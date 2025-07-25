@@ -1,4 +1,4 @@
-package app.domain.menu.dto.request;
+package app.domain.menu.dto.response;
 
 import java.util.UUID;
 
