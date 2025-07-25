@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: order-platform-backend
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order_platform
+    username: bonun
+    password: password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        use_sql_comments: true
