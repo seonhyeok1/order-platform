@@ -26,7 +26,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_order")
+@Table(name = "p_orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -35,7 +35,7 @@ public class Orders extends BaseEntity {
 
 	@Id
 	@GeneratedValue
-	private UUID OrdersId;
+	private UUID ordersId;
 
 	@ManyToOne
 	@JoinColumn(name = "store_id", nullable = false)
@@ -57,7 +57,7 @@ public class Orders extends BaseEntity {
 
 	@Column(nullable = false, length = 20)
 	@Enumerated(EnumType.STRING)
-	private OrderChannel OrderChannel;
+	private OrderChannel orderChannel;
 
 	@Column(nullable = false, length = 20)
 	@Enumerated(EnumType.STRING)
@@ -65,7 +65,7 @@ public class Orders extends BaseEntity {
 
 	@Column(nullable = false, length = 20)
 	@Enumerated(EnumType.STRING)
-	private OrderStatus OrderStatus;
+	private OrderStatus orderStatus;
 
 	@Lob
 	private String requestMessage;
