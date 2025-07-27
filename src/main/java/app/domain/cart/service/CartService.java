@@ -6,7 +6,7 @@ import java.util.UUID;
 import app.domain.cart.model.dto.RedisCartItem;
 
 public interface CartService {
-	void addCartItem(Long userId, UUID menuId, int quantity);
+	void addCartItem(Long userId, UUID menuId, UUID storeId, int quantity);
 
 	void updateCartItem(Long userId, UUID menuId, int quantity);
 

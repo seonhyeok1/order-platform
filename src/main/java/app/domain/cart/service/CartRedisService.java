@@ -10,4 +10,6 @@ public interface CartRedisService {
 	List<RedisCartItem> getCartFromRedis(Long userId);
 
 	void deleteCartFromRedis(Long userId);
+
+	boolean existsCartInRedis(Long userId);
 }

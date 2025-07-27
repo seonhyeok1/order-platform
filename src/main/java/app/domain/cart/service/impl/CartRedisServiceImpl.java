@@ -1,6 +1,5 @@
 package app.domain.cart.service.impl;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -36,10 +35,6 @@ public class CartRedisServiceImpl implements CartRedisService {
 		try {
 			String key = "cart:" + userId;
 			String json = redisTemplate.opsForValue().get(key);
-			if (json == null) {
-				return Collections.emptyList();
-			}
-
 			return objectMapper.readValue(json, new TypeReference<List<RedisCartItem>>() {
 			});
 		} catch (JsonProcessingException e) {
@@ -49,7 +44,15 @@ public class CartRedisServiceImpl implements CartRedisService {
 
 	@Override
 	public void deleteCartFromRedis(Long userId) {
+		if (existsCartInRedis(userId)) {
+			String key = "cart:" + userId;
+			redisTemplate.delete(key);
+		}
+	}
+
+	@Override
+	public boolean existsCartInRedis(Long userId) {
 		String key = "cart:" + userId;
-		redisTemplate.delete(key);
+		return redisTemplate.hasKey(key);
 	}
 }
