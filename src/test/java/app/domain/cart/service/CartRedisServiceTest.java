@@ -87,7 +87,7 @@ class CartRedisServiceTest {
 		cartRedisService.saveCartToRedis(userId, cartItems);
 
 		// when
-		cartRedisService.deleteCartFromRedis(userId);
+		cartRedisService.clearCartItems(userId);
 
 		// then
 		List<RedisCartItem> result = cartRedisService.getCartFromRedis(userId);
