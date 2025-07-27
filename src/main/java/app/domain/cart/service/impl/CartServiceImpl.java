@@ -73,8 +73,8 @@ public class CartServiceImpl implements CartService {
 	}
 
 	@Override
-	public void clearCartCache(Long userId) {
-		cartRedisService.deleteCartFromRedis(userId);
+	public void clearCartItems(Long userId) {
+		cartRedisService.clearCartItems(userId);
 	}
 
 	@Override

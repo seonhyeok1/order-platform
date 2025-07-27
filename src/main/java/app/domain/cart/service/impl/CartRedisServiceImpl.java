@@ -43,11 +43,8 @@ public class CartRedisServiceImpl implements CartRedisService {
 	}
 
 	@Override
-	public void deleteCartFromRedis(Long userId) {
-		if (existsCartInRedis(userId)) {
-			String key = "cart:" + userId;
-			redisTemplate.delete(key);
-		}
+	public void clearCartItems(Long userId) {
+		saveCartToRedis(userId, List.of());
 	}
 
 	@Override

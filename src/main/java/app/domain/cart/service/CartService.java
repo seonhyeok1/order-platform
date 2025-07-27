@@ -14,7 +14,7 @@ public interface CartService {
 
 	List<RedisCartItem> getCartFromCache(Long userId);
 
-	void clearCartCache(Long userId);
+	void clearCartItems(Long userId);
 
 	void loadDbToRedis(Long userId);
 
