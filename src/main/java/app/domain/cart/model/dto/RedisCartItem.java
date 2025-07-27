@@ -14,5 +14,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RedisCartItem {
 	private UUID menuId;
+	private UUID storeId;
 	private int quantity;
 }
