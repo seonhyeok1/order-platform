@@ -11,7 +11,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -41,11 +40,9 @@ public class AiHistory extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private ReqType reqType; // 메뉴 설명, 가게 설명
 
-	@Lob
 	@Column(nullable = false)
 	private String promptText;
 
-	@Lob
 	private String generatedContent;
 
 	@Column(nullable = false)
