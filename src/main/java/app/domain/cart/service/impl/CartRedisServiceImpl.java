@@ -54,8 +54,7 @@ public class CartRedisServiceImpl implements CartRedisService {
 
 	@Override
 	public void clearCartItems(Long userId) {
-		String key = "cart:" + userId;
-		redisTemplate.delete(key);
+		saveCartToRedis(userId, List.of());
 	}
 
 	public void removeCartItem(Long userId, UUID menuId) {
