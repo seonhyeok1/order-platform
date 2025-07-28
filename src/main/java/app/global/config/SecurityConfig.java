@@ -43,7 +43,7 @@ public class SecurityConfig {
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					// 회원가입 API (경로는 실제 Controller에 맞게 수정 필요)
+					// 회원가입 API
 					"/api/users/signup" // 예시 경로, 실제 회원가입 엔드포인트를 추가해주세요.
 				).permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
 				.anyRequest().authenticated() // 나머지 모든 경로는 인증 필요
@@ -52,12 +52,12 @@ public class SecurityConfig {
 		return http.build();
 	}
 
-	// CORS 설정을 위한 Bean
+	// CORS 설정을 위한 Bean TODO: 실제 운영 환경에서는 구체적인 도메인 명시 필요
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 
-		// 허용할 오리진(출처) 설정 - 실제 운영 환경에서는 구체적인 도메인을 명시해야 합니다.
+		// 허용할 오리진(출처) 설정
 		configuration.setAllowedOrigins(Collections.singletonList("*")); // 모든 출처 허용 (개발용)
 		// 허용할 HTTP 메서드 설정
 		configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
