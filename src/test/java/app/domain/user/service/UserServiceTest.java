@@ -45,7 +45,7 @@ class UserServiceTest {
 	void createUser_fail_when_username_already_exists() {
 		// given
 		CreateUserReq request = new CreateUserReq();
-		request.setUserName("existingUser");
+		request.setUsername("existingUser");
 		request.setPassword("password123");
 
 		// given: findByUserName이 호출되면, 빌더로 생성한 User 객체를 포함한 Optional을 반환
@@ -73,7 +73,7 @@ class UserServiceTest {
 	void createUser_success() {
 		// given
 		CreateUserReq request = new CreateUserReq();
-		request.setUserName("newUser");
+		request.setUsername("newUser");
 		request.setPassword("password123");
 		request.setEmail("newuser@example.com");
 		request.setNickname("newbie");
@@ -83,7 +83,7 @@ class UserServiceTest {
 		Long newUserId = 1L;
 		User savedUser = User.builder()
 			.userId(newUserId) // ID는 Long 타입
-			.username(request.getUserName())
+			.username(request.getUsername())
 			.password("encryptedPassword")
 			.email(request.getEmail())
 			.nickname(request.getNickname())
@@ -92,7 +92,7 @@ class UserServiceTest {
 			.build();
 
 		// given: Mock 객체들의 동작을 정의
-		given(userRepository.findByUserName(request.getUserName())).willReturn(Optional.empty());
+		given(userRepository.findByUserName(request.getUsername())).willReturn(Optional.empty());
 		given(passwordEncoder.encode(request.getPassword())).willReturn("encryptedPassword");
 		given(userRepository.save(any(User.class))).willReturn(savedUser);
 
