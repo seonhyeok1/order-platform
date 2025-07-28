@@ -59,9 +59,7 @@ public class CartServiceImpl implements CartService {
 
 	@Override
 	public void removeCartItem(Long userId, UUID menuId) {
-		List<RedisCartItem> items = cartRedisService.getCartFromRedis(userId);
-		items.removeIf(item -> item.getMenuId().equals(menuId));
-		cartRedisService.saveCartToRedis(userId, items);
+		cartRedisService.removeCartItem(userId, menuId);
 	}
 
 	@Override
