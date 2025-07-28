@@ -38,7 +38,7 @@ class AiServiceImplTest {
 
 		// Then
 		assertNotNull(aiResponse.getRequest_id());
-		assertNotNull(aiResponse.getGenerated_content());
+		assertFalse(aiResponse.getGenerated_content().isEmpty()); // 내용이 비어있지 않음을 확인
 	}
 
 	@Test
@@ -56,7 +56,7 @@ class AiServiceImplTest {
 
 		// Then
 		assertNotNull(aiResponse.getRequest_id());
-		assertNotNull(aiResponse.getGenerated_content());
+		assertFalse(aiResponse.getGenerated_content().isEmpty()); // 내용이 비어있지 않음을 확인
 
 		// 데이터베이스에서 저장된 AiHistory 조회 및 검증
 		AiHistory savedAiHistory = aiHistoryRepository.findById(java.util.UUID.fromString(aiResponse.getRequest_id()))
@@ -67,7 +67,7 @@ class AiServiceImplTest {
 		assertEquals("고구마 피자", savedAiHistory.getMenuName());
 		assertEquals(ReqType.MENU_DESCRIPTION, savedAiHistory.getReqType());
 		assertEquals("고구마 피자에 대해 달콤하고 부드러운 점을 강조해서 간략한 상품 설명을 작성해줘", savedAiHistory.getPromptText());
-		assertEquals("AI 모델로부터 생성된 컨텐츠입니다.", savedAiHistory.getGeneratedContent());
+		assertFalse(savedAiHistory.getGeneratedContent().isEmpty()); // 내용이 비어있지 않음을 확인
 		assertEquals(AiRequestStatus.SUCCESS, savedAiHistory.getStatus());
 	}
 }

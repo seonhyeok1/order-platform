@@ -1,5 +1,6 @@
 package app.domain.ai.service.impl;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class AiServiceImpl implements AiService {
 
 	private final AiHistoryRepository aiHistoryRepository;
+	private final ChatClient chatClient;
 
 	@Override
 	public AiResponse generateDescription(AiRequest aiRequest) {
@@ -30,10 +32,19 @@ public class AiServiceImpl implements AiService {
 
 		AiHistory savedAiRequestEntity = aiHistoryRepository.save(aiRequestEntity);
 
-		// TODO: AI 모델에 요청을 보내고 응답을 받는 로직 구현
-		String generatedContent = "AI 모델로부터 생성된 컨텐츠입니다.";
-
-		savedAiRequestEntity.updateGeneratedContent(generatedContent, AiRequestStatus.SUCCESS);
+		String generatedContent;
+		try {
+			// Spring AI ChatClient를 사용하여 AI 모델에 요청 보내기
+			generatedContent = chatClient.prompt()
+				.user(aiRequest.getPromptText())
+				.call()
+				.content();
+			savedAiRequestEntity.updateGeneratedContent(generatedContent, AiRequestStatus.SUCCESS);
+		} catch (Exception e) {
+			// Handle exceptions during AI model call
+			savedAiRequestEntity.updateGeneratedContent("Error: " + e.getMessage(), AiRequestStatus.FAILED);
+			throw new RuntimeException("Failed to generate AI content", e); // Re-throw or handle as appropriate
+		}
 
 		return AiResponse.builder()
 			.request_id(savedAiRequestEntity.getAiRequestId().toString())
