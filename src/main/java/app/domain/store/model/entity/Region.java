@@ -30,6 +30,9 @@ public class Region extends BaseEntity {
 	@Column(unique = true, nullable = false)
 	private int regionCode;
 
+	@Column(nullable = false, length = 100)
+	private String regionName;
+
 	@Column(nullable = false)
 	private boolean isActive = false;
 

@@ -3,10 +3,13 @@ package app.domain.store.model.entity;
 import java.util.UUID;
 
 import app.domain.menu.model.entity.Category;
+import app.domain.store.model.type.StoreAcceptStatus;
 import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -61,6 +64,7 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	private int minOrderAmount = 0;
 
+	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private boolean storeAcceptStatus = false;
+	private StoreAcceptStatus storeAcceptStatus = StoreAcceptStatus.PENDING;
 }
