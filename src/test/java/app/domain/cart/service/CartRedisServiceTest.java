@@ -28,54 +28,62 @@ class CartRedisServiceTest {
 	}
 
 	@Test
-	void RedisSave() {
+	void saveAndGet() {
 		// given
 		Long userId = 1L;
+		UUID menuId1 = UUID.randomUUID();
+		UUID menuId2 = UUID.randomUUID();
 		List<RedisCartItem> cartItems = List.of(
 			RedisCartItem.builder()
-				.menuId(UUID.randomUUID())
+				.menuId(menuId1)
 				.quantity(2)
 				.build(),
 			RedisCartItem.builder()
-				.menuId(UUID.randomUUID())
+				.menuId(menuId2)
 				.quantity(3)
 				.build()
 		);
 
 		// when
 		cartRedisService.saveCartToRedis(userId, cartItems);
-
-		// then
-		List<RedisCartItem> savedItems = cartRedisService.getCartFromRedis(userId);
-		assertThat(savedItems).hasSize(2);
-		assertThat(savedItems.get(0).getQuantity()).isEqualTo(2);
-		assertThat(savedItems.get(1).getQuantity()).isEqualTo(3);
-	}
-
-	@Test
-	void RedisGet() {
-		// given
-		Long userId = 2L;
-		UUID menuId = UUID.randomUUID();
-		List<RedisCartItem> cartItems = List.of(
-			RedisCartItem.builder()
-				.menuId(menuId)
-				.quantity(5)
-				.build()
-		);
-		cartRedisService.saveCartToRedis(userId, cartItems);
-
-		// when
 		List<RedisCartItem> result = cartRedisService.getCartFromRedis(userId);
 
 		// then
-		assertThat(result).hasSize(1);
-		assertThat(result.get(0).getMenuId()).isEqualTo(menuId);
-		assertThat(result.get(0).getQuantity()).isEqualTo(5);
+		assertThat(result).hasSize(2);
+		assertThat(result).extracting(RedisCartItem::getMenuId).containsExactlyInAnyOrder(menuId1, menuId2);
+		assertThat(result).extracting(RedisCartItem::getQuantity).containsExactlyInAnyOrder(2, 3);
 	}
 
 	@Test
-	void RedisDelete() {
+	void delete() {
+		// given
+		Long userId = 2L;
+		UUID menuId1 = UUID.randomUUID();
+		UUID menuId2 = UUID.randomUUID();
+		List<RedisCartItem> cartItems = List.of(
+			RedisCartItem.builder()
+				.menuId(menuId1)
+				.quantity(1)
+				.build(),
+			RedisCartItem.builder()
+				.menuId(menuId2)
+				.quantity(2)
+				.build()
+		);
+
+		cartRedisService.saveCartToRedis(userId, cartItems);
+
+		// when - 하나의 메뉴만 삭제
+		cartRedisService.removeCartItem(userId, menuId1);
+
+		// then
+		List<RedisCartItem> result = cartRedisService.getCartFromRedis(userId);
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getMenuId()).isEqualTo(menuId2);
+	}
+
+	@Test
+	void clear() {
 		// given
 		Long userId = 3L;
 		List<RedisCartItem> cartItems = List.of(
@@ -92,5 +100,24 @@ class CartRedisServiceTest {
 		// then
 		List<RedisCartItem> result = cartRedisService.getCartFromRedis(userId);
 		assertThat(result).isEmpty();
+	}
+
+	@Test
+	void exists() {
+		// given
+		Long userId = 4L;
+		List<RedisCartItem> cartItems = List.of(
+			RedisCartItem.builder()
+				.menuId(UUID.randomUUID())
+				.quantity(1)
+				.build()
+		);
+
+		// when & then - 장바구니가 없을 때
+		assertThat(cartRedisService.existsCartInRedis(userId)).isFalse();
+
+		// when & then - 장바구니가 있을 때
+		cartRedisService.saveCartToRedis(userId, cartItems);
+		assertThat(cartRedisService.existsCartInRedis(userId)).isTrue();
 	}
 }
