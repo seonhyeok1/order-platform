@@ -14,10 +14,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartRedisService;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartRedisServiceImpl implements CartRedisService {
 	private final RedisTemplate<String, String> redisTemplate;
 	private final ObjectMapper objectMapper;
@@ -34,7 +38,11 @@ public class CartRedisServiceImpl implements CartRedisService {
 			}
 			redisTemplate.expire(key, CART_TTL);
 		} catch (JsonProcessingException e) {
-			throw new RuntimeException("장바구니 Redis 저장 실패", e);
+			log.error("장바구니 Redis 저장 실패 - userId: {}", userId, e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED);
+		} catch (Exception e) {
+			log.error("장바구니 Redis 저장 중 예상치 못한 오류 - userId: {}", userId, e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED);
 		}
 	}
 
@@ -47,40 +55,71 @@ public class CartRedisServiceImpl implements CartRedisService {
 					try {
 						return objectMapper.readValue((String)value, RedisCartItem.class);
 					} catch (JsonProcessingException e) {
-						throw new RuntimeException("장바구니 아이템 파싱 실패", e);
+						log.error("장바구니 아이템 파싱 실패 - userId: {}", userId, e);
+						throw new GeneralException(ErrorStatus.CART_ITEM_PARSE_FAILED);
 					}
 				})
 				.collect(Collectors.toList());
+		} catch (GeneralException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new RuntimeException("장바구니 Redis 조회 실패", e);
+			log.error("장바구니 Redis 조회 실패 - userId: {}", userId, e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_LOAD_FAILED);
 		}
 	}
 
 	@Override
 	public void clearCartItems(Long userId) {
-		saveCartToRedis(userId, List.of());
+		try {
+			saveCartToRedis(userId, List.of());
+		} catch (GeneralException e) {
+			throw e;
+		} catch (Exception e) {
+			log.error("장바구니 전체 삭제 실패 - userId: {}", userId, e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED);
+		}
 	}
 
 	@Override
 	public void removeCartItem(Long userId, UUID menuId) {
-		String key = "cart:" + userId;
-		redisTemplate.opsForHash().delete(key, menuId.toString());
-		redisTemplate.expire(key, CART_TTL);
+		try {
+			String key = "cart:" + userId;
+			redisTemplate.opsForHash().delete(key, menuId.toString());
+			redisTemplate.expire(key, CART_TTL);
+		} catch (Exception e) {
+			log.error("장바구니 아이템 삭제 실패 - userId: {}, menuId: {}", userId, menuId, e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED);
+		}
 	}
 
 	@Override
 	public boolean existsCartInRedis(Long userId) {
-		String key = "cart:" + userId;
-		return redisTemplate.hasKey(key);
+		try {
+			String key = "cart:" + userId;
+			return redisTemplate.hasKey(key);
+		} catch (Exception e) {
+			log.error("장바구니 존재 여부 확인 실패 - userId: {}", userId, e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_LOAD_FAILED);
+		}
 	}
 
 	@Override
 	public Set<String> getAllCartKeys() {
-		return redisTemplate.keys("cart:*");
+		try {
+			return redisTemplate.keys("cart:*");
+		} catch (Exception e) {
+			log.error("모든 장바구니 키 조회 실패", e);
+			throw new GeneralException(ErrorStatus.CART_REDIS_LOAD_FAILED);
+		}
 	}
 
 	@Override
 	public Long extractUserIdFromKey(String key) {
-		return Long.parseLong(key.substring(5));
+		try {
+			return Long.parseLong(key.substring(5));
+		} catch (Exception e) {
+			log.error("키에서 userId 추출 실패 - key: {}", key, e);
+			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+		}
 	}
 }
