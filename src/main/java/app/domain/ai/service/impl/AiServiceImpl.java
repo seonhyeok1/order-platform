@@ -44,7 +44,7 @@ public class AiServiceImpl implements AiService {
 				- 가게 이름: {storeName}
 				- 메뉴 이름: {menuName}
 				- 요청 종류: {reqType}
-				- 핵심 요청사항 : {promptText} 
+				- 핵심 요청사항 : {promptText}
 				
 				요청 종류가 MENU_DESCRIPTION 이면 30자 이내로 작성해주고 STORE_DESCRIPTION 이면 100자 이내로 작성해줘.
 				""");
@@ -66,8 +66,8 @@ public class AiServiceImpl implements AiService {
 		}
 
 		return AiResponse.builder()
-			.request_id(savedAiRequestEntity.getAiRequestId().toString())
-			.generated_content(generatedContent)
+			.requestId(savedAiRequestEntity.getAiRequestId().toString())
+			.generatedContent(generatedContent)
 			.build();
 	}
 }

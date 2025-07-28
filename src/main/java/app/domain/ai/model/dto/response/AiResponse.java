@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AiResponse {
-	private String request_id;
-	private String generated_content;
+	private String requestId;
+	private String generatedContent;
 }
