@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -216,5 +217,40 @@ class CartServiceTest {
 			items.size() == 1 &&
 				items.get(0).getQuantity() == 3
 		));
+	}
+
+	@Test
+	void syncAllCartsToDb_shouldSyncMultipleCarts() {
+		// given
+		Set<String> cartKeys = Set.of("cart:1", "cart:2");
+		when(cartRedisService.getAllCartKeys()).thenReturn(cartKeys);
+		when(cartRedisService.extractUserIdFromKey("cart:1")).thenReturn(1L);
+		when(cartRedisService.extractUserIdFromKey("cart:2")).thenReturn(2L);
+
+		RedisCartItem redisItem1 = RedisCartItem.builder()
+			.menuId(UUID.randomUUID())
+			.storeId(storeId)
+			.quantity(1)
+			.build();
+		RedisCartItem redisItem2 = RedisCartItem.builder()
+			.menuId(UUID.randomUUID())
+			.storeId(storeId)
+			.quantity(2)
+			.build();
+		when(cartRedisService.getCartFromRedis(1L)).thenReturn(List.of(redisItem1));
+		when(cartRedisService.getCartFromRedis(2L)).thenReturn(List.of(redisItem2));
+
+		Cart cart1 = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(1L).build()).build();
+		Cart cart2 = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(2L).build()).build();
+		when(cartRepository.findByUser_UserId(1L)).thenReturn(Optional.of(cart1));
+		when(cartRepository.findByUser_UserId(2L)).thenReturn(Optional.of(cart2));
+
+		// when
+		cartService.syncAllCartsToDb();
+
+		// then
+		verify(cartItemRepository).deleteByCart_CartId(cart1.getCartId());
+		verify(cartItemRepository).deleteByCart_CartId(cart2.getCartId());
+		verify(cartItemRepository, times(2)).saveAll(any());
 	}
 }

@@ -3,7 +3,9 @@ package app.domain.cart.service;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -119,5 +121,60 @@ class CartRedisServiceTest {
 		// when & then - 장바구니가 있을 때
 		cartRedisService.saveCartToRedis(userId, cartItems);
 		assertThat(cartRedisService.existsCartInRedis(userId)).isTrue();
+	}
+
+	@Test
+	void ttlExpiration() throws InterruptedException {
+		// given
+		Long userId = 5L;
+		List<RedisCartItem> cartItems = List.of(
+			RedisCartItem.builder()
+				.menuId(UUID.randomUUID())
+				.quantity(1)
+				.build()
+		);
+
+		// when
+		cartRedisService.saveCartToRedis(userId, cartItems);
+		String key = "cart:" + userId;
+		Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+
+		// then
+		assertThat(ttl).isGreaterThan(0);
+		assertThat(cartRedisService.existsCartInRedis(userId)).isTrue();
+	}
+
+	@Test
+	void getAllCartKeys() {
+		// given
+		Long userId1 = 6L;
+		Long userId2 = 7L;
+		List<RedisCartItem> cartItems = List.of(
+			RedisCartItem.builder()
+				.menuId(UUID.randomUUID())
+				.quantity(1)
+				.build()
+		);
+
+		// when
+		cartRedisService.saveCartToRedis(userId1, cartItems);
+		cartRedisService.saveCartToRedis(userId2, cartItems);
+		Set<String> keys = cartRedisService.getAllCartKeys();
+
+		// then
+		assertThat(keys).hasSize(2);
+		assertThat(keys).contains("cart:" + userId1, "cart:" + userId2);
+	}
+
+	@Test
+	void extractUserIdFromKey() {
+		// given
+		String key = "cart:123";
+
+		// when
+		Long userId = cartRedisService.extractUserIdFromKey(key);
+
+		// then
+		assertThat(userId).isEqualTo(123L);
 	}
 }

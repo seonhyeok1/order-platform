@@ -116,9 +116,9 @@ public class CartServiceImpl implements CartService {
 	@Override
 	@Scheduled(initialDelay = 900000, fixedRate = 900000) // 15분마다 실행
 	public void syncAllCartsToDb() {
-		Set<String> cartKeys = ((CartRedisServiceImpl)cartRedisService).getAllCartKeys();
+		Set<String> cartKeys = cartRedisService.getAllCartKeys();
 		for (String key : cartKeys) {
-			Long userId = ((CartRedisServiceImpl)cartRedisService).extractUserIdFromKey(key);
+			Long userId = cartRedisService.extractUserIdFromKey(key);
 			try {
 				syncRedisToDb(userId);
 			} catch (Exception e) {
