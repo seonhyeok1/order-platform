@@ -24,7 +24,7 @@ public class UserService {
 	public String createUser(CreateUserReq createUserReq) {
 
 		// 1. userName 중복 확인
-		if (userRepository.findByUserName(createUserReq.getUserName()).isPresent()) {
+		if (userRepository.findByUsername(createUserReq.getUserName()).isPresent()) {
 			throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
 		}
 
