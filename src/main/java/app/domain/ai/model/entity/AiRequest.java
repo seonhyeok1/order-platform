@@ -51,4 +51,9 @@ public class AiRequest extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private AiRequestStatus status;
+
+	public void updateGeneratedContent(String generatedContent, AiRequestStatus status) {
+		this.generatedContent = generatedContent;
+		this.status = status;
+	}
 }
