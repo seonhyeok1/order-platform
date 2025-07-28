@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AiResponseDto {
-    private String request_id;
-    private String generated_content;
+public class AiResponse {
+	private String request_id;
+	private String generated_content;
 }

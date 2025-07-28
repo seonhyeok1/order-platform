@@ -20,12 +20,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_ai_requests")
+@Table(name = "p_ai_history")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class AiRequest extends BaseEntity {
+public class AiHistory extends BaseEntity {
 
 	@Id
 	@GeneratedValue

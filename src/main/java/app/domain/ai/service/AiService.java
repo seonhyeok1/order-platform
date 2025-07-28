@@ -1,8 +1,8 @@
 package app.domain.ai.service;
 
-import app.domain.ai.model.dto.request.AiRequestDto;
-import app.domain.ai.model.dto.response.AiResponseDto;
+import app.domain.ai.model.dto.request.AiRequest;
+import app.domain.ai.model.dto.response.AiResponse;
 
 public interface AiService {
-    AiResponseDto generateDescription(AiRequestDto aiRequestDto);
+	AiResponse generateDescription(AiRequest aiRequest);
 }
