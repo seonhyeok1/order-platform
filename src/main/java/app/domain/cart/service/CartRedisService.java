@@ -1,6 +1,7 @@
 package app.domain.cart.service;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import app.domain.cart.model.dto.RedisCartItem;
@@ -15,4 +16,8 @@ public interface CartRedisService {
 	void clearCartItems(Long userId);
 
 	boolean existsCartInRedis(Long userId);
+
+	Set<String> getAllCartKeys();
+
+	Long extractUserIdFromKey(String key);
 }

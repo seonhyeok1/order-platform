@@ -1,6 +1,8 @@
 package app.domain.cart.service.impl;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -19,16 +21,18 @@ import lombok.RequiredArgsConstructor;
 public class CartRedisServiceImpl implements CartRedisService {
 	private final RedisTemplate<String, String> redisTemplate;
 	private final ObjectMapper objectMapper;
+	private static final Duration CART_TTL = Duration.ofMinutes(30);
 
 	@Override
 	public void saveCartToRedis(Long userId, List<RedisCartItem> cartItems) {
 		try {
 			String key = "cart:" + userId;
-			redisTemplate.delete(key); // 기존 데이터 삭제
+			redisTemplate.delete(key);
 			for (RedisCartItem item : cartItems) {
 				String itemJson = objectMapper.writeValueAsString(item);
 				redisTemplate.opsForHash().put(key, item.getMenuId().toString(), itemJson);
 			}
+			redisTemplate.expire(key, CART_TTL);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("장바구니 Redis 저장 실패", e);
 		}
@@ -57,14 +61,26 @@ public class CartRedisServiceImpl implements CartRedisService {
 		saveCartToRedis(userId, List.of());
 	}
 
+	@Override
 	public void removeCartItem(Long userId, UUID menuId) {
 		String key = "cart:" + userId;
 		redisTemplate.opsForHash().delete(key, menuId.toString());
+		redisTemplate.expire(key, CART_TTL);
 	}
 
 	@Override
 	public boolean existsCartInRedis(Long userId) {
 		String key = "cart:" + userId;
 		return redisTemplate.hasKey(key);
+	}
+
+	@Override
+	public Set<String> getAllCartKeys() {
+		return redisTemplate.keys("cart:*");
+	}
+
+	@Override
+	public Long extractUserIdFromKey(String key) {
+		return Long.parseLong(key.substring(5));
 	}
 }

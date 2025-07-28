@@ -1,8 +1,10 @@
 package app.domain.cart.service.impl;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import app.domain.cart.model.CartItemRepository;
@@ -26,7 +28,6 @@ public class CartServiceImpl implements CartService {
 	public void addCartItem(Long userId, UUID menuId, UUID storeId, int quantity) {
 		List<RedisCartItem> items = cartRedisService.getCartFromRedis(userId);
 
-		// 다른 매장 메뉴가 있으면 기존 장바구니 비우기
 		if (!items.isEmpty() && !items.get(0).getStoreId().equals(storeId)) {
 			items.clear();
 		}
@@ -109,6 +110,20 @@ public class CartServiceImpl implements CartService {
 				.toList();
 
 			cartItemRepository.saveAll(cartItems);
+		}
+	}
+
+	@Override
+	@Scheduled(initialDelay = 900000, fixedRate = 900000) // 15분마다 실행
+	public void syncAllCartsToDb() {
+		Set<String> cartKeys = ((CartRedisServiceImpl)cartRedisService).getAllCartKeys();
+		for (String key : cartKeys) {
+			Long userId = ((CartRedisServiceImpl)cartRedisService).extractUserIdFromKey(key);
+			try {
+				syncRedisToDb(userId);
+			} catch (Exception e) {
+				System.err.println("Failed to sync cart for userId: " + userId + ", error: " + e.getMessage());
+			}
 		}
 	}
 }
