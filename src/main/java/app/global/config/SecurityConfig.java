@@ -43,8 +43,7 @@ public class SecurityConfig {
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					// 회원가입 API
-					"/api/users/signup" // 예시 경로, 실제 회원가입 엔드포인트를 추가해주세요.
+					"/api/auth/signup", "/api/auth/login"
 				).permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
 				.anyRequest().authenticated() // 나머지 모든 경로는 인증 필요
 			);
