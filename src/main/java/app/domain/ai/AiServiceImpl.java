@@ -40,15 +40,9 @@ public class AiServiceImpl implements AiService {
 			throw new GeneralException(ErrorStatus.AI_INVALID_INPUT_VALUE);
 		}
 
-		String menuNameForHistory = aiRequest.menuName();
-		if (aiRequest.reqType() == ReqType.STORE_DESCRIPTION && (menuNameForHistory != null
-			&& menuNameForHistory.isBlank())) {
-			menuNameForHistory = null;
-		}
-
 		AiHistory aiRequestEntity = AiHistory.builder()
 			.storeName(aiRequest.storeName())
-			.menuName(menuNameForHistory) // 수정된 menuName 사용
+			.menuName(StringUtils.hasText(aiRequest.menuName()) ? aiRequest.menuName() : "")
 			.reqType(aiRequest.reqType())
 			.promptText(aiRequest.promptText())
 			.status(AiRequestStatus.PENDING)
