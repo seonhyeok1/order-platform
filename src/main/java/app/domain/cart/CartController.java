@@ -1,4 +1,4 @@
-package app.domain.cart.controller;
+package app.domain.cart;
 
 import java.util.List;
 import java.util.UUID;
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.domain.cart.model.dto.request.AddCartItemRequest;
-import app.domain.cart.model.dto.response.RedisCartItem;
+import app.domain.cart.model.dto.AddCartItemRequest;
+import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
@@ -48,12 +48,12 @@ public class CartController {
 					""")))
 	})
 	@PostMapping("/item")
-	public ApiResponse<Void> addItemToCart(@RequestParam Long userId, @RequestBody AddCartItemRequest request) {
+	public ApiResponse<String> addItemToCart(@RequestParam Long userId, @RequestBody AddCartItemRequest request) {
 		if (request.quantity() <= 0) {
 			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
 		}
-		cartService.addCartItem(userId, request.menuId(), request.storeId(), request.quantity());
-		return ApiResponse.onSuccess(null);
+		String result = cartService.addCartItem(userId, request.menuId(), request.storeId(), request.quantity());
+		return ApiResponse.onSuccess(result);
 	}
 
 	@Operation(summary = "장바구니 아이템 수량 수정 API", description = "장바구니에 있는 특정 메뉴의 수량을 수정합니다.")
@@ -69,10 +69,10 @@ public class CartController {
 					""")))
 	})
 	@PatchMapping("/item/{menuId}/{quantity}")
-	public ApiResponse<Void> updateItemInCart(@RequestParam Long userId, @PathVariable UUID menuId,
+	public ApiResponse<String> updateItemInCart(@RequestParam Long userId, @PathVariable UUID menuId,
 		@PathVariable int quantity) {
-		cartService.updateCartItem(userId, menuId, quantity);
-		return ApiResponse.onSuccess(null);
+		String result = cartService.updateCartItem(userId, menuId, quantity);
+		return ApiResponse.onSuccess(result);
 	}
 
 	@Operation(summary = "장바구니 아이템 삭제 API", description = "장바구니에서 특정 메뉴를 삭제합니다.")
@@ -88,9 +88,10 @@ public class CartController {
 					""")))
 	})
 	@DeleteMapping("/item/{menuId}")
-	public ApiResponse<Void> removeItemFromCart(@RequestParam Long userId, @PathVariable UUID menuId) {
-		cartService.removeCartItem(userId, menuId);
-		return ApiResponse.onSuccess(null);
+	public ApiResponse<String> removeItemFromCart(@RequestParam Long userId, @PathVariable UUID menuId) {
+		String result = cartService.removeCartItem(userId, menuId);
+
+		return ApiResponse.onSuccess(result);
 	}
 
 	@Operation(summary = "장바구니 조회 API", description = "사용자의 장바구니 내용을 조회합니다. Redis에 없으면 DB에서 로드합니다.")
@@ -143,9 +144,9 @@ public class CartController {
 					""")))
 	})
 	@DeleteMapping("/item")
-	public ApiResponse<Void> clearCart(@RequestParam Long userId) {
-		cartService.clearCartItems(userId);
-		return ApiResponse.onSuccess(null);
+	public ApiResponse<String> clearCart(@RequestParam Long userId) {
+		String result = cartService.clearCartItems(userId);
+		return ApiResponse.onSuccess(result);
 	}
 
 }
