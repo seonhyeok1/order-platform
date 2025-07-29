@@ -16,9 +16,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import app.domain.admin.model.dto.response.GetUserListResponse;
-import app.domain.user.model.UserRepository;
-import app.domain.user.model.entity.User;
-import app.domain.user.model.entity.enums.UserRole;
+import app.domain.customer.model.UserRepository;
+import app.domain.customer.model.entity.User;
+import app.domain.customer.model.entity.enums.UserRole;
 import app.global.apiPayload.PagedResponse;
 
 class AdminUserServiceImplTest {

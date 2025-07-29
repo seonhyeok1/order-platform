@@ -1,4 +1,4 @@
-package app.domain.user.model.entity;
+package app.domain.customer.model.entity;
 
 import java.util.UUID;
 

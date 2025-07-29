@@ -1,6 +1,6 @@
-package app.domain.user.model.entity;
+package app.domain.customer.model.entity;
 
-import app.domain.user.model.entity.enums.UserRole;
+import app.domain.customer.model.entity.enums.UserRole;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -3,7 +3,7 @@ package app.domain.store.model.entity;
 import java.util.UUID;
 
 import app.domain.menu.model.entity.Category;
-import app.domain.user.model.entity.User;
+import app.domain.customer.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
