@@ -5,7 +5,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.domain.auth.service.impl.AuthService;
+import app.domain.auth.service.AuthService;
 import app.domain.customer.model.dto.CreateUserReq;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

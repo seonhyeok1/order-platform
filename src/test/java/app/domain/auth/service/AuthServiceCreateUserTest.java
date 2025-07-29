@@ -1,4 +1,4 @@
-package app.domain.auth.service.impl;
+package app.domain.auth.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;

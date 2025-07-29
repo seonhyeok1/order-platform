@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import app.domain.auth.service.impl.AuthService;
+import app.domain.auth.service.AuthService;
 import app.domain.customer.model.UserRepository;
 import app.domain.customer.model.dto.CreateUserReq;
 import app.domain.customer.model.entity.User;
