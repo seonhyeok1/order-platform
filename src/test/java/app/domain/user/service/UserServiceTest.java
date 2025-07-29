@@ -49,7 +49,7 @@ class UserServiceTest {
 		request.setPassword("password123");
 
 		// given: findByUserName이 호출되면, 빌더로 생성한 User 객체를 포함한 Optional을 반환
-		given(userRepository.findByUserName("existingUser")).willReturn(Optional.of(User.builder().build()));
+		given(userRepository.findByUsername("existingUser")).willReturn(Optional.of(User.builder().build()));
 
 		// when then
 		// userService.createUser(request)를 실행했을 때 GeneralException이 발생하는지 확인
@@ -92,7 +92,7 @@ class UserServiceTest {
 			.build();
 
 		// given: Mock 객체들의 동작을 정의
-		given(userRepository.findByUserName(request.getUsername())).willReturn(Optional.empty());
+		given(userRepository.findByUsername(request.getUsername())).willReturn(Optional.empty());
 		given(passwordEncoder.encode(request.getPassword())).willReturn("encryptedPassword");
 		given(userRepository.save(any(User.class))).willReturn(savedUser);
 
