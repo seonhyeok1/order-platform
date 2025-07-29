@@ -1,4 +1,4 @@
-package app.domain.cart.service.impl;
+package app.domain.cart.service;
 
 import java.time.Duration;
 import java.util.List;
@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.domain.cart.model.dto.response.RedisCartItem;
-import app.domain.cart.service.CartRedisService;
+import app.domain.cart.model.dto.RedisCartItem;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +27,7 @@ public class CartRedisServiceImpl implements CartRedisService {
 	private static final Duration CART_TTL = Duration.ofMinutes(30);
 
 	@Override
-	public void saveCartToRedis(Long userId, List<RedisCartItem> cartItems) {
+	public String saveCartToRedis(Long userId, List<RedisCartItem> cartItems) {
 		try {
 			String key = "cart:" + userId;
 			redisTemplate.delete(key);
@@ -37,6 +36,7 @@ public class CartRedisServiceImpl implements CartRedisService {
 				redisTemplate.opsForHash().put(key, item.getMenuId().toString(), itemJson);
 			}
 			redisTemplate.expire(key, CART_TTL);
+			return "사용자 " + userId + "의 장바구니가 성공적으로 저장되었습니다.";
 		} catch (JsonProcessingException e) {
 			log.error("장바구니 Redis 저장 실패 - userId: {}", userId, e);
 			throw new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED);
@@ -69,9 +69,10 @@ public class CartRedisServiceImpl implements CartRedisService {
 	}
 
 	@Override
-	public void clearCartItems(Long userId) {
+	public String clearCartItems(Long userId) {
 		try {
 			saveCartToRedis(userId, List.of());
+			return "사용자 " + userId + "의 장바구니가 성공적으로 비워졌습니다.";
 		} catch (GeneralException e) {
 			throw e;
 		} catch (Exception e) {
@@ -81,11 +82,12 @@ public class CartRedisServiceImpl implements CartRedisService {
 	}
 
 	@Override
-	public void removeCartItem(Long userId, UUID menuId) {
+	public String removeCartItem(Long userId, UUID menuId) {
 		try {
 			String key = "cart:" + userId;
 			redisTemplate.opsForHash().delete(key, menuId.toString());
 			redisTemplate.expire(key, CART_TTL);
+			return "사용자 " + userId + "의 장바구니에서 메뉴 " + menuId + "가 성공적으로 삭제되었습니다.";
 		} catch (Exception e) {
 			log.error("장바구니 아이템 삭제 실패 - userId: {}, menuId: {}", userId, menuId, e);
 			throw new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED);
