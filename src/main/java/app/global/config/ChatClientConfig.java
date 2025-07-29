@@ -1,4 +1,4 @@
-package app.domain.ai.service.config;
+package app.global.config;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
