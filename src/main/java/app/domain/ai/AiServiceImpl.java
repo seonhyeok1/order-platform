@@ -8,6 +8,7 @@ import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import app.domain.ai.model.AiHistoryRepository;
 import app.domain.ai.model.dto.request.AiRequest;
@@ -29,6 +30,16 @@ public class AiServiceImpl implements AiService {
 
 	@Override
 	public AiResponse generateDescription(AiRequest aiRequest) {
+		if (!StringUtils.hasText(aiRequest.storeName())) {
+			throw new GeneralException(ErrorStatus.AI_INVALID_INPUT_VALUE);
+		}
+		if (!StringUtils.hasText(aiRequest.promptText())) {
+			throw new GeneralException(ErrorStatus.AI_INVALID_INPUT_VALUE);
+		}
+		if (aiRequest.reqType() == ReqType.MENU_DESCRIPTION && !StringUtils.hasText(aiRequest.menuName())) {
+			throw new GeneralException(ErrorStatus.AI_INVALID_INPUT_VALUE);
+		}
+
 		String menuNameForHistory = aiRequest.menuName();
 		if (aiRequest.reqType() == ReqType.STORE_DESCRIPTION && (menuNameForHistory != null
 			&& menuNameForHistory.isBlank())) {

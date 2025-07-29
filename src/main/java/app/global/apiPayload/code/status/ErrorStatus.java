@@ -20,6 +20,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	AI_INVALID_PROMPT(HttpStatus.BAD_REQUEST, "AI003", "유효하지 않은 프롬프트입니다. 내용을 확인해주세요."),
 	AI_RATE_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "AI004", "AI 서비스 요청 한도를 초과했습니다. 잠시 후 다시 시도해주세요."),
 	AI_MODEL_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "AI005", "요청하신 AI 모델을 찾을 수 없거나 지원되지 않습니다."),
+	AI_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "AI006", "잘못된 입력값입니다"),
 
 	// 가장 일반적인 응답
 	_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
