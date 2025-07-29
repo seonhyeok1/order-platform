@@ -49,7 +49,7 @@ public class User extends BaseEntity {
 
 	@Column(nullable = false, length = 50)
 	@Schema(description = "실명")
-	private String realname;
+	private String realName;
 
 	@Column(nullable = false, unique = true, length = 20)
 	@Schema(description = "전화번호")
