@@ -1,4 +1,4 @@
-package app.domain.ai.service;
+package app.domain.ai;
 
 import app.domain.ai.model.dto.request.AiRequest;
 import app.domain.ai.model.dto.response.AiResponse;

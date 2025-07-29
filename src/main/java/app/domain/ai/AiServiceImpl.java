@@ -1,4 +1,4 @@
-package app.domain.ai.service.impl;
+package app.domain.ai;
 
 import java.util.Map;
 
@@ -14,7 +14,9 @@ import app.domain.ai.model.dto.request.AiRequest;
 import app.domain.ai.model.dto.response.AiResponse;
 import app.domain.ai.model.entity.AiHistory;
 import app.domain.ai.model.entity.enums.AiRequestStatus;
-import app.domain.ai.service.AiService;
+import app.domain.ai.model.entity.enums.ReqType;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,9 +29,15 @@ public class AiServiceImpl implements AiService {
 
 	@Override
 	public AiResponse generateDescription(AiRequest aiRequest) {
+		String menuNameForHistory = aiRequest.menuName();
+		if (aiRequest.reqType() == ReqType.STORE_DESCRIPTION && (menuNameForHistory != null
+			&& menuNameForHistory.isBlank())) {
+			menuNameForHistory = null;
+		}
+
 		AiHistory aiRequestEntity = AiHistory.builder()
 			.storeName(aiRequest.storeName())
-			.menuName(aiRequest.menuName())
+			.menuName(menuNameForHistory) // 수정된 menuName 사용
 			.reqType(aiRequest.reqType())
 			.promptText(aiRequest.promptText())
 			.status(AiRequestStatus.PENDING)
@@ -62,12 +70,9 @@ public class AiServiceImpl implements AiService {
 		} catch (Exception e) {
 			// Handle exceptions during AI model call
 			savedAiRequestEntity.updateGeneratedContent("Error: " + e.getMessage(), AiRequestStatus.FAILED);
-			throw new RuntimeException("Failed to generate AI content", e); // Re-throw or handle as appropriate
+			throw new GeneralException(ErrorStatus.AI_GENERATION_FAILED); // GeneralException 발생
 		}
 
-		return AiResponse.builder()
-			.requestId(savedAiRequestEntity.getAiRequestId().toString())
-			.generatedContent(generatedContent)
-			.build();
+		return new AiResponse(savedAiRequestEntity.getAiRequestId().toString(), generatedContent);
 	}
 }

@@ -1,4 +1,4 @@
-package app.domain.ai.controller;
+package app.domain.ai;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.ai.model.dto.request.AiRequest;
 import app.domain.ai.model.dto.response.AiResponse;
-import app.domain.ai.service.AiService;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -1,4 +1,4 @@
-package app.domain.ai.service.impl;
+package app.domain.ai;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -29,7 +29,6 @@ import app.domain.ai.model.dto.response.AiResponse;
 import app.domain.ai.model.entity.AiHistory;
 import app.domain.ai.model.entity.enums.AiRequestStatus;
 import app.domain.ai.model.entity.enums.ReqType;
-import app.domain.ai.service.AiService;
 
 @DisplayName("AiService 테스트")
 class AiServiceImplTest {
@@ -45,19 +44,20 @@ class AiServiceImplTest {
 		@Mock
 		private AiHistoryRepository aiHistoryRepository;
 
-		// ChatClient의 각 체인 단계를 Mocking하기 위한 Mock 객체들
-		@Mock
-		private ChatClient chatClient;
-		@Mock
-		private ChatClient.ChatClientRequestSpec chatClientRequestSpec; // prompt()의 반환 타입
-		@Mock
-		private ChatClient.CallResponseSpec callResponseSpec; // call()의 최종 반환 타입 (content()를 가짐)
-
+		@Captor
+		private ArgumentCaptor<String> promptTextCaptor;
 		@Captor
 		private ArgumentCaptor<AiHistory> aiHistoryCaptor;
 
+		@Mock
+		private ChatClient chatClient;
+		@Mock
+		private ChatClient.ChatClientRequestSpec chatClientRequestSpec;
+		@Mock
+		private ChatClient.CallResponseSpec callResponseSpec;
+
 		private AiRequest aiRequest;
-		private AiHistory savedHistory; // Service 로직 내에서 상태가 변경될 객체
+		private AiHistory savedHistory;
 
 		@BeforeEach
 		void setUp() {
@@ -79,31 +79,20 @@ class AiServiceImplTest {
 
 			when(aiHistoryRepository.save(any(AiHistory.class))).thenReturn(savedHistory);
 
-			// --- ChatClient의 메서드 체인을 Mocking ---
-			// 1. chatClient.prompt() 호출 시 chatClientRequestSpec 반환
 			when(chatClient.prompt()).thenReturn(chatClientRequestSpec);
-
-			// 2. chatClientRequestSpec.user(anyString()) 호출 시 chatClientRequestSpec 자기 자신 반환
 			when(chatClientRequestSpec.user(anyString())).thenReturn(chatClientRequestSpec);
-
-			// 3. chatClientRequestSpec.options(any(ChatOptions.class)) 호출 시 chatClientRequestSpec 자기 자신 반환
 			when(chatClientRequestSpec.options(any(ChatOptions.class))).thenReturn(chatClientRequestSpec);
-
-			// 4. chatClientRequestSpec.call() 호출 시 callResponseSpec 반환
 			when(chatClientRequestSpec.call()).thenReturn(callResponseSpec);
-			// --- Mocking 체인 끝 ---
 		}
 
 		@Test
-		@DisplayName("시나리오 1: 요청 시 DB에 PENDING 상태로 저장되는지 확인")
-		void savePendingStatusTest() {
-			// given
-			when(callResponseSpec.content()).thenReturn("AI 응답");
+		@DisplayName("AI 요청 시 DB에 PENDING 상태로 저장되는지 확인")
+		void givenAiRequest_whenGenerateDescription_thenHistorySavedAsPending() {
+			String expectedContent = "AI 응답";
+			when(callResponseSpec.content()).thenReturn(expectedContent);
 
-			// when
 			aiService.generateDescription(aiRequest);
 
-			// then
 			verify(aiHistoryRepository, times(1)).save(aiHistoryCaptor.capture());
 			AiHistory capturedOnSave = aiHistoryCaptor.getValue();
 
@@ -112,16 +101,29 @@ class AiServiceImplTest {
 		}
 
 		@Test
-		@DisplayName("시나리오 2: Input/Output이 올바른지 성공 케이스 확인")
-		void generateDescription_Success_IO_Test() {
-			// given
+		@DisplayName("AI 모델에 올바른 프롬프트가 전달되는지 확인")
+		void givenAiRequest_whenGenerateDescription_thenCorrectPromptIsSentToAiModel() {
+			String expectedContent = "AI 응답";
+			when(callResponseSpec.content()).thenReturn(expectedContent);
+
+			aiService.generateDescription(aiRequest);
+
+			verify(chatClientRequestSpec, times(1)).user(promptTextCaptor.capture());
+			String capturedPrompt = promptTextCaptor.getValue();
+
+			assertTrue(capturedPrompt.contains(aiRequest.storeName()));
+			assertTrue(capturedPrompt.contains(aiRequest.menuName()));
+			assertTrue(capturedPrompt.contains(aiRequest.promptText()));
+		}
+
+		@Test
+		@DisplayName("AI 응답 성공 시 응답 내용과 DB 상태가 올바르게 업데이트되는지 확인")
+		void givenSuccessfulAiResponse_whenGenerateDescription_thenResponseAndHistoryAreCorrect() {
 			String expectedContent = "쫄깃함과 부드러움이 공존하는 환상의 맛! 저희 가게 대표 메뉴 반반 족발입니다.";
 			when(callResponseSpec.content()).thenReturn(expectedContent);
 
-			// when
 			AiResponse response = aiService.generateDescription(aiRequest);
 
-			// then
 			assertNotNull(response);
 			assertEquals(expectedContent, response.getGeneratedContent());
 
@@ -130,25 +132,22 @@ class AiServiceImplTest {
 		}
 
 		@Test
-		@DisplayName("시나리오 2: Input/Output이 올바른지 실패 케이스 확인")
-		void generateDescription_Failure_IO_Test() {
-			// given
+		@DisplayName("AI 응답 실패 시 예외 발생 및 DB 상태가 FAILED로 업데이트되는지 확인")
+		void givenFailedAiResponse_whenGenerateDescription_thenThrowsExceptionAndHistoryIsFailed() {
 			when(callResponseSpec.content()).thenThrow(
 				new RuntimeException("AI 모델 호출 실패"));
 
-			// when & then
 			assertThrows(RuntimeException.class, () -> aiService.generateDescription(aiRequest));
 
-			// verify
 			assertEquals(AiRequestStatus.FAILED, savedHistory.getStatus());
 			assertTrue(savedHistory.getGeneratedContent().contains("Error: AI 모델 호출 실패"));
 		}
 	}
 
 	@Nested
-	@DisplayName("시나리오 3: 연동 테스트 (@SpringBootTest)")
+	@DisplayName("통합 테스트 (@SpringBootTest)")
 	@SpringBootTest
-	@ActiveProfiles("test") // test용 application.yml(properties) 사용
+	@ActiveProfiles("test")
 	class AiServiceIntegrationTest {
 
 		@Autowired
@@ -158,26 +157,22 @@ class AiServiceImplTest {
 		private AiHistoryRepository aiHistoryRepository;
 
 		@Test
-		@DisplayName("실제 AI API에 접속하여 응답을 받아오고 DB에 SUCCESS로 저장되는지 확인")
+		@DisplayName("AI 응답 연동 및 DB 저장 확인")
 		@Transactional
-		void generateDescription_IntegrationTest() {
-			// given
+		void givenRealAiRequest_whenGenerateDescription_thenHistorySavedAsSuccess() {
 			AiRequest realRequest = new AiRequest(
 				"미스터피자",
 				"고구마 피자",
 				ReqType.MENU_DESCRIPTION,
 				"달콤하고 부드러운 점을 강조해서 30자 이내로 간략한 상품 설명을 작성해줘"
 			);
-			// when
 			AiResponse aiResponse = aiService.generateDescription(realRequest);
 
-			// then
 			assertNotNull(aiResponse.getRequestId(), "응답으로 받은 ID가 null이 아니어야 합니다.");
 			assertNotNull(aiResponse.getGeneratedContent(), "생성된 내용이 null이 아니어야 합니다.");
 			assertFalse(aiResponse.getGeneratedContent().isEmpty(), "생성된 내용이 비어있지 않아야 합니다.");
 			System.out.println("AI 생성 결과: " + aiResponse.getGeneratedContent());
 
-			// DB에서 직접 조회하여 검증
 			AiHistory savedHistory = aiHistoryRepository.findById(UUID.fromString(aiResponse.getRequestId()))
 				.orElse(null);
 
@@ -186,6 +181,5 @@ class AiServiceImplTest {
 			assertEquals(aiResponse.getGeneratedContent(), savedHistory.getGeneratedContent(),
 				"응답 내용과 DB에 저장된 내용이 같아야 합니다.");
 		}
-
 	}
 }

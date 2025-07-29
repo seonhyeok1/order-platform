@@ -17,5 +17,4 @@ public record AiRequest(
 	@NotBlank(message = "프롬프트 텍스트는 필수입니다.")
 	String promptText
 ) {
-	// 필요한 경우 레코드의 컴팩트 생성자를 정의할 수 있습니다.
 }
