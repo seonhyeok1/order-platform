@@ -203,7 +203,6 @@ public class CartServiceImpl implements CartService {
 		}
 	}
 
-	@Override
 	@Scheduled(initialDelay = 900000, fixedRate = 900000) // 15분마다 실행
 	public void syncAllCartsToDb() {
 		try {

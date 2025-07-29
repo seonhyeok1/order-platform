@@ -19,6 +19,4 @@ public interface CartService {
 	void loadDbToRedis(Long userId);
 
 	void syncRedisToDb(Long userId);
-
-	void syncAllCartsToDb();
 }
