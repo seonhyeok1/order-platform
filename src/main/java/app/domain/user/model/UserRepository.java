@@ -13,6 +13,7 @@ import app.domain.user.model.entity.enums.UserRole;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 
-	Optional<User> findByUserName(String userName);
+	Optional<User> findByUsername(String userName);
+
 	Page<User> findAllByRole(UserRole role, Pageable pageable);
 }
