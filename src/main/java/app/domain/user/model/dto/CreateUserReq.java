@@ -32,6 +32,11 @@ public class CreateUserReq {
 	@Schema(description = "닉네임", example = "테스트유저")
 	private String nickname;
 
+	@NotBlank(message = "실명은 필수입니다.")
+	@Size(min = 2, max = 50, message = "실명은 2자 이상 50자 이하로 입력해주세요.")
+	@Schema(description = "실명", example = "김구름")
+	private String realName;
+
 	@NotBlank(message = "전화번호는 필수입니다.")
 	@Pattern(regexp = "^\\d{10,11}$", message = "유효한 전화번호 형식이 아닙니다. ('-' 없이 숫자만 입력)")
 	@Schema(description = "전화번호('-' 없이 숫자만 입력)", example = "01012345678")
