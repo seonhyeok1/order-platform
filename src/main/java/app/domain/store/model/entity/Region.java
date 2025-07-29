@@ -28,7 +28,7 @@ public class Region extends BaseEntity {
 	private UUID regionId;
 
 	@Column(unique = true, nullable = false)
-	private int regionCode;
+	private String regionCode;
 
 	@Column(nullable = false, length = 100)
 	private String regionName;

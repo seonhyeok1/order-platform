@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface RegionRepository extends JpaRepository<Region, UUID> {
-	Optional<Region> findByRegionCode(int regionCode);
+	Optional<Region> findByRegionCode(String regionCode);
 }
