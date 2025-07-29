@@ -43,6 +43,7 @@ public class UserService {
 			.password(encryptedPassword)
 			.email(createUserReq.getEmail())
 			.nickname(createUserReq.getNickname())
+			.realname(createUserReq.getRealName())
 			.phoneNumber(createUserReq.getPhoneNumber())
 			.userRole(UserRole.CUSTOMER)
 			.build();
@@ -56,7 +57,6 @@ public class UserService {
 			String rootMsg = Objects.requireNonNull(e.getRootCause()).getMessage();
 
 			// 2. 예외 메시지에 포함된 DB 제약조건 이름을 분석하여 원인 파악
-			// (주의: 제약조건 이름은 실제 DB에 생성된 이름을 확인해야 합니다)
 			if (rootMsg.contains("p_user_email_key")) {
 				throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
 			} else if (rootMsg.contains("p_user_nickname_key")) {
