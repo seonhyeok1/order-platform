@@ -4,6 +4,7 @@ import app.domain.ai.model.entity.enums.ReqType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+@ConditionalNotNull
 public record AiRequest(
 	@NotBlank(message = "가게 이름은 필수입니다.")
 	String storeName,

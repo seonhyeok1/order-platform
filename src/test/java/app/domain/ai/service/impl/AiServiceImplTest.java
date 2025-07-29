@@ -87,7 +87,6 @@ class AiServiceImplTest {
 			when(chatClientRequestSpec.user(anyString())).thenReturn(chatClientRequestSpec);
 
 			// 3. chatClientRequestSpec.options(any(ChatOptions.class)) 호출 시 chatClientRequestSpec 자기 자신 반환
-			//    (서비스 로직에서 ChatOptions를 사용한다면 필요)
 			when(chatClientRequestSpec.options(any(ChatOptions.class))).thenReturn(chatClientRequestSpec);
 
 			// 4. chatClientRequestSpec.call() 호출 시 callResponseSpec 반환
@@ -99,7 +98,7 @@ class AiServiceImplTest {
 		@DisplayName("시나리오 1: 요청 시 DB에 PENDING 상태로 저장되는지 확인")
 		void savePendingStatusTest() {
 			// given
-			when(callResponseSpec.content()).thenReturn("AI 응답"); // 변경: responseSpec -> callResponseSpec
+			when(callResponseSpec.content()).thenReturn("AI 응답");
 
 			// when
 			aiService.generateDescription(aiRequest);
@@ -117,7 +116,7 @@ class AiServiceImplTest {
 		void generateDescription_Success_IO_Test() {
 			// given
 			String expectedContent = "쫄깃함과 부드러움이 공존하는 환상의 맛! 저희 가게 대표 메뉴 반반 족발입니다.";
-			when(callResponseSpec.content()).thenReturn(expectedContent); // 변경: responseSpec -> callResponseSpec
+			when(callResponseSpec.content()).thenReturn(expectedContent);
 
 			// when
 			AiResponse response = aiService.generateDescription(aiRequest);
