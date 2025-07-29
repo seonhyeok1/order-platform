@@ -19,7 +19,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
 	@Override
 	public PagedResponse<GetUserListResponse> getAllUsers(Pageable pageable) {
-		Page<GetUserListResponse> page = userRepository.findAllByRole(UserRole.CUSTOMER, pageable)
+		Page<GetUserListResponse> page = userRepository.findAllByUserRole(UserRole.CUSTOMER, pageable)
 			.map(GetUserListResponse::from);
 
 		return PagedResponse.from(page);
