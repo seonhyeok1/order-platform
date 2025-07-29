@@ -46,7 +46,7 @@ class StoreServiceImplTest {
 
 		Region region = Region.builder()
 			.regionId(regionId)
-			.regionCode(101)
+			.regionCode("101")
 			.regionName("서울")
 			.build();
 
@@ -57,7 +57,7 @@ class StoreServiceImplTest {
 			.address(request.address())
 			.description(request.desc())
 			.phoneNumber(request.phoneNumber())
-			.minOrderAmount(request.minOrderAmount().intValue())
+			.minOrderAmount(request.minOrderAmount())
 			.storeAcceptStatus(StoreAcceptStatus.PENDING)
 			.build();
 
