@@ -29,7 +29,7 @@ public class CartItem extends BaseEntity {
 	@Id
 	@GeneratedValue
 	@Column(name = "cart_item_id", updatable = false, nullable = false)
-	private UUID cartItemid;
+	private UUID cartItemId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "cart_id", nullable = false)
