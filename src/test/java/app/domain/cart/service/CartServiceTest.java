@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.CartItemRepository;
 import app.domain.cart.model.CartRepository;
-import app.domain.cart.model.dto.RedisCartItem;
+import app.domain.cart.model.dto.response.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
 import app.domain.cart.service.impl.CartServiceImpl;

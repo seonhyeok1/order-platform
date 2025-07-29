@@ -94,6 +94,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	CART_ITEM_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART_003", "장바구니 아이템 파싱에 실패했습니다."),
 	CART_NOT_FOUND(HttpStatus.NOT_FOUND, "CART_004", "장바구니를 찾을 수 없습니다."),
 	CART_DB_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART_005", "장바구니 DB 동기화에 실패했습니다."),
+	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART_006", "수량은 1 이상이어야 합니다."),
 
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR,"TOKEN_001" , "스마트컨트랙트 전송 중 오류가 발생했습니다."),

@@ -2,11 +2,17 @@ package app.domain.cart.model.dto.request;
 
 import java.util.UUID;
 
-import lombok.Data;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 
-@Data
-public class AddCartItemRequest {
-	private UUID menuId;
-	private UUID storeId;
-	private int quantity;
+public record AddCartItemRequest(
+	UUID menuId,
+	UUID storeId,
+	int quantity
+) {
+	public AddCartItemRequest {
+		if (quantity <= 0) {
+			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
+		}
+	}
 }

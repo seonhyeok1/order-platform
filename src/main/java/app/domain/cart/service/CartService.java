@@ -3,7 +3,7 @@ package app.domain.cart.service;
 import java.util.List;
 import java.util.UUID;
 
-import app.domain.cart.model.dto.RedisCartItem;
+import app.domain.cart.model.dto.response.RedisCartItem;
 
 public interface CartService {
 	void addCartItem(Long userId, UUID menuId, UUID storeId, int quantity);

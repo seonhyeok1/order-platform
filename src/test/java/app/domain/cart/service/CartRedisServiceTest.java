@@ -13,7 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import app.domain.cart.model.dto.RedisCartItem;
+import app.domain.cart.model.dto.response.RedisCartItem;
 
 @SpringBootTest
 class CartRedisServiceTest {

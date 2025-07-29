@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.domain.cart.model.dto.RedisCartItem;
+import app.domain.cart.model.dto.response.RedisCartItem;
 import app.domain.cart.service.CartRedisService;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;

@@ -13,9 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.dto.request.AddCartItemRequest;
-import app.domain.cart.model.dto.request.UpdateCartItemRequest;
+import app.domain.cart.model.dto.response.RedisCartItem;
 import app.domain.cart.service.CartService;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +47,7 @@ public class CartController {
 	})
 	@PostMapping("/item")
 	public ApiResponse<Void> addItemToCart(@RequestParam Long userId, @RequestBody AddCartItemRequest request) {
-		cartService.addCartItem(userId, request.getMenuId(), request.getStoreId(), request.getQuantity());
+		cartService.addCartItem(userId, request.menuId(), request.storeId(), request.quantity());
 		return ApiResponse.onSuccess(null);
 	}
 
@@ -64,10 +63,10 @@ public class CartController {
 					}
 					""")))
 	})
-	@PatchMapping("/item/{menuId}")
+	@PatchMapping("/item/{menuId}/{quantity}")
 	public ApiResponse<Void> updateItemInCart(@RequestParam Long userId, @PathVariable UUID menuId,
-		@RequestBody UpdateCartItemRequest request) {
-		cartService.updateCartItem(userId, menuId, request.getQuantity());
+		@PathVariable int quantity) {
+		cartService.updateCartItem(userId, menuId, quantity);
 		return ApiResponse.onSuccess(null);
 	}
 

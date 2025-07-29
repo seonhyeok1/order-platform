@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import app.domain.cart.model.dto.RedisCartItem;
+import app.domain.cart.model.dto.response.RedisCartItem;
 
 public interface CartRedisService {
 	void saveCartToRedis(Long userId, List<RedisCartItem> cartItems);

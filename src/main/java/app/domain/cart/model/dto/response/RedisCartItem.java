@@ -1,4 +1,4 @@
-package app.domain.cart.model.dto;
+package app.domain.cart.model.dto.response;
 
 import java.util.UUID;
 
