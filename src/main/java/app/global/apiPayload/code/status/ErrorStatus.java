@@ -54,11 +54,11 @@ public enum ErrorStatus implements BaseErrorCode {
 	VOUCHER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "VOUCHER_009", "이미 삭제 처리된 바우처입니다."),
 
 	// User 관련
-	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "존재하지 않는 사용자입니다."),
-	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_002", "이미 존재하는 유저입니다."),
-	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_003", "이미 사용 중인 이메일입니다."),
-	NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_004", "이미 사용 중인 닉네임입니다."),
-	PHONE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_005", "이미 사용 중인 전화번호입니다."),
+	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "존재하지 않는 사용자입니다."),
+	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER002", "이미 존재하는 유저입니다."),
+	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER003", "이미 사용 중인 이메일입니다."),
+	NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER004", "이미 사용 중인 닉네임입니다."),
+	PHONE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER005", "이미 사용 중인 전화번호입니다."),
 
 	// Merchant 관련
 	MERCHANT_ALREADY_EXISTS(HttpStatus.CONFLICT, "MERCHANT_001", "이미 존재하는 가맹점주입니다."),
