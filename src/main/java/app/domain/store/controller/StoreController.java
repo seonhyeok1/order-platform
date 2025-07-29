@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.service.StoreService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -20,8 +21,7 @@ public class StoreController {
 
 	@PostMapping
 	public ResponseEntity<StoreApproveResponse> createStore(
-		@RequestBody StoreApproveRequest request
-	) {
+		@Valid @RequestBody StoreApproveRequest request) {
 		StoreApproveResponse response = storeService.createStore(request);
 		return ResponseEntity.ok(response);
 	}
