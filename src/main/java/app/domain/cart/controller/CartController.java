@@ -17,6 +17,8 @@ import app.domain.cart.model.dto.request.AddCartItemRequest;
 import app.domain.cart.model.dto.response.RedisCartItem;
 import app.domain.cart.service.CartService;
 import app.global.apiPayload.ApiResponse;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -47,6 +49,9 @@ public class CartController {
 	})
 	@PostMapping("/item")
 	public ApiResponse<Void> addItemToCart(@RequestParam Long userId, @RequestBody AddCartItemRequest request) {
+		if (request.quantity() <= 0) {
+			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
+		}
 		cartService.addCartItem(userId, request.menuId(), request.storeId(), request.quantity());
 		return ApiResponse.onSuccess(null);
 	}

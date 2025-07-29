@@ -10,9 +10,4 @@ public record AddCartItemRequest(
 	UUID storeId,
 	int quantity
 ) {
-	public AddCartItemRequest {
-		if (quantity <= 0) {
-			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
-		}
-	}
 }
