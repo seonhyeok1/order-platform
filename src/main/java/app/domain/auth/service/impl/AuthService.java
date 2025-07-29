@@ -1,4 +1,4 @@
-package app.domain.user.service;
+package app.domain.auth.service.impl;
 
 import java.util.Optional;
 
@@ -8,10 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.domain.user.model.UserRepository;
-import app.domain.user.model.dto.CreateUserReq;
-import app.domain.user.model.entity.User;
-import app.domain.user.model.entity.enums.UserRole;
+import app.domain.customer.model.UserRepository;
+import app.domain.customer.model.dto.CreateUserReq;
+import app.domain.customer.model.entity.User;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Slf4j
-public class UserService {
+public class AuthService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
@@ -45,7 +44,7 @@ public class UserService {
 			.nickname(createUserReq.getNickname())
 			.realName(createUserReq.getRealName())
 			.phoneNumber(createUserReq.getPhoneNumber())
-			.userRole(UserRole.CUSTOMER)
+			.userRole(createUserReq.getUserRole())
 			.build();
 
 		try {
