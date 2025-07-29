@@ -61,18 +61,19 @@ class AiServiceImplTest {
 
 		@BeforeEach
 		void setUp() {
-			aiRequest = new AiRequest();
-			aiRequest.setStoreName("맛있는 족발집");
-			aiRequest.setMenuName("반반 족발");
-			aiRequest.setReqType(ReqType.MENU_DESCRIPTION);
-			aiRequest.setPromptText("쫄깃하고 부드러운 식감을 강조해주세요.");
+			aiRequest = new AiRequest(
+				"맛있는 족발집",
+				"반반 족발",
+				ReqType.MENU_DESCRIPTION,
+				"쫄깃하고 부드러운 식감을 강조해주세요."
+			);
 
 			savedHistory = AiHistory.builder()
 				.aiRequestId(UUID.randomUUID())
-				.storeName(aiRequest.getStoreName())
-				.menuName(aiRequest.getMenuName())
-				.reqType(aiRequest.getReqType())
-				.promptText(aiRequest.getPromptText())
+				.storeName(aiRequest.storeName())
+				.menuName(aiRequest.menuName())
+				.reqType(aiRequest.reqType())
+				.promptText(aiRequest.promptText())
 				.status(AiRequestStatus.PENDING)
 				.build();
 
@@ -162,12 +163,12 @@ class AiServiceImplTest {
 		@Transactional
 		void generateDescription_IntegrationTest() {
 			// given
-			AiRequest realRequest = new AiRequest();
-			realRequest.setStoreName("미스터피자");
-			realRequest.setMenuName("고구마 피자");
-			realRequest.setReqType(ReqType.MENU_DESCRIPTION);
-			realRequest.setPromptText("달콤하고 부드러운 점을 강조해서 30자 이내로 간략한 상품 설명을 작성해줘");
-
+			AiRequest realRequest = new AiRequest(
+				"미스터피자",
+				"고구마 피자",
+				ReqType.MENU_DESCRIPTION,
+				"달콤하고 부드러운 점을 강조해서 30자 이내로 간략한 상품 설명을 작성해줘"
+			);
 			// when
 			AiResponse aiResponse = aiService.generateDescription(realRequest);
 

@@ -28,10 +28,10 @@ public class AiServiceImpl implements AiService {
 	@Override
 	public AiResponse generateDescription(AiRequest aiRequest) {
 		AiHistory aiRequestEntity = AiHistory.builder()
-			.storeName(aiRequest.getStoreName())
-			.menuName(aiRequest.getMenuName())
-			.reqType(aiRequest.getReqType())
-			.promptText(aiRequest.getPromptText())
+			.storeName(aiRequest.storeName())
+			.menuName(aiRequest.menuName())
+			.reqType(aiRequest.reqType())
+			.promptText(aiRequest.promptText())
 			.status(AiRequestStatus.PENDING)
 			.build();
 
@@ -49,8 +49,8 @@ public class AiServiceImpl implements AiService {
 				요청 종류가 MENU_DESCRIPTION 이면 30자 이내로 작성해주고 STORE_DESCRIPTION 이면 100자 이내로 작성해줘.
 				""");
 			Prompt prompt = promptTemplate.create(Map.of(
-				"storeName", aiRequest.getStoreName(), "menuName", aiRequest.getMenuName()
-				, "reqType", aiRequest.getReqType(), "promptText", aiRequest.getPromptText())
+				"storeName", aiRequest.storeName(), "menuName", aiRequest.menuName()
+				, "reqType", aiRequest.reqType(), "promptText", aiRequest.promptText())
 			);
 
 			generatedContent = chatClient.prompt()
