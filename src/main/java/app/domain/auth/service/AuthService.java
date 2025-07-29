@@ -1,9 +1,6 @@
-package app.domain.auth.service.impl;
-
-import java.util.Optional;
+package app.domain.auth.service;
 
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,10 +25,8 @@ public class AuthService {
 	@Transactional
 	public String createUser(CreateUserReq createUserReq) {
 
-		// 1. userName 중복 확인
-		if (userRepository.findByUsername(createUserReq.getUsername()).isPresent()) {
-			throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
-		}
+		// 1. 중복 검사 수정
+		validateUserUniqueness(createUserReq);
 
 		// 2. 비밀번호 암호화
 		String encryptedPassword = passwordEncoder.encode(createUserReq.getPassword());
@@ -47,33 +42,33 @@ public class AuthService {
 			.userRole(createUserReq.getUserRole())
 			.build();
 
+		// 4. 유저 등록 및 예외 처리
 		try {
 			User savedUser = userRepository.save(user);
 			return savedUser.getUserId().toString();
-		} catch (DataIntegrityViolationException e) {
-			// 1. Unique 제약조건 위반 예외를 먼저 처리
-			log.error("데이터베이스 Unique 제약조건 위반", e);
-
-			// NullPointerException 방지를 위해 Optional 사용
-			String rootMsg = Optional.ofNullable(e.getRootCause())
-				.map(Throwable::getMessage)
-				.orElse("");
-
-			// 2. 예외 메시지에 포함된 DB 제약조건 이름을 분석하여 원인 파악
-			if (rootMsg.contains("p_user_email_key")) {
-				throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
-			} else if (rootMsg.contains("p_user_nickname_key")) {
-				throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
-			} else if (rootMsg.contains("p_user_phone_number_key")) {
-				throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
-			}
-			// 분석되지 않은 다른 무결성 제약조건 위반은 일반 서버 에러로 처리
-			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
-
 		} catch (DataAccessException e) {
-			// 3. 그 외의 모든 데이터베이스 관련 예외 처리
+			// 사전 검사를 통과했음에도 DB 에러가 발생한 경우 (e.g., Race Condition, DB 연결 끊김 등)
 			log.error("데이터베이스에 사용자 등록을 실패했습니다.", e);
 			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	/**
+	 * 사용자의 고유 필드(아이디, 이메일, 닉네임, 전화번호) 중복 여부 검사
+	 * @param createUserReq 회원가입 요청 DTO
+	 */
+	private void validateUserUniqueness(CreateUserReq createUserReq) {
+		if (userRepository.existsByUsername(createUserReq.getUsername())) {
+			throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
+		}
+		if (userRepository.existsByEmail(createUserReq.getEmail())) {
+			throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
+		}
+		if (userRepository.existsByNickname(createUserReq.getNickname())) {
+			throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
+		}
+		if (userRepository.existsByPhoneNumber(createUserReq.getPhoneNumber())) {
+			throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
 		}
 	}
 }
