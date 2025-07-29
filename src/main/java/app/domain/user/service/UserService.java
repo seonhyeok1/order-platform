@@ -1,6 +1,6 @@
 package app.domain.user.service;
 
-import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -43,7 +43,7 @@ public class UserService {
 			.password(encryptedPassword)
 			.email(createUserReq.getEmail())
 			.nickname(createUserReq.getNickname())
-			.realname(createUserReq.getRealName())
+			.realName(createUserReq.getRealName())
 			.phoneNumber(createUserReq.getPhoneNumber())
 			.userRole(UserRole.CUSTOMER)
 			.build();
@@ -54,7 +54,11 @@ public class UserService {
 		} catch (DataIntegrityViolationException e) {
 			// 1. Unique 제약조건 위반 예외를 먼저 처리
 			log.error("데이터베이스 Unique 제약조건 위반", e);
-			String rootMsg = Objects.requireNonNull(e.getRootCause()).getMessage();
+
+			// NullPointerException 방지를 위해 Optional 사용
+			String rootMsg = Optional.ofNullable(e.getRootCause())
+				.map(Throwable::getMessage)
+				.orElse("");
 
 			// 2. 예외 메시지에 포함된 DB 제약조건 이름을 분석하여 원인 파악
 			if (rootMsg.contains("p_user_email_key")) {
