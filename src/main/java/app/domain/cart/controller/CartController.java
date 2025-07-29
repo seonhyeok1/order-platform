@@ -40,7 +40,7 @@ public class CartController {
 			content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class),
 				examples = @ExampleObject(value = """
 					{
-					    "resultCode": "CART_001",
+					    "resultCode": "CART001",
 					    "message": "장바구니 Redis 저장에 실패했습니다."
 					}
 					""")))
@@ -58,7 +58,7 @@ public class CartController {
 			content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class),
 				examples = @ExampleObject(value = """
 					{
-					    "resultCode": "CART_001",
+					    "resultCode": "CART001",
 					    "message": "장바구니 Redis 저장에 실패했습니다."
 					}
 					""")))
@@ -77,7 +77,7 @@ public class CartController {
 			content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class),
 				examples = @ExampleObject(value = """
 					{
-					    "resultCode": "CART_001",
+					    "resultCode": "CART001",
 					    "message": "장바구니 Redis 저장에 실패했습니다."
 					}
 					""")))
@@ -114,7 +114,7 @@ public class CartController {
 			content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class),
 				examples = @ExampleObject(value = """
 					{
-					    "resultCode": "CART_002",
+					    "resultCode": "CART002",
 					    "message": "장바구니 Redis 조회에 실패했습니다."
 					}
 					""")))
@@ -132,7 +132,7 @@ public class CartController {
 			content = @Content(mediaType = "application/json", schema = @Schema(implementation = ApiResponse.class),
 				examples = @ExampleObject(value = """
 					{
-					    "resultCode": "CART_001",
+					    "resultCode": "CART001",
 					    "message": "장바구니 Redis 저장에 실패했습니다."
 					}
 					""")))
