@@ -15,13 +15,13 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class StoreServiceImpl implements StoreService {
 
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
 
 	@Override
+	@Transactional // savedStore .save(store)
 	public StoreApproveResponse createStore(StoreApproveRequest request) {
 		Region region = regionRepository.findById(request.regionId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
