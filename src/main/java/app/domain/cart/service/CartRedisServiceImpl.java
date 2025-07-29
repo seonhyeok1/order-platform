@@ -31,10 +31,16 @@ public class CartRedisServiceImpl implements CartRedisService {
 		try {
 			String key = "cart:" + userId;
 			redisTemplate.delete(key);
+
 			for (RedisCartItem item : cartItems) {
 				String itemJson = objectMapper.writeValueAsString(item);
 				redisTemplate.opsForHash().put(key, item.getMenuId().toString(), itemJson);
 			}
+
+			if (cartItems.isEmpty()) {
+				redisTemplate.opsForValue().set(key, "");
+			}
+
 			redisTemplate.expire(key, CART_TTL);
 			return "사용자 " + userId + "의 장바구니가 성공적으로 저장되었습니다.";
 		} catch (JsonProcessingException e) {
@@ -50,6 +56,16 @@ public class CartRedisServiceImpl implements CartRedisService {
 	public List<RedisCartItem> getCartFromRedis(Long userId) {
 		try {
 			String key = "cart:" + userId;
+			
+			if (!redisTemplate.hasKey(key)) {
+				return List.of();
+			}
+			
+			String keyType = redisTemplate.type(key).code();
+			if ("string".equals(keyType)) {
+				return List.of();
+			}
+			
 			return redisTemplate.opsForHash().values(key).stream()
 				.map(value -> {
 					try {
@@ -85,7 +101,24 @@ public class CartRedisServiceImpl implements CartRedisService {
 	public String removeCartItem(Long userId, UUID menuId) {
 		try {
 			String key = "cart:" + userId;
+			
+			if (!redisTemplate.hasKey(key)) {
+				return "사용자 " + userId + "의 장바구니에서 메뉴 " + menuId + "가 성공적으로 삭제되었습니다.";
+			}
+			
+			String keyType = redisTemplate.type(key).code();
+			if ("string".equals(keyType)) {
+				redisTemplate.expire(key, CART_TTL);
+				return "사용자 " + userId + "의 장바구니에서 메뉴 " + menuId + "가 성공적으로 삭제되었습니다.";
+			}
+			
+			Long hashSize = redisTemplate.opsForHash().size(key);
 			redisTemplate.opsForHash().delete(key, menuId.toString());
+
+			if (hashSize == 1) {
+				redisTemplate.opsForValue().set(key, "");
+			}
+
 			redisTemplate.expire(key, CART_TTL);
 			return "사용자 " + userId + "의 장바구니에서 메뉴 " + menuId + "가 성공적으로 삭제되었습니다.";
 		} catch (Exception e) {
