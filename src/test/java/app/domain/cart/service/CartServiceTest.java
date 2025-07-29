@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -56,97 +57,105 @@ class CartServiceTest {
 	}
 
 	@Test
-	void addCartItem() {
-		// given
+	@DisplayName("장바구니에 새로운 아이템을 추가할 수 있다")
+	void addItem() {
+		// given - 빈 장바구니 상태를 모킹
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
-		// when
+		// when - 새로운 메뉴 아이템을 수량 2개로 추가
 		cartService.addCartItem(userId, menuId, storeId, 2);
 
-		// then
+		// then - Redis에 올바른 아이템이 저장되는지 검증
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
-			items.size() == 1 &&
-				items.get(0).getMenuId().equals(menuId) &&
-				items.get(0).getQuantity() == 2
+			items.size() == 1 && // 1개의 아이템이 저장되어야 함
+				items.get(0).getMenuId().equals(menuId) && // 메뉴 ID가 일치해야 함
+				items.get(0).getQuantity() == 2 // 수량이 2개여야 함
 		));
 	}
 
 	@Test
-	void addCartItem_shouldUpdateQuantityIfAlreadyExists() {
-		// given
+	@DisplayName("이미 존재하는 아이템을 추가하면 수량이 누적된다")
+	void addExistingItem() {
+		// given - 이미 수량 1개인 아이템이 장바구니에 있는 상태
 		cartItems.add(RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(1).build());
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
-		// when
+		// when - 동일한 메뉴를 수량 2개로 다시 추가
 		cartService.addCartItem(userId, menuId, storeId, 2);
 
-		// then
+		// then - 기존 수량(1) + 새 수량(2) = 3개로 업데이트되는지 검증
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
-			items.get(0).getQuantity() == 3
+			items.get(0).getQuantity() == 3 // 수량이 3개로 누적되어야 함
 		));
 	}
 
 	@Test
-	void addCartItem_shouldClearCartIfDifferentStoreItemExists() {
-		// given
+	@DisplayName("다른 매장의 아이템을 추가하면 기존 장바구니가 초기화된다")
+	void addDifferentStoreItem() {
+		// given - 다른 매장의 아이템이 장바구니에 있는 상태
 		UUID otherStoreId = UUID.randomUUID();
 		cartItems.add(RedisCartItem.builder().menuId(UUID.randomUUID()).storeId(otherStoreId).quantity(1).build());
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
-		// when
+		// when - 다른 매장의 메뉴를 추가
 		cartService.addCartItem(userId, menuId, storeId, 2);
 
-		// then
+		// then - 기존 장바구니가 삭제되고 새 아이템만 남는지 검증
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
-			items.size() == 1 &&
-				items.get(0).getStoreId().equals(storeId)
+			items.size() == 1 && // 1개의 아이템만 남아있어야 함
+				items.get(0).getStoreId().equals(storeId) // 새로운 매장 ID여야 함
 		));
 	}
 
 	@Test
-	void updateCartItem_shouldChangeQuantity() {
-		// given
+	@DisplayName("장바구니 아이템의 수량을 수정할 수 있다")
+	void updateItem() {
+		// given - 수량 1개인 아이템이 장바구니에 있는 상태
 		cartItems.add(RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(1).build());
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
-		// when
+		// when - 아이템 수량을 5개로 수정
 		cartService.updateCartItem(userId, menuId, 5);
 
-		// then
+		// then - 수량이 5개로 업데이트되는지 검증
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
-			items.get(0).getQuantity() == 5
+			items.get(0).getQuantity() == 5 // 수량이 5개로 변경되어야 함
 		));
 	}
 
 	@Test
-	void removeCartItem_shouldCallRedisRemove() {
-		// when
+	@DisplayName("장바구니에서 특정 아이템을 삭제할 수 있다")
+	void removeItem() {
+		// when - 특정 메뉴 아이템을 삭제
 		cartService.removeCartItem(userId, menuId);
 
-		// then
+		// then - Redis 서비스의 삭제 메서드가 호출되는지 검증
 		verify(cartRedisService).removeCartItem(userId, menuId);
 	}
 
 	@Test
-	void getCartFromCache_shouldReturnFromRedisIfExists() {
-		// given
+	@DisplayName("Redis에 장바구니가 있으면 Redis에서 조회한다")
+	void getFromRedis() {
+		// given - Redis에 장바구니가 존재하는 상태를 모킹
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
-		// when
+		// when - 장바구니를 캐시에서 조회
 		List<RedisCartItem> result = cartService.getCartFromCache(userId);
 
-		// then
-		assertThat(result).isEqualTo(cartItems);
-		verify(cartRedisService, never()).saveCartToRedis(any(), any());
+		// then - Redis에서 조회한 데이터가 반환되고 DB 동기화는 수행되지 않는지 검증
+		assertThat(result).isEqualTo(cartItems); // Redis 데이터가 반환되어야 함
+		verify(cartRedisService, never()).saveCartToRedis(any(), any()); // DB에서 로드하지 않아야 함
 	}
 
 	@Test
-	void getCartFromCache_shouldLoadFromDbIfRedisNotExists() {
-		// given
+	@DisplayName("Redis에 장바구니가 없으면 DB에서 로드한다")
+	void getFromDb() {
+		// given - Redis에 장바구니가 없는 상태를 모킹
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(false);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
+		// DB에 있는 장바구니 데이터를 모킹
 		Cart cart = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(userId).build()).build();
 		CartItem cartItem = CartItem.builder()
 			.cart(cart)
@@ -157,26 +166,28 @@ class CartServiceTest {
 		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
 		when(cartItemRepository.findByCart_CartId(cart.getCartId())).thenReturn(List.of(cartItem));
 
-		// when
+		// when - 장바구니를 캐시에서 조회 (내부에서 DB 로드 수행)
 		List<RedisCartItem> result = cartService.getCartFromCache(userId);
 
-		// then
-		verify(cartRedisService).saveCartToRedis(eq(userId), any());
-		assertThat(result).isEqualTo(cartItems);
+		// then - DB에서 로드한 데이터가 Redis에 저장되고 반환되는지 검증
+		verify(cartRedisService).saveCartToRedis(eq(userId), any()); // DB 데이터가 Redis에 저장되어야 함
+		assertThat(result).isEqualTo(cartItems); // 조회된 데이터가 반환되어야 함
 	}
 
 	@Test
-	void clearCartItems_shouldCallRedisClear() {
-		// when
+	@DisplayName("장바구니의 모든 아이템을 삭제할 수 있다")
+	void clearItems() {
+		// when - 장바구니의 모든 아이템을 삭제
 		cartService.clearCartItems(userId);
 
-		// then
+		// then - Redis 서비스의 전체 삭제 메서드가 호출되는지 검증
 		verify(cartRedisService).clearCartItems(userId);
 	}
 
 	@Test
-	void loadDbToRedis_shouldSaveConvertedCartToRedis() {
-		// given
+	@DisplayName("DB의 장바구니 데이터를 Redis로 로드할 수 있다")
+	void loadDbToRedis() {
+		// given - DB에 있는 장바구니 데이터를 모킹
 		Cart cart = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(userId).build()).build();
 		CartItem cartItem = CartItem.builder()
 			.cart(cart)
@@ -187,46 +198,49 @@ class CartServiceTest {
 		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
 		when(cartItemRepository.findByCart_CartId(cart.getCartId())).thenReturn(List.of(cartItem));
 
-		// when
+		// when - DB 데이터를 Redis로 로드
 		cartService.loadDbToRedis(userId);
 
-		// then
+		// then - DB 데이터가 올바르게 변환되어 Redis에 저장되는지 검증
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
-			items.size() == 1 &&
-				items.get(0).getMenuId().equals(menuId) &&
-				items.get(0).getStoreId().equals(storeId) &&
-				items.get(0).getQuantity() == 2
+			items.size() == 1 && // 1개의 아이템이 저장되어야 함
+				items.get(0).getMenuId().equals(menuId) && // 메뉴 ID가 일치해야 함
+				items.get(0).getStoreId().equals(storeId) && // 매장 ID가 일치해야 함
+				items.get(0).getQuantity() == 2 // 수량이 2개여야 함
 		));
 	}
 
 	@Test
-	void syncRedisToDb_shouldUpdateDatabaseWithRedisCart() {
-		// given
+	@DisplayName("Redis의 장바구니 데이터를 DB에 동기화할 수 있다")
+	void syncRedisToDb() {
+		// given - Redis에 있는 장바구니 데이터와 DB 장바구니를 모킹
 		RedisCartItem redisItem = RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(3).build();
 		Cart cart = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(userId).build()).build();
 
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(List.of(redisItem));
 		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
 
-		// when
+		// when - Redis 데이터를 DB에 동기화
 		cartService.syncRedisToDb(userId);
 
-		// then
-		verify(cartItemRepository).deleteByCart_CartId(cart.getCartId());
+		// then - 기존 DB 데이터가 삭제되고 Redis 데이터가 새로 저장되는지 검증
+		verify(cartItemRepository).deleteByCart_CartId(cart.getCartId()); // 기존 장바구니 아이템 삭제
 		verify(cartItemRepository).saveAll(argThat((List<CartItem> items) ->
-			items.size() == 1 &&
-				items.get(0).getQuantity() == 3
+			items.size() == 1 && // 1개의 아이템이 저장되어야 함
+				items.get(0).getQuantity() == 3 // 수량이 3개여야 함
 		));
 	}
 
 	@Test
-	void syncAllCartsToDb_shouldSyncMultipleCarts() {
-		// given
+	@DisplayName("모든 사용자의 Redis 장바구니를 DB에 동기화할 수 있다")
+	void syncAllCarts() {
+		// given - 여러 사용자의 Redis 장바구니 데이터를 모킹
 		Set<String> cartKeys = Set.of("cart:1", "cart:2");
 		when(cartRedisService.getAllCartKeys()).thenReturn(cartKeys);
 		when(cartRedisService.extractUserIdFromKey("cart:1")).thenReturn(1L);
 		when(cartRedisService.extractUserIdFromKey("cart:2")).thenReturn(2L);
 
+		// 각 사용자의 Redis 장바구니 아이템 모킹
 		RedisCartItem redisItem1 = RedisCartItem.builder()
 			.menuId(UUID.randomUUID())
 			.storeId(storeId)
@@ -240,17 +254,18 @@ class CartServiceTest {
 		when(cartRedisService.getCartFromRedis(1L)).thenReturn(List.of(redisItem1));
 		when(cartRedisService.getCartFromRedis(2L)).thenReturn(List.of(redisItem2));
 
+		// 각 사용자의 DB 장바구니 모킹
 		Cart cart1 = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(1L).build()).build();
 		Cart cart2 = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(2L).build()).build();
 		when(cartRepository.findByUser_UserId(1L)).thenReturn(Optional.of(cart1));
 		when(cartRepository.findByUser_UserId(2L)).thenReturn(Optional.of(cart2));
 
-		// when
+		// when - 모든 사용자의 장바구니를 DB에 동기화
 		cartService.syncAllCartsToDb();
 
-		// then
-		verify(cartItemRepository).deleteByCart_CartId(cart1.getCartId());
-		verify(cartItemRepository).deleteByCart_CartId(cart2.getCartId());
-		verify(cartItemRepository, times(2)).saveAll(any());
+		// then - 모든 사용자의 기존 DB 데이터가 삭제되고 Redis 데이터가 저장되는지 검증
+		verify(cartItemRepository).deleteByCart_CartId(cart1.getCartId()); // 사용자 1의 기존 데이터 삭제
+		verify(cartItemRepository).deleteByCart_CartId(cart2.getCartId()); // 사용자 2의 기존 데이터 삭제
+		verify(cartItemRepository, times(2)).saveAll(any()); // 2번의 저장 작업이 수행되어야 함
 	}
 }
