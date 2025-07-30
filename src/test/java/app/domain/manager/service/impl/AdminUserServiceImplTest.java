@@ -1,4 +1,4 @@
-package app.domain.manager.service.impl;
+package app.domain.admin.service.impl;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.Mockito.*;
@@ -15,10 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import app.domain.admin.model.dto.response.GetUserListResponse;
 import app.domain.customer.model.UserRepository;
 import app.domain.customer.model.entity.User;
 import app.domain.customer.model.entity.enums.UserRole;
-import app.domain.manager.model.dto.response.GetUserListResponse;
 import app.global.apiPayload.PagedResponse;
 
 class AdminUserServiceImplTest {
@@ -40,13 +40,13 @@ class AdminUserServiceImplTest {
 		ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
 
 		Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
-		when(userRepository.findAllByUserRole(UserRole.CUSTOMER, pageable)).thenReturn(userPage);
+		when(userRepository.findAllByRole(UserRole.CUSTOMER, pageable)).thenReturn(userPage);
 
 		// when
 		PagedResponse<GetUserListResponse> response = adminUserService.getAllUsers(pageable);
 
 		// then
 		assertThat(response.content().get(0).email()).isEqualTo("test@example.com");
-		verify(userRepository, times(1)).findAllByUserRole(UserRole.CUSTOMER, pageable);
+		verify(userRepository, times(1)).findAllByRole(UserRole.CUSTOMER, pageable);
 	}
 }

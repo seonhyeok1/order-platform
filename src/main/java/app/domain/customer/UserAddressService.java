@@ -21,14 +21,13 @@ public class UserAddressService {
     private final UserAddressRepository userAddressRepository;
     private final UserRepository userRepository;
 
-    public AddUserAddressResponse AddUserAddress(AddUserAddressRequest request) {
+    public AddUserAddressResponse addUserAddress(AddUserAddressRequest request) {
         // 1. userId로 User 엔티티 조회
         User user = userRepository.findById(request.userId())
             .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
         // 2. UserAddress 생성 (User 포함)
         UserAddress address = UserAddress.builder()
-            .addressId(UUID.randomUUID())
             .user(user)
             .alias(request.alias())
             .address(request.address())
