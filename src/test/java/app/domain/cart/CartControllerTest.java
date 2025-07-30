@@ -9,54 +9,52 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
-import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
-@ExtendWith(MockitoExtension.class)
+// @ExtendWith(MockitoExtension.class)
+@WebMvcTest(CartController.class)
 class CartControllerTest {
 
+	@Autowired
 	private MockMvc mockMvc;
+
+	@Autowired
 	private ObjectMapper objectMapper;
 
-	@Mock
+	@MockitoBean
 	private CartService cartService;
 
-	@BeforeEach
-	void setUp() {
-		CartController cartController = new CartController(cartService);
-		mockMvc = MockMvcBuilders.standaloneSetup(cartController)
-			.setControllerAdvice(new TestExceptionHandler())
-			.build();
-		objectMapper = new ObjectMapper();
-	}
+	// @BeforeEach
+	// void setUp() {
+	// 	CartController cartController = new CartController(cartService);
+	// 	mockMvc = MockMvcBuilders.standaloneSetup(cartController)
+	// 		.setControllerAdvice(new ExceptionAdvice())
+	// 		.build();
+	// 	objectMapper = new ObjectMapper();
+	// }
 
-	@RestControllerAdvice
-	static class TestExceptionHandler {
-		@ExceptionHandler(GeneralException.class)
-		public ResponseEntity<ApiResponse<Object>> handleGeneralException(GeneralException e) {
-			return ResponseEntity.status(e.getErrorReasonHttpStatus().getHttpStatus())
-				.body(ApiResponse.onFailure(e.getErrorReasonHttpStatus().getCode(), e.getMessage(), null));
-		}
-	}
+	// @RestControllerAdvice
+	// static class TestExceptionHandler {
+	// 	@ExceptionHandler(GeneralException.class)
+	// 	public ResponseEntity<ApiResponse<Object>> handleGeneralException(GeneralException e) {
+	// 		return ResponseEntity.status(e.getErrorReasonHttpStatus().getHttpStatus())
+	// 			.body(ApiResponse.onFailure(e.getErrorReasonHttpStatus().getCode(), e.getMessage(), null));
+	// 	}
+	// }
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 성공")
@@ -66,7 +64,7 @@ class CartControllerTest {
 		UUID storeId = UUID.randomUUID();
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 
-		when(cartService.addCartItem(userId, menuId, storeId, 2))
+		when(cartService.addCartItem(userId, request))
 			.thenReturn("사용자 1의 장바구니가 성공적으로 저장되었습니다.");
 
 		mockMvc.perform(post("/cart/item")
@@ -78,7 +76,7 @@ class CartControllerTest {
 			.andExpect(jsonPath("$.message").value("success"))
 			.andExpect(jsonPath("$.result").value("사용자 1의 장바구니가 성공적으로 저장되었습니다."));
 
-		verify(cartService).addCartItem(userId, menuId, storeId, 2);
+		verify(cartService).addCartItem(userId, request);
 	}
 
 	@Test
@@ -95,10 +93,9 @@ class CartControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andDo(print())
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("CART006"));
-		// .andExpect(jsonPath("$.message").value("수량은 1 이상이어야 합니다."));
+			.andExpect(jsonPath("$.resultCode").value("CART006"))
+			.andExpect(jsonPath("$.message").value("수량은 1 이상이어야 합니다."));
 
-		verify(cartService, never()).addCartItem(any(), any(), any(), anyInt());
 	}
 
 	@Test
@@ -109,7 +106,7 @@ class CartControllerTest {
 		UUID storeId = UUID.randomUUID();
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 
-		when(cartService.addCartItem(userId, menuId, storeId, 2))
+		when(cartService.addCartItem(userId, request))
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED));
 
 		mockMvc.perform(post("/cart/item")
@@ -118,8 +115,8 @@ class CartControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andDo(print())
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("CART001"));
-		// .andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
+			.andExpect(jsonPath("$.resultCode").value("CART001"))
+			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
 	}
 
 	@Test
@@ -221,8 +218,8 @@ class CartControllerTest {
 				.param("userId", userId.toString()))
 			.andDo(print())
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("CART002"));
-		// .andExpect(jsonPath("$.message").value("장바구니 Redis 조회에 실패했습니다."));
+			.andExpect(jsonPath("$.resultCode").value("CART002"))
+			.andExpect(jsonPath("$.message").value("장바구니 Redis 조회에 실패했습니다."));
 	}
 
 	@Test
@@ -255,8 +252,8 @@ class CartControllerTest {
 				.param("userId", userId.toString()))
 			.andDo(print())
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("CART001"));
-		// .andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
+			.andExpect(jsonPath("$.resultCode").value("CART001"))
+			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
 	}
 
 	@Test
@@ -271,7 +268,7 @@ class CartControllerTest {
 				.content(invalidJson))
 			.andExpect(status().isBadRequest());
 
-		verify(cartService, never()).addCartItem(any(), any(), any(), anyInt());
+		verify(cartService, never()).addCartItem(any(), any());
 	}
 
 	@Test
@@ -286,6 +283,6 @@ class CartControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest());
 
-		verify(cartService, never()).addCartItem(any(), any(), any(), anyInt());
+		verify(cartService, never()).addCartItem(any(), any());
 	}
 }

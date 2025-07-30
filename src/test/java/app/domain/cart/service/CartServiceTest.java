@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.CartItemRepository;
 import app.domain.cart.model.CartRepository;
+import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
@@ -58,11 +59,12 @@ class CartServiceTest {
 	@Test
 	@DisplayName("장바구니에 새로운 아이템을 추가할 수 있다")
 	void addItem() {
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.addCartItem(userId, menuId, storeId, 2);
+		cartService.addCartItem(userId, request);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.size() == 1 &&
@@ -74,12 +76,13 @@ class CartServiceTest {
 	@Test
 	@DisplayName("이미 존재하는 아이템을 추가하면 수량이 누적된다")
 	void addExistingItem() {
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		cartItems.add(RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(1).build());
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.addCartItem(userId, menuId, storeId, 2);
+		cartService.addCartItem(userId, request);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.get(0).getQuantity() == 3
@@ -89,13 +92,14 @@ class CartServiceTest {
 	@Test
 	@DisplayName("다른 매장의 아이템을 추가하면 기존 장바구니가 초기화된다")
 	void addDifferentStoreItem() {
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		UUID otherStoreId = UUID.randomUUID();
 		cartItems.add(RedisCartItem.builder().menuId(UUID.randomUUID()).storeId(otherStoreId).quantity(1).build());
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.addCartItem(userId, menuId, storeId, 2);
+		cartService.addCartItem(userId, request);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.size() == 1 &&
