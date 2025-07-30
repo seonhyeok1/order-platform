@@ -11,7 +11,6 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -20,12 +19,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_ai_requests")
+@Table(name = "p_ai_history")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class AiRequest extends BaseEntity {
+public class AiHistory extends BaseEntity {
 
 	@Id
 	@GeneratedValue
@@ -41,14 +40,17 @@ public class AiRequest extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private ReqType reqType; // 메뉴 설명, 가게 설명
 
-	@Lob
 	@Column(nullable = false)
 	private String promptText;
 
-	@Lob
 	private String generatedContent;
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private AiRequestStatus status;
+
+	public void updateGeneratedContent(String generatedContent, AiRequestStatus status) {
+		this.generatedContent = generatedContent;
+		this.status = status;
+	}
 }

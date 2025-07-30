@@ -21,9 +21,18 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
+    maven {
+        name = 'Central Portal Snapshots'
+        url = 'https://central.sonatype.com/repository/maven-snapshots/'
+    }
 }
 
 dependencies {
+    implementation platform("org.springframework.ai:spring-ai-bom:1.0.0-SNAPSHOT")
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai'
+
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compileOnly 'org.projectlombok:lombok'
@@ -35,8 +44,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
     testRuntimeOnly 'com.h2database:h2'
+
 }
 
 tasks.named('test') {
