@@ -32,10 +32,6 @@ public class CartService {
 
 	public String addCartItem(Long userId, AddCartItemRequest request) {
 		try {
-			if (request.quantity() < 1) {
-				throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
-			}
-
 			List<RedisCartItem> items = getCartFromCache(userId);
 
 			if (!items.isEmpty() && !items.get(0).getStoreId().equals(request.storeId())) {

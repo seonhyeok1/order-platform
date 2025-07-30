@@ -25,7 +25,6 @@ import app.domain.cart.service.CartService;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
-// @ExtendWith(MockitoExtension.class)
 @WebMvcTest(CartController.class)
 class CartControllerTest {
 
@@ -37,24 +36,6 @@ class CartControllerTest {
 
 	@MockitoBean
 	private CartService cartService;
-
-	// @BeforeEach
-	// void setUp() {
-	// 	CartController cartController = new CartController(cartService);
-	// 	mockMvc = MockMvcBuilders.standaloneSetup(cartController)
-	// 		.setControllerAdvice(new ExceptionAdvice())
-	// 		.build();
-	// 	objectMapper = new ObjectMapper();
-	// }
-
-	// @RestControllerAdvice
-	// static class TestExceptionHandler {
-	// 	@ExceptionHandler(GeneralException.class)
-	// 	public ResponseEntity<ApiResponse<Object>> handleGeneralException(GeneralException e) {
-	// 		return ResponseEntity.status(e.getErrorReasonHttpStatus().getHttpStatus())
-	// 			.body(ApiResponse.onFailure(e.getErrorReasonHttpStatus().getCode(), e.getMessage(), null));
-	// 	}
-	// }
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 성공")
