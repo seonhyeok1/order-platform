@@ -7,48 +7,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.UUID;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.domain.ai.model.dto.request.AiRequest;
 import app.domain.ai.model.dto.response.AiResponse;
 import app.domain.ai.model.entity.enums.ReqType;
-import app.global.apiPayload.exception.ExceptionAdvice;
 
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(AiController.class)
 @DisplayName("AiController 테스트")
 class AiControllerTest {
-
+	@Autowired
 	private MockMvc mockMvc;
-
+	@Autowired
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
-	@Mock
+	@MockitoBean
 	private AiService aiService;
-
-	@InjectMocks
-	private AiController aiController;
-
-	@BeforeEach
-	void setUp() {
-		mockMvc =
-			MockMvcBuilders.standaloneSetup(aiController)
-				.setControllerAdvice(
-					new ExceptionAdvice())
-				.addFilter(new CharacterEncodingFilter("UTF-8", true))
-				.build();
-	}
 
 	@Test
 	@DisplayName("AI 생성 요청 성공")
