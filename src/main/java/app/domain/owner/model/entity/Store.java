@@ -1,7 +1,6 @@
 package app.domain.owner.model.entity;
 
 import java.util.UUID;
-
 import app.domain.menu.model.entity.Category;
 import app.domain.owner.model.type.StoreAcceptStatus;
 import app.domain.user.model.entity.User;
@@ -14,7 +13,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -51,7 +49,6 @@ public class Store extends BaseEntity {
 	@Column(nullable = false, length = 100)
 	private String storeName;
 
-	@Lob
 	@Column
 	private String description;
 
@@ -68,4 +65,5 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	@Builder.Default
 	private StoreAcceptStatus storeAcceptStatus = StoreAcceptStatus.PENDING;
+
 }
