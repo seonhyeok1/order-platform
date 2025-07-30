@@ -49,22 +49,22 @@ public class AiServiceImpl implements AiService {
 			.build();
 
 		AiHistory savedAiRequestEntity = aiHistoryRepository.save(aiRequestEntity);
+		PromptTemplate promptTemplate = new PromptTemplate("""
+			너는 사용자의 요청에 맞춰 배달앱에 적합한 마케팅 문구를 생성하는 AI야. 아래 주어진 정보를 바탕으로 멋진 결과물을 만들어줘.
+			
+			- 가게 이름: {storeName}
+			- 메뉴 이름: {menuName}
+			- 요청 종류: {reqType}
+			- 핵심 요청사항 : {promptText}
+			
+			요청 종류가 MENU_DESCRIPTION 이면 30자 이내로 작성해주고 STORE_DESCRIPTION 이면 100자 이내로 작성해줘.
+			""");
+		Prompt prompt = promptTemplate.create(Map.of(
+			"storeName", aiRequest.storeName(), "menuName", aiRequest.menuName()
+			, "reqType", aiRequest.reqType(), "promptText", aiRequest.promptText())
+		);
 		String generatedContent;
 		try {
-			PromptTemplate promptTemplate = new PromptTemplate("""
-				너는 사용자의 요청에 맞춰 배달앱에 적합한 마케팅 문구를 생성하는 AI야. 아래 주어진 정보를 바탕으로 멋진 결과물을 만들어줘.
-				
-				- 가게 이름: {storeName}
-				- 메뉴 이름: {menuName}
-				- 요청 종류: {reqType}
-				- 핵심 요청사항 : {promptText}
-				
-				요청 종류가 MENU_DESCRIPTION 이면 30자 이내로 작성해주고 STORE_DESCRIPTION 이면 100자 이내로 작성해줘.
-				""");
-			Prompt prompt = promptTemplate.create(Map.of(
-				"storeName", aiRequest.storeName(), "menuName", aiRequest.menuName()
-				, "reqType", aiRequest.reqType(), "promptText", aiRequest.promptText())
-			);
 
 			generatedContent = chatClient.prompt()
 				.options(OpenAiChatOptions.builder().model("gpt-4.1-mini").build())
