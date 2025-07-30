@@ -73,9 +73,8 @@ public class AiServiceImpl implements AiService {
 				.content();
 			savedAiRequestEntity.updateGeneratedContent(generatedContent, AiRequestStatus.SUCCESS);
 		} catch (Exception e) {
-			// Handle exceptions during AI model call
 			savedAiRequestEntity.updateGeneratedContent("Error: " + e.getMessage(), AiRequestStatus.FAILED);
-			throw new GeneralException(ErrorStatus.AI_GENERATION_FAILED); // GeneralException 발생
+			throw new GeneralException(ErrorStatus.AI_GENERATION_FAILED);
 		}
 
 		return new AiResponse(savedAiRequestEntity.getAiRequestId().toString(), generatedContent);

@@ -27,7 +27,6 @@ public class AiController {
 	@Operation(
 		summary = "AI 글쓰기 도우미",
 		description = "가게 또는 메뉴 설명을 AI를 통해 생성합니다.",
-		// Swagger UI에 표시될 요청 본문 예시를 정의합니다
 		requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 			content = @Content(
 				mediaType = "application/json",
