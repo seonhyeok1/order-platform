@@ -24,6 +24,12 @@ public class AuthController {
 
 	private final AuthService authService;
 
+	/*-------------------------------------------
+	 *
+	 *      회원가입 - 계정 생성(customer, owner)
+	 *
+	 *-------------------------------------------*/
+
 	@Operation(summary = "회원가입 API", description = "새로운 사용자를 등록합니다. 모든 필드는 유효성 검사를 거칩니다.")
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK, 성공. 생성된 사용자의 ID(Long)를 문자열로 반환합니다."),
