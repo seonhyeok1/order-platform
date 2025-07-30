@@ -3,7 +3,6 @@ package app.domain.cart;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
@@ -72,7 +71,6 @@ class CartControllerTest {
 				.param("userId", userId.toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andDo(print())
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.resultCode").value("CART006"))
 			.andExpect(jsonPath("$.message").value("수량은 1 이상이어야 합니다."));
@@ -94,7 +92,6 @@ class CartControllerTest {
 				.param("userId", userId.toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
-			.andDo(print())
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.resultCode").value("CART001"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
@@ -197,7 +194,6 @@ class CartControllerTest {
 
 		mockMvc.perform(get("/cart")
 				.param("userId", userId.toString()))
-			.andDo(print())
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.resultCode").value("CART002"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 조회에 실패했습니다."));
@@ -231,7 +227,6 @@ class CartControllerTest {
 
 		mockMvc.perform(delete("/cart/item")
 				.param("userId", userId.toString()))
-			.andDo(print())
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.resultCode").value("CART001"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
