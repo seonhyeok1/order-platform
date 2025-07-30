@@ -1,4 +1,4 @@
-package app.domain.store.model.entity;
+package app.domain.owner.model.entity;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface StoreRepository extends JpaRepository<Store, UUID> {
 
-	Optional<Store> findByUserId(Long userId);
+	Optional<Store> findByUser_UserId(Long userId);
+
+	boolean existsByStoreNameAndRegion(String storeName, Region region);
 
 }

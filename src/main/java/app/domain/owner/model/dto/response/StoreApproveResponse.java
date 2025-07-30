@@ -1,4 +1,4 @@
-package app.domain.store.model.dto.response;
+package app.domain.owner.model.dto.response;
 
 import java.util.UUID;
 

@@ -3,7 +3,7 @@ package app.domain.review.model.entity;
 import java.util.UUID;
 
 import app.domain.order.model.entity.Orders;
-import app.domain.store.model.entity.Store;
+import app.domain.owner.model.entity.Store;
 import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;

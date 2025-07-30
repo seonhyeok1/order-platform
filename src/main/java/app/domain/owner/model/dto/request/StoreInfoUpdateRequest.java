@@ -1,4 +1,4 @@
-package app.domain.store.model.dto.request;
+package app.domain.owner.model.dto.request;
 
 public record StoreInfoUpdateRequest(
 	String name,
