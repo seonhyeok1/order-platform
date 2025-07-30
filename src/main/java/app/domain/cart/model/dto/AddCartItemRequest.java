@@ -17,7 +17,7 @@ public record AddCartItemRequest(
 	UUID storeId,
 
 	@NotNull
-	@Min(1)
+	@Min(value = 1, message = "수량은 1 이상이어야 합니다.")
 	@Schema(description = "메뉴 개수", example = "1")
 	Integer quantity
 ) {
