@@ -1,10 +1,9 @@
-package app.domain.review.model.entity;
+package app.domain.owner.model.entity;
 
 import java.util.UUID;
 
 import app.domain.customer.model.entity.User;
-import app.domain.order.model.entity.Orders;
-import app.domain.owner.model.entity.Store;
+import app.domain.menu.model.entity.Category;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,33 +22,45 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_review")
+@Table(name = "p_store")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Review extends BaseEntity {
+public class Store extends BaseEntity {
 
 	@Id
 	@GeneratedValue
-	private UUID reviewId;
-
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "b_order_id", nullable = false)
-	private Orders Orders;
+	private UUID storeId;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "store_id", nullable = false)
-	private Store store;
+	@JoinColumn(name = "region_id", nullable = false)
+	private Region region;
 
-	@Column(nullable = false)
-	private int rating;
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "category_id", nullable = false)
+	private Category category;
+
+	@Column(nullable = false, length = 100)
+	private String storeName;
 
 	@Lob
+	@Column
+	private String description;
+
 	@Column(nullable = false)
-	private String context;
+	private String address;
+
+	@Column(length = 20)
+	private String phoneNumber;
+
+	@Column(nullable = false)
+	private int minOrderAmount = 0;
+
+	@Column(nullable = false)
+	private boolean storeAcceptStatus = false;
 }
