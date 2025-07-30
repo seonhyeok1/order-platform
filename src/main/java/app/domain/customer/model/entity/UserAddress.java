@@ -33,7 +33,7 @@ public class UserAddress extends BaseEntity {
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@Column(length = 50)
+	@Column(length = 50, nullable = false)
 	private String alias;
 
 	@Column(nullable = false)
