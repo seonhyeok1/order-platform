@@ -14,6 +14,10 @@ public enum ErrorStatus implements BaseErrorCode {
 	// For test
 	TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트"),
 
+	// AI 관련
+	AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "AI 콘텐츠 생성에 실패했습니다."),
+	AI_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "AI002", "잘못된 입력값입니다"),
+
 	// 가장 일반적인 응답
 	_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
 	_BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
@@ -54,10 +58,11 @@ public enum ErrorStatus implements BaseErrorCode {
 	VOUCHER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "VOUCHER_009", "이미 삭제 처리된 바우처입니다."),
 
 	// User 관련
-	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_001", "존재하지 않는 사용자입니다."),
-	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER_002", "이미 존재하는 유저입니다."),
-	USER_PASSWORD_NOT_MATCH(HttpStatus.INTERNAL_SERVER_ERROR, "USER_003", "현재 비밀번호와 새 비밀번호를 모두 입력해야 합니다."),
-	USER_PASSWORD_UPDATE_BAD_REQUEST(HttpStatus.BAD_REQUEST, "USER_004", "현재 비밀번호가 일치하지 않습니다."),
+	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "존재하지 않는 사용자입니다."),
+	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER002", "이미 존재하는 유저입니다."),
+	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER003", "이미 사용 중인 이메일입니다."),
+	NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER004", "이미 사용 중인 닉네임입니다."),
+	PHONE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER005", "이미 사용 중인 전화번호입니다."),
 
 	// Merchant 관련
 	MERCHANT_ALREADY_EXISTS(HttpStatus.CONFLICT, "MERCHANT_001", "이미 존재하는 가맹점주입니다."),
@@ -95,6 +100,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	CART_NOT_FOUND(HttpStatus.NOT_FOUND, "CART004", "장바구니를 찾을 수 없습니다."),
 	CART_DB_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART005", "장바구니 DB 동기화에 실패했습니다."),
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART006", "수량은 1 이상이어야 합니다."),
+
 
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
