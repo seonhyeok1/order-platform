@@ -1,4 +1,4 @@
-package app.domain.store.model.entity;
+package app.domain.owner.model.entity;
 
 import java.util.Optional;
 import java.util.UUID;
