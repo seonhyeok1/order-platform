@@ -19,6 +19,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import app.domain.auth.AuthService;
 import app.domain.customer.model.UserRepository;
 import app.domain.customer.model.dto.CreateUserReq;
 import app.domain.customer.model.entity.User;
