@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import app.domain.cart.model.CartItemRepository;
 import app.domain.cart.model.CartRepository;
+import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
@@ -29,25 +30,29 @@ public class CartService {
 	private final CartRepository cartRepository;
 	private final CartItemRepository cartItemRepository;
 
-	public String addCartItem(Long userId, UUID menuId, UUID storeId, int quantity) {
+	public String addCartItem(Long userId, AddCartItemRequest request) {
 		try {
+			if (request.quantity() < 1) {
+				throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
+			}
+
 			List<RedisCartItem> items = getCartFromCache(userId);
 
-			if (!items.isEmpty() && !items.get(0).getStoreId().equals(storeId)) {
+			if (!items.isEmpty() && !items.get(0).getStoreId().equals(request.storeId())) {
 				items.clear();
 			}
 
-			boolean isExist = items.stream().anyMatch(i -> i.getMenuId().equals(menuId));
+			boolean isExist = items.stream().anyMatch(i -> i.getMenuId().equals(request.menuId()));
 			if (isExist) {
 				items.stream()
-					.filter(item -> item.getMenuId().equals(menuId))
+					.filter(item -> item.getMenuId().equals(request.menuId()))
 					.findFirst()
-					.ifPresent(item -> item.setQuantity(item.getQuantity() + quantity));
+					.ifPresent(item -> item.setQuantity(item.getQuantity() + request.quantity()));
 			} else {
 				items.add(RedisCartItem.builder()
-					.menuId(menuId)
-					.storeId(storeId)
-					.quantity(quantity)
+					.menuId(request.menuId())
+					.storeId(request.storeId())
+					.quantity(request.quantity())
 					.build());
 			}
 
@@ -55,7 +60,7 @@ public class CartService {
 		} catch (GeneralException e) {
 			throw e;
 		} catch (Exception e) {
-			log.error("장바구니 아이템 추가 실패 - userId: {}, menuId: {}", userId, menuId, e);
+			log.error("장바구니 아이템 추가 실패 - userId: {}, menuId: {}", userId, request.menuId(), e);
 			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
 	}
@@ -117,9 +122,9 @@ public class CartService {
 	@Transactional(readOnly = true)
 	public String loadDbToRedis(Long userId) {
 		try {
-		Cart cart = cartRepository.findByUser_UserId(userId)
+			Cart cart = cartRepository.findByUser_UserId(userId)
 				.orElseThrow(() -> new GeneralException(ErrorStatus.CART_NOT_FOUND));
-			
+
 			List<CartItem> cartItems = cartItemRepository.findByCart_CartId(cart.getCartId());
 			List<RedisCartItem> redisItems = cartItems.stream()
 				.map(item -> RedisCartItem.builder()

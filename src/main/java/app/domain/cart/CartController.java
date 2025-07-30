@@ -52,7 +52,7 @@ public class CartController {
 		if (request.quantity() <= 0) {
 			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
 		}
-		String result = cartService.addCartItem(userId, request.menuId(), request.storeId(), request.quantity());
+		String result = cartService.addCartItem(userId, request);
 		return ApiResponse.onSuccess(result);
 	}
 
