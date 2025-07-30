@@ -31,7 +31,6 @@ class UserRepositoryTest {
 
 	private User user;
 
-	// 각 테스트 실행 전에 테스트용 User 객체를 생성하고 DB에 저장
 	@BeforeEach
 	void setUp() {
 		user = User.builder()
@@ -43,7 +42,7 @@ class UserRepositoryTest {
 			.phoneNumber("01012345678")
 			.userRole(UserRole.CUSTOMER)
 			.build();
-		entityManager.persistAndFlush(user); // 영속성 컨텍스트에 저장하고 즉시 DB에 반영
+		entityManager.persistAndFlush(user);
 	}
 
 	@Nested
