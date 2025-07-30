@@ -1,4 +1,4 @@
-package app.domain.store.model.type;
+package app.domain.owner.model.type;
 
 public enum StoreAcceptStatus {
 	PENDING, //대기

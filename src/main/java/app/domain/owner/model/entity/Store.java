@@ -1,9 +1,9 @@
-package app.domain.store.model.entity;
+package app.domain.owner.model.entity;
 
 import java.util.UUID;
 
 import app.domain.menu.model.entity.Category;
-import app.domain.store.model.type.StoreAcceptStatus;
+import app.domain.owner.model.type.StoreAcceptStatus;
 import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -66,5 +66,6 @@ public class Store extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
+	@Builder.Default
 	private StoreAcceptStatus storeAcceptStatus = StoreAcceptStatus.PENDING;
 }
