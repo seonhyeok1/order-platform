@@ -1,11 +1,10 @@
-package app.domain.auth.controller;
+package app.domain.auth;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.domain.auth.service.AuthService;
 import app.domain.customer.model.dto.CreateUserReq;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-	// 1. 변수명을 authService로 변경하여 가독성 향상
 	private final AuthService authService;
 
 	@Operation(summary = "회원가입 API", description = "새로운 사용자를 등록합니다. 모든 필드는 유효성 검사를 거칩니다.")
