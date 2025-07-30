@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.customer.model.dto.request.AddUserAddressRequest;
 import app.domain.customer.model.dto.response.AddUserAddressResponse;
-import app.domain.customer.UserAddressService;
 
 
 @RestController
@@ -31,7 +30,7 @@ public class UserController {
     @Operation(summary = "사용자 주소지 등록", description = "")
     public ApiResponse<AddUserAddressResponse> AddUserAddress(
         @RequestBody @Valid AddUserAddressRequest request) {
-        AddUserAddressResponse response = userAddressService.AddUserAddress(request);
+        AddUserAddressResponse response = userAddressService.addUserAddress(request);
         return ApiResponse.onSuccess(response);
     }
 

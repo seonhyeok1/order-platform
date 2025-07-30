@@ -40,13 +40,13 @@ class AdminUserServiceImplTest {
 		ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
 
 		Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
-		when(userRepository.findAllByRole(UserRole.USER, pageable)).thenReturn(userPage);
+		when(userRepository.findAllByRole(UserRole.CUSTOMER, pageable)).thenReturn(userPage);
 
 		// when
 		PagedResponse<GetUserListResponse> response = adminUserService.getAllUsers(pageable);
 
 		// then
 		assertThat(response.content().get(0).email()).isEqualTo("test@example.com");
-		verify(userRepository, times(1)).findAllByRole(UserRole.USER, pageable);
+		verify(userRepository, times(1)).findAllByRole(UserRole.CUSTOMER, pageable);
 	}
 }
