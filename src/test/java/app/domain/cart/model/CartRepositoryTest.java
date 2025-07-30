@@ -11,11 +11,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-
 import app.domain.cart.model.entity.Cart;
-import app.domain.store.model.entity.Store;
-import app.domain.user.model.entity.User;
-import app.domain.user.model.entity.enums.UserRole;
+import app.domain.customer.model.entity.User;
+import app.domain.customer.model.entity.enums.UserRole;
+import app.domain.owner.model.entity.Store;
 
 @DataJpaTest
 class CartRepositoryTest {
@@ -38,7 +37,7 @@ class CartRepositoryTest {
 			.password("password123")
 			.nickname("테스트유저")
 			.phoneNumber("010-1234-5678")
-			.role(UserRole.USER)
+			.userRole(UserRole.CUSTOMER)
 			.build();
 		entityManager.persistAndFlush(testUser);
 
@@ -85,7 +84,7 @@ class CartRepositoryTest {
 			.password("password123")
 			.nickname("새유저")
 			.phoneNumber("010-9876-5432")
-			.role(UserRole.USER)
+			.userRole(UserRole.CUSTOMER)
 			.build();
 		entityManager.persistAndFlush(newUser);
 
@@ -142,7 +141,7 @@ class CartRepositoryTest {
 			.password("password123")
 			.nickname("다른유저")
 			.phoneNumber("010-1111-2222")
-			.role(UserRole.USER)
+			.userRole(UserRole.CUSTOMER)
 			.build();
 		entityManager.persistAndFlush(anotherUser);
 

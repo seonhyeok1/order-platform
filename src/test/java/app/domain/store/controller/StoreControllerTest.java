@@ -17,8 +17,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import app.domain.store.model.dto.request.StoreApproveRequest;
-import app.domain.store.model.dto.response.StoreApproveResponse;
+import app.domain.owner.model.dto.request.StoreApproveRequest;
+import app.domain.owner.model.dto.response.StoreApproveResponse;
 import app.domain.store.service.StoreService;
 
 @SpringBootTest

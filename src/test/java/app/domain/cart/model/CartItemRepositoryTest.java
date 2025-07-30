@@ -15,9 +15,9 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
+import app.domain.customer.model.entity.User;
 import app.domain.menu.model.entity.Menu;
-import app.domain.store.model.entity.Store;
-import app.domain.user.model.entity.User;
+import app.domain.owner.model.entity.Store;
 
 @DataJpaTest
 class CartItemRepositoryTest {

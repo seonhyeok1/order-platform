@@ -2,8 +2,8 @@ package app.domain.cart.model.entity;
 
 import java.util.UUID;
 
-import app.domain.store.model.entity.Store;
 import app.domain.customer.model.entity.User;
+import app.domain.owner.model.entity.Store;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

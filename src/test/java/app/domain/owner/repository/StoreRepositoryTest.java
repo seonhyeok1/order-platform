@@ -8,15 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.TestPropertySource;
 
+import app.domain.customer.model.UserRepository;
+import app.domain.customer.model.entity.User;
+import app.domain.customer.model.entity.enums.UserRole;
 import app.domain.menu.model.entity.Category;
 import app.domain.menu.model.entity.CategoryRepository;
 import app.domain.owner.model.entity.Region;
 import app.domain.owner.model.entity.RegionRepository;
 import app.domain.owner.model.entity.Store;
 import app.domain.owner.model.entity.StoreRepository;
-import app.domain.user.model.UserRepository;
-import app.domain.user.model.entity.User;
-import app.domain.user.model.entity.enums.UserRole;
+
 
 @DataJpaTest
 @TestPropertySource(properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect")
@@ -50,7 +51,7 @@ class StoreRepositoryTest {
 			.password("password")
 			.nickname("testnick")
 			.phoneNumber("01012345678")
-			.role(UserRole.OWNER)
+			.userRole(UserRole.OWNER)
 			.build();
 		user = userRepository.save(user);
 
@@ -93,7 +94,7 @@ class StoreRepositoryTest {
 			.password("password_null")
 			.nickname("testnick_null")
 			.phoneNumber("01098765432")
-			.role(UserRole.OWNER)
+			.userRole(UserRole.OWNER)
 			.build();
 		user = userRepository.save(user);
 

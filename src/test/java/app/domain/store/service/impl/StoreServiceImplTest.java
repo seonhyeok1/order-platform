@@ -12,18 +12,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.domain.store.model.dto.request.StoreApproveRequest;
-import app.domain.store.model.dto.response.StoreApproveResponse;
-import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
-import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
-import app.domain.store.model.type.StoreAcceptStatus;
+import app.domain.owner.StoreService;
+import app.domain.owner.model.dto.request.StoreApproveRequest;
+import app.domain.owner.model.dto.response.StoreApproveResponse;
+import app.domain.owner.model.entity.Region;
+import app.domain.owner.model.entity.RegionRepository;
+import app.domain.owner.model.entity.Store;
+import app.domain.owner.model.entity.StoreRepository;
+import app.domain.owner.model.type.StoreAcceptStatus;
 
 @ExtendWith(MockitoExtension.class)
 class StoreServiceImplTest {
 	@InjectMocks
-	private StoreServiceImpl storeService;
+	private StoreService storeService;
 
 	@Mock
 	private StoreRepository storeRepository;
