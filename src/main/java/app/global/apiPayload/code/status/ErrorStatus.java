@@ -93,6 +93,15 @@ public enum ErrorStatus implements BaseErrorCode {
 	// Pagination 관련
 	INVALID_PAGE(HttpStatus.BAD_REQUEST, "PAGE_400", "유효하지 않은 페이지 넘버입니다."),
 
+	// Cart 관련
+	CART_REDIS_SAVE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART001", "장바구니 Redis 저장에 실패했습니다."),
+	CART_REDIS_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART002", "장바구니 Redis 조회에 실패했습니다."),
+	CART_ITEM_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART003", "장바구니 아이템 파싱에 실패했습니다."),
+	CART_NOT_FOUND(HttpStatus.NOT_FOUND, "CART004", "장바구니를 찾을 수 없습니다."),
+	CART_DB_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART005", "장바구니 DB 동기화에 실패했습니다."),
+	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART006", "수량은 1 이상이어야 합니다."),
+
+
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
 	TOKEN_MINT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_002", "토큰 발행(mint) 처리 중 오류가 발생했습니다."),
