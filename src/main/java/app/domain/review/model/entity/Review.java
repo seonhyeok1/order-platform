@@ -5,6 +5,7 @@ import java.util.UUID;
 import app.domain.customer.model.entity.User;
 import app.domain.order.model.entity.Orders;
 import app.domain.owner.model.entity.Store;
+import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,7 +13,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -49,7 +49,6 @@ public class Review extends BaseEntity {
 	@Column(nullable = false)
 	private int rating;
 
-	@Lob
 	@Column(nullable = false)
 	private String context;
 }
