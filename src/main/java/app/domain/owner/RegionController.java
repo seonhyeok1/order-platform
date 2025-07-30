@@ -1,4 +1,4 @@
-package app.domain.store.controller;
+package app.domain.owner;
 
 import java.util.UUID;
 
@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.domain.store.service.RegionService;
 import lombok.RequiredArgsConstructor;
 
 @RestController

@@ -1,4 +1,4 @@
-package app.domain.store.controller;
+package app.domain.owner;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -6,9 +6,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import app.domain.store.model.dto.request.StoreApproveRequest;
-import app.domain.store.model.dto.response.StoreApproveResponse;
-import app.domain.store.service.StoreService;
+import app.domain.owner.model.dto.request.StoreApproveRequest;
+import app.domain.owner.model.dto.response.StoreApproveResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
