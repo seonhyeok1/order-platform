@@ -1,6 +1,5 @@
 package app.domain.store;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -80,6 +79,6 @@ public class StoreService {
 		Store store = storeRepository.findById(storeId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
 
-		store.setDeleteAt(LocalDateTime.now());
+		store.markAsDeleted();
 	}
 }
