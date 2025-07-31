@@ -8,7 +8,10 @@ import app.domain.customer.model.entity.UserAddress;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -22,6 +25,21 @@ public class UserAddressService {
     private final UserRepository userRepository;
 
     public AddUserAddressResponse addUserAddress(AddUserAddressRequest request) {
+        // --- START: Input Validation ---
+        // A robust service should always validate its inputs first.
+        if (request.userId() == null) {
+            throw new IllegalArgumentException("User ID cannot be null.");
+        }
+        // StringUtils.hasText is excellent for checking for null, empty, and whitespace-only strings.
+        if (!StringUtils.hasText(request.alias())) {
+            throw new IllegalArgumentException("Address alias is required.");
+        }
+        if (!StringUtils.hasText(request.address())) {
+            throw new IllegalArgumentException("Address is required.");
+        }
+        // --- END: Input Validation ---
+
+
         // 1. userId로 User 엔티티 조회
         User user = userRepository.findById(request.userId())
             .orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
@@ -36,7 +54,16 @@ public class UserAddressService {
             .build();
 
         // 3. 저장 및 반환
-        UserAddress savedAddress = userAddressRepository.save(address);
-        return new AddUserAddressResponse(savedAddress.getAddressId());
+        try {
+            UserAddress savedAddress = userAddressRepository.save(address);
+            if (savedAddress.getAddressId() == null) {
+                // This indicates a failure in persistence or ID generation.
+                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+            }
+            return new AddUserAddressResponse(savedAddress.getAddressId());
+        } catch (DataAccessException e) {
+            // Catch persistence-layer exceptions and wrap them in a service-layer exception.
+            throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+        }
     }
 }
