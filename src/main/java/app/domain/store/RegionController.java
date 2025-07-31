@@ -19,7 +19,7 @@ public class RegionController {
 
 	private final RegionService regionService;
 
-	@PostMapping("/region/id")
+	@PostMapping("/region")
 	public ResponseEntity<UUID> getRegionIdByCode(@RequestBody String regionCode) {
 		UUID regionId = regionService.getRegionIdByCode(regionCode);
 
