@@ -186,7 +186,7 @@ public class ManagerController {
 					        "content": [
 					            {
 					                "userId": 1,
-					                "name":"홍길동"
+					                "name":"홍길동",
 					                "email": "user1@example.com",
 					                "createdAt": "2024-01-01T10:00:00"
 					            },
