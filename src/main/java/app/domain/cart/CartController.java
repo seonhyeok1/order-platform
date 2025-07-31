@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "cart", description = "장바구니 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/cart")
+@RequestMapping("/customer/cart")
 public class CartController {
 
 	private final CartService cartService;

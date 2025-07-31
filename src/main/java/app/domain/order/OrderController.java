@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 
 @Tag(name = "order", description = "주문 관련 API")
 @RestController
-@RequestMapping("/order")
+@RequestMapping("/customer/order")
 @RequiredArgsConstructor
 public class OrderController {
 
