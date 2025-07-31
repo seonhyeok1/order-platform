@@ -2,12 +2,12 @@ package app.domain.order.model.entity;
 
 import java.util.UUID;
 
-import app.domain.user.model.entity.User;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
 import app.domain.store.model.entity.Store;
+import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,7 +16,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -70,10 +69,8 @@ public class Orders extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isRefundable;
 
-	@Lob
 	@Column(nullable = false)
 	private String orderHistory; // JSON 문자열
 
-	@Lob
 	private String requestMessage;
 }
