@@ -24,7 +24,7 @@ import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
-@RestControllerAdvice(annotations = {RestController.class})
+@RestControllerAdvice
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
 
