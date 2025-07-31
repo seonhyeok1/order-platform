@@ -1,19 +1,23 @@
 package app.domain.customer;
 
-import app.domain.user.model.UserAddressRepository;
-import app.domain.user.model.UserRepository;
-import app.domain.customer.dto.response.AddCustomerAddressResponse;
+import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.UserAddress;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.UserAddressRepository;
+import app.domain.customer.dto.request.AddCustomerAddressRequest;
+import app.domain.customer.dto.response.AddCustomerAddressResponse;
+
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
-import lombok.RequiredArgsConstructor;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 
-import app.domain.customer.dto.request.AddCustomerAddressRequest;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,13 +26,12 @@ public class CustomerAddressService {
 	private final UserAddressRepository userAddressRepository;
 	private final UserRepository userRepository;
 
-	public AddCustomerAddressResponse addUserAddress(AddCustomerAddressRequest request) {
+	@Transactional
+	public AddCustomerAddressResponse addCustomerAddress(AddCustomerAddressRequest request) {
 		// --- START: Input Validation ---
-		// A robust service should always validate its inputs first.
 		if (request.userId() == null) {
 			throw new IllegalArgumentException("User ID cannot be null.");
 		}
-		// StringUtils.hasText is excellent for checking for null, empty, and whitespace-only strings.
 		if (!StringUtils.hasText(request.alias())) {
 			throw new IllegalArgumentException("Address alias is required.");
 		}
@@ -37,30 +40,46 @@ public class CustomerAddressService {
 		}
 		// --- END: Input Validation ---
 
-		// 1. userId로 User 엔티티 조회
 		User user = userRepository.findById(request.userId())
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		// 2. UserAddress 생성 (User 포함)
+		// --- START: isDefault logic ---
+		if (request.isDefault()) { // New address is intended to be default
+			// Find existing default address for this user using repository
+			userAddressRepository.findByUser_UserIdAndIsDefaultTrue(user.getUserId())
+				.ifPresent(existingDefault -> {
+					existingDefault.setDefault(false); // Unset existing default
+					userAddressRepository.save(existingDefault); // Save the updated existing address
+				});
+		}
+		// --- END: isDefault logic ---
+
 		UserAddress address = UserAddress.builder()
 			.user(user)
 			.alias(request.alias())
 			.address(request.address())
 			.addressDetail(request.addressDetail())
-			.isDefault(request.isDefault())
+			.isDefault(request.isDefault()) // Set isDefault based on request
 			.build();
 
-		// 3. 저장 및 반환
 		try {
 			UserAddress savedAddress = userAddressRepository.save(address);
 			if (savedAddress.getAddressId() == null) {
-				// This indicates a failure in persistence or ID generation.
 				throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 			}
 			return new AddCustomerAddressResponse(savedAddress.getAddressId());
 		} catch (DataAccessException e) {
-			// Catch persistence-layer exceptions and wrap them in a service-layer exception.
 			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
 	}
+
+	@Transactional(readOnly = true)
+	public List<GetCustomerAddressListResponse> getCustomerAddresses(Long userId) {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+		return userAddressRepository.findAllByUserUserId(userId)
+			.stream().map(GetCustomerAddressListResponse::from).toList();
+	}
+
+
 }
