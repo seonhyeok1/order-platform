@@ -32,7 +32,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_004", "해당 가맹점을 찾을 수 없습니다."),
 
 	// 인증 관련
-	INVALID_SIMPLE_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "간편 비밀번호가 일치하지 않습니다."),
+	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
 
 	// Wallet 관련
 	USER_WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "WALLET_001", "사용자 지갑이 존재하지 않습니다."),

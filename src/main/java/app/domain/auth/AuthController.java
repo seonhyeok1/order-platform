@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.domain.auth.model.dto.request.LoginRequest;
+import app.domain.auth.model.dto.response.LoginResponse;
 import app.domain.customer.model.dto.CreateUserReq;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Auth", description = "인증 및 로그인, 회원가입")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 public class AuthController {
 
 	private final AuthService authService;
@@ -83,5 +85,12 @@ public class AuthController {
 	public ApiResponse<String> createUser(@Valid @RequestBody CreateUserReq createUserReq) {
 		String userId = authService.createUser(createUserReq);
 		return ApiResponse.onSuccess(userId);
+	}
+
+	@PostMapping("/login")
+	@Operation(summary = "로그인 API", description = "아이디와 비밀번호로 로그인하여 토큰을 발급받습니다.")
+	public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+		LoginResponse response = authService.login(request);
+		return ApiResponse.onSuccess(response);
 	}
 }
