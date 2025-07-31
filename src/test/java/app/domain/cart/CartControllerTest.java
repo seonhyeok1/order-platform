@@ -12,7 +12,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -23,8 +25,11 @@ import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
+import app.global.config.SecurityConfig;
 
 @WebMvcTest(CartController.class)
+@Import(SecurityConfig.class)
+@DisplayName("CartController 테스트")
 class CartControllerTest {
 
 	@Autowired
@@ -38,6 +43,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 성공")
+	@WithMockUser
 	void addItemToCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
@@ -61,6 +67,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 수량 0 이하 실패")
+	@WithMockUser
 	void addItemToCart_InvalidQuantity() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
@@ -79,6 +86,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 서비스 에러")
+	@WithMockUser
 	void addItemToCart_ServiceError() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
@@ -99,6 +107,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 아이템 수량 수정 - 성공")
+	@WithMockUser
 	void updateItemInCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
@@ -119,6 +128,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 아이템 삭제 - 성공")
+	@WithMockUser
 	void removeItemFromCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
@@ -138,6 +148,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 조회 - 성공")
+	@WithMockUser
 	void getCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId1 = UUID.randomUUID();
@@ -168,6 +179,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 조회 - 빈 장바구니")
+	@WithMockUser
 	void getCart_Empty() throws Exception {
 		Long userId = 1L;
 
@@ -186,6 +198,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 조회 - 서비스 에러")
+	@WithMockUser
 	void getCart_ServiceError() throws Exception {
 		Long userId = 1L;
 
@@ -201,6 +214,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 전체 삭제 - 성공")
+	@WithMockUser
 	void clearCart_Success() throws Exception {
 		Long userId = 1L;
 
@@ -219,6 +233,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 전체 삭제 - 서비스 에러")
+	@WithMockUser
 	void clearCart_ServiceError() throws Exception {
 		Long userId = 1L;
 
@@ -234,6 +249,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("잘못된 JSON 형식 - 요청 바디 매핑 실패")
+	@WithMockUser
 	void addItemToCart_InvalidJson() throws Exception {
 		Long userId = 1L;
 		String invalidJson = "{\"menuId\": \"invalid-uuid\", \"storeId\": \"valid-uuid\", \"quantity\": 2}";
@@ -249,6 +265,7 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("필수 파라미터 누락 - userId 없음")
+	@WithMockUser
 	void addItemToCart_MissingUserId() throws Exception {
 		UUID menuId = UUID.randomUUID();
 		UUID storeId = UUID.randomUUID();
