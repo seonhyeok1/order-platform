@@ -62,7 +62,7 @@ class OrderControllerTest {
 		when(orderService.createOrder(eq(userId), any(CreateOrderRequest.class), any()))
 			.thenReturn(orderId + " 가 생성되었습니다");
 
-		mockMvc.perform(post("/order")
+		mockMvc.perform(post("/customer/order")
 				.param("userId", userId.toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -88,7 +88,7 @@ class OrderControllerTest {
 			"서울시 강남구"
 		);
 
-		mockMvc.perform(post("/order")
+		mockMvc.perform(post("/customer/order")
 				.param("userId", userId.toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -116,7 +116,7 @@ class OrderControllerTest {
 		when(orderService.createOrder(eq(userId), any(CreateOrderRequest.class), any()))
 			.thenThrow(new GeneralException(ErrorStatus.ORDER_CREATE_FAILED));
 
-		mockMvc.perform(post("/order")
+		mockMvc.perform(post("/customer/order")
 				.param("userId", userId.toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -144,7 +144,7 @@ class OrderControllerTest {
 
 		when(orderService.getOrderDetail(orderId)).thenReturn(response);
 
-		mockMvc.perform(get("/order/{orderId}", orderId))
+		mockMvc.perform(get("/customer/order/{orderId}", orderId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
@@ -174,7 +174,7 @@ class OrderControllerTest {
 		when(orderService.getOrderDetail(orderId))
 			.thenThrow(new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 
-		mockMvc.perform(get("/order/{orderId}", orderId))
+		mockMvc.perform(get("/customer/order/{orderId}", orderId))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.resultCode").value("ORDER006"))
 			.andExpect(jsonPath("$.message").value("주문을 찾을 수 없습니다."));
@@ -191,7 +191,7 @@ class OrderControllerTest {
 		when(orderService.getOrderDetail(orderId))
 			.thenThrow(new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR));
 
-		mockMvc.perform(get("/order/{orderId}", orderId))
+		mockMvc.perform(get("/customer/order/{orderId}", orderId))
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.resultCode").value("COMMON500"))
 			.andExpect(jsonPath("$.message").value("서버 에러, 관리자에게 문의 바랍니다."));
@@ -206,7 +206,7 @@ class OrderControllerTest {
 		Long userId = 1L;
 		String invalidJson = "{\"paymentMethod\": \"INVALID_METHOD\", \"totalPrice\": 10000}";
 
-		mockMvc.perform(post("/order")
+		mockMvc.perform(post("/customer/order")
 				.param("userId", userId.toString())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(invalidJson))
@@ -228,7 +228,7 @@ class OrderControllerTest {
 			"서울시 강남구"
 		);
 
-		mockMvc.perform(post("/order")
+		mockMvc.perform(post("/customer/order")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest());
@@ -242,7 +242,7 @@ class OrderControllerTest {
 	void getOrderDetail_InvalidUUID() throws Exception {
 		String invalidUUID = "invalid-uuid";
 
-		mockMvc.perform(get("/order/{orderId}", invalidUUID))
+		mockMvc.perform(get("/customer/order/{orderId}", invalidUUID))
 			.andExpect(status().isBadRequest());
 
 		verify(orderService, never()).getOrderDetail(any());
