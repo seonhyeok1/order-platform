@@ -169,8 +169,8 @@ public class ManagerController {
 
 	@GetMapping("/search")
 	@Operation(
-		summary = "전체 사용자 목록 조회",
-		description = "가입한 사용자 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
+		summary = "사용자 검색",
+		description = "키워드를 사용하여 가입한 사용자를 검색하고, 결과를 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
 			responseCode = "200",
