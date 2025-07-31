@@ -16,10 +16,11 @@ public class RegionService {
 
 	public UUID getRegionIdByCode(String regionCode) {
 		if (regionCode == null || regionCode.isBlank()) {
-			throw new IllegalArgumentException("지역 코드는 null이거나 비어있을 수 없습니다.");
+			return null;
 		}
-		Region region = regionRepository.findByRegionCode(regionCode)
-			.orElseThrow(() -> new IllegalArgumentException("존재하지 않는 지역 코드입니다."));
-		return region.getRegionId();
+
+		return regionRepository.findByRegionCode(regionCode)
+			.map(Region::getRegionId)
+			.orElse(null);
 	}
 }
