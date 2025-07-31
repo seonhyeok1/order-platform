@@ -14,8 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.entity.Cart;
-import app.domain.customer.model.entity.User;
-import app.domain.owner.model.entity.Store;
+import app.domain.user.model.entity.User;
+import app.domain.store.model.entity.Store;
 
 @ExtendWith(MockitoExtension.class)
 class CartRepositoryTest {
@@ -142,7 +142,7 @@ class CartRepositoryTest {
 
 		// When
 		Optional<Cart> foundCart = cartRepository.findById(cartId);
-		
+
 		// Cart 조회 시점에는 User 쿼리가 실행되지 않음
 		verify(cartRepository).findById(cartId);
 		verify(mockUser, never()).getUserId();
@@ -165,7 +165,7 @@ class CartRepositoryTest {
 
 		// When
 		Optional<Cart> foundCart = cartRepository.findById(cartId);
-		
+
 		// Cart 조회 시점에는 Store 쿼리가 실행되지 않음
 		verify(cartRepository).findById(cartId);
 		verify(mockStore, never()).getStoreId();

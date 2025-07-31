@@ -19,8 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
-import app.domain.customer.model.UserRepository;
-import app.domain.customer.model.entity.User;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.order.model.OrderItemRepository;
@@ -32,8 +32,8 @@ import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
-import app.domain.owner.model.entity.Store;
-import app.domain.owner.model.entity.StoreRepository;
+import app.domain.store.model.entity.Store;
+import app.domain.store.model.entity.StoreRepository;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -136,7 +136,7 @@ class OrderServiceTest {
 		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
+				GeneralException generalEx = (GeneralException)ex;
 				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
 			});
 
@@ -167,7 +167,7 @@ class OrderServiceTest {
 		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
+				GeneralException generalEx = (GeneralException)ex;
 				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
 			});
 
@@ -203,7 +203,7 @@ class OrderServiceTest {
 		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
+				GeneralException generalEx = (GeneralException)ex;
 				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("서로 다른 매장의 메뉴는 함께 주문할 수 없습니다.");
 			});
 
@@ -225,7 +225,7 @@ class OrderServiceTest {
 		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
+				GeneralException generalEx = (GeneralException)ex;
 				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("장바구니를 찾을 수 없습니다.");
 			});
 
@@ -259,7 +259,7 @@ class OrderServiceTest {
 		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
+				GeneralException generalEx = (GeneralException)ex;
 				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("메뉴를 찾을 수 없습니다.");
 			});
 
@@ -335,7 +335,7 @@ class OrderServiceTest {
 		assertThatThrownBy(() -> orderService.getOrderDetail(orderId))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
+				GeneralException generalEx = (GeneralException)ex;
 				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("주문을 찾을 수 없습니다.");
 			});
 

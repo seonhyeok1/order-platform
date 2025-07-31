@@ -14,8 +14,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import app.domain.customer.model.entity.User;
-import app.domain.customer.model.entity.enums.UserRole;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
+import app.domain.user.model.entity.enums.UserRole;
 import app.global.config.JpaAuditingConfig;
 
 @DataJpaTest // 인메모리 DB 사용

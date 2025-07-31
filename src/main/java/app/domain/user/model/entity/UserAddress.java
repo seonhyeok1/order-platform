@@ -1,16 +1,15 @@
-package app.domain.cart.model.entity;
+package app.domain.user.model.entity;
 
 import java.util.UUID;
 
-import app.domain.user.model.entity.User;
-import app.domain.store.model.entity.Store;
 import app.global.entity.BaseEntity;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,22 +18,30 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_cart")
+@Table(name = "p_user_address")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Cart extends BaseEntity {
+public class UserAddress extends BaseEntity {
 
 	@Id
 	@GeneratedValue
-	private UUID cartId;
+	private UUID addressId;
 
-	@OneToOne
-	@JoinColumn(name = "user_id", nullable = false, unique = true)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@ManyToOne
-	@JoinColumn(name = "store_id", nullable = false)
-	private Store store;
+	@Column(length = 50, nullable = false)
+	private String alias;
+
+	@Column(nullable = false)
+	private String address;
+
+	@Column(nullable = false)
+	private String addressDetail;
+
+	@Column(nullable = false)
+	private boolean isDefault = false;
 }

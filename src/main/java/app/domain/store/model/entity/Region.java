@@ -1,16 +1,12 @@
-package app.domain.menu.model.entity;
+package app.domain.store.model.entity;
 
 import java.util.UUID;
 
-import app.domain.store.model.entity.Store;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,30 +15,35 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "p_menu")
+@Table(name = "p_region")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Menu extends BaseEntity {
+public class Region extends BaseEntity {
 
 	@Id
 	@GeneratedValue
-	private UUID menuId;
+	private UUID regionId;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "store_id", nullable = false)
-	private Store store;
+	@Column(unique = true, nullable = false)
+	private String regionCode;
 
 	@Column(nullable = false, length = 100)
-	private String name;
-
-	@Column
-	private String description;
+	private String regionName;
 
 	@Column(nullable = false)
-	private int price;
+	private boolean isActive = false;
 
 	@Column(nullable = false)
-	private boolean isHidden = false;
+	private String fullName;
+
+	@Column(length = 20)
+	private String sido; // 시도 (예: 서울특별시, 경기도 등)
+
+	@Column(length = 30)
+	private String sigungu; // 시군구 (예: 강남구, 수원시 등)
+
+	@Column(length = 30)
+	private String eupmyendong; // 읍면동 (예: 역삼동, 신길동 등)
 }

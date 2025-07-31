@@ -13,13 +13,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.domain.customer.model.entity.User;
+import app.domain.user.model.entity.User;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
-import app.domain.owner.model.entity.Store;
+import app.domain.store.model.entity.Store;
 
 @ExtendWith(MockitoExtension.class)
 class OrdersRepositoryTest {

@@ -2,7 +2,7 @@ package app.global.jwt;
 
 import org.springframework.stereotype.Component;
 
-import app.domain.customer.model.entity.User;
+import app.domain.user.model.entity.User;
 
 // NOTE: This is a placeholder for a real JWT implementation.
 // A real implementation would use a library like jjwt, a secret key, and handle claims, signing, and parsing.

@@ -22,7 +22,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "order", description = "주문 관련 API")
@@ -70,7 +69,7 @@ public class OrderController {
 					""")))
 	})
 	@PostMapping
-	public ApiResponse<String> createOrder(@RequestParam Long userId, @Valid @RequestBody CreateOrderRequest request) {
+	public ApiResponse<String> createOrder(@RequestParam Long userId, @RequestBody CreateOrderRequest request) {
 		if (request.totalPrice() <= 0) {
 			throw new GeneralException(ErrorStatus.INVALID_TOTAL_PRICE);
 		}
