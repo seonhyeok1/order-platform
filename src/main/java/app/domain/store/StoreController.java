@@ -64,7 +64,7 @@ public class StoreController {
 		}
 	}
 
-	@PutMapping
+	@PutMapping("/store")
 	public ResponseEntity<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
 		if (request.storeId() == null) {
 			throw new IllegalArgumentException("storeId error");
