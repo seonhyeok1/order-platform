@@ -14,17 +14,17 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import app.domain.admin.model.dto.response.GetUserListResponse;
 import app.domain.customer.model.UserRepository;
 import app.domain.customer.model.entity.User;
 import app.domain.customer.model.entity.enums.UserRole;
+import app.domain.manager.model.dto.response.GetUserListResponse;
+import app.domain.manager.service.AdminUserService;
 import app.global.apiPayload.PagedResponse;
 
 class AdminUserServiceImplTest {
 
 	private final UserRepository userRepository = mock(UserRepository.class);
-	private final AdminUserServiceImpl adminUserService = new AdminUserServiceImpl(userRepository);
+	private final AdminUserService adminUserService = new AdminUserService(userRepository);
 
 	@Test
 	@DisplayName("관리자가 유저 목록을 조회한다")
@@ -40,13 +40,13 @@ class AdminUserServiceImplTest {
 		ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.now());
 
 		Page<User> userPage = new PageImpl<>(List.of(user), pageable, 1);
-		when(userRepository.findAllByRole(UserRole.CUSTOMER, pageable)).thenReturn(userPage);
+		when(userRepository.findAllByUserRole(UserRole.CUSTOMER, pageable)).thenReturn(userPage);
 
 		// when
 		PagedResponse<GetUserListResponse> response = adminUserService.getAllUsers(pageable);
 
 		// then
 		assertThat(response.content().get(0).email()).isEqualTo("test@example.com");
-		verify(userRepository, times(1)).findAllByRole(UserRole.CUSTOMER, pageable);
+		verify(userRepository, times(1)).findAllByUserRole(UserRole.CUSTOMER, pageable);
 	}
 }

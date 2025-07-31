@@ -101,6 +101,14 @@ public enum ErrorStatus implements BaseErrorCode {
 	CART_DB_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART005", "장바구니 DB 동기화에 실패했습니다."),
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART006", "수량은 1 이상이어야 합니다."),
 
+	// Order 관련
+	ORDER_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER001", "주문 생성에 실패했습니다."),
+	INVALID_ORDER_REQUEST(HttpStatus.BAD_REQUEST, "ORDER002", "유효하지 않은 주문 요청입니다."),
+	ORDER_DIFFERENT_STORE(HttpStatus.BAD_REQUEST, "ORDER003", "서로 다른 매장의 메뉴는 함께 주문할 수 없습니다."),
+	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER004", "메뉴를 찾을 수 없습니다."),
+	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
+	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
+
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
 	TOKEN_MINT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_002", "토큰 발행(mint) 처리 중 오류가 발생했습니다."),

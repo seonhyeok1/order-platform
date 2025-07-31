@@ -46,7 +46,7 @@ public class Orders extends BaseEntity {
 	private User user; // nullable (오프라인 주문 고려)
 
 	@Column(nullable = false)
-	private int totalPrice;
+	private Long totalPrice;
 
 	@Column(nullable = false)
 	private String deliveryAddress; // 오프라인,포장은 "없음"
@@ -68,7 +68,7 @@ public class Orders extends BaseEntity {
 	private OrderStatus orderStatus;
 
 	@Column(nullable = false)
-	private boolean isRefundable = true;
+	private boolean isRefundable;
 
 	@Lob
 	@Column(nullable = false)

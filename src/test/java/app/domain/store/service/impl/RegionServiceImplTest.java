@@ -12,14 +12,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
+import app.domain.owner.RegionService;
+import app.domain.owner.model.entity.Region;
+import app.domain.owner.model.entity.RegionRepository;
 
 @ExtendWith(MockitoExtension.class)
 class RegionServiceImplTest {
 
 	@InjectMocks
-	private RegionServiceImpl regionService;
+	private RegionService regionService;
 
 	@Mock
 	private RegionRepository regionRepository;

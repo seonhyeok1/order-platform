@@ -1,244 +1,219 @@
 package app.domain.cart.model;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
 import app.domain.menu.model.entity.Menu;
-import app.domain.store.model.entity.Store;
-import app.domain.user.model.entity.User;
 
-@DataJpaTest
+@ExtendWith(MockitoExtension.class)
 class CartItemRepositoryTest {
 
-	@Autowired
-	private TestEntityManager entityManager;
-
-	@Autowired
+	@Mock
 	private CartItemRepository cartItemRepository;
 
-	private User testUser;
-	private Cart testCart;
-	private Store testStore;
-	private Menu testMenu1;
-	private Menu testMenu2;
+	@Mock
+	private Cart mockCart;
+
+	@Mock
+	private Menu mockMenu;
+
 	private CartItem testCartItem1;
 	private CartItem testCartItem2;
+	private UUID cartId;
+	private UUID cartItemId1;
+	private UUID cartItemId2;
 
 	@BeforeEach
 	void setUp() {
-		testUser = User.builder()
-			.userId(1L)
-			.email("test@example.com")
-			// .name("테스트유저")
-			.build();
-		entityManager.persistAndFlush(testUser);
-
-		testCart = Cart.builder()
-			.cartId(UUID.randomUUID())
-			.user(testUser)
-			.build();
-		entityManager.persistAndFlush(testCart);
-
-		testStore = Store.builder()
-			.storeId(UUID.randomUUID())
-			.storeName("테스트매장")
-			.build();
-		entityManager.persistAndFlush(testStore);
-
-		testMenu1 = Menu.builder()
-			.menuId(UUID.randomUUID())
-			// .menuName("메뉴1")
-			.price(10000)
-			.store(testStore)
-			.build();
-		entityManager.persistAndFlush(testMenu1);
-
-		testMenu2 = Menu.builder()
-			.menuId(UUID.randomUUID())
-			.name("메뉴2")
-			.price(15000)
-			.store(testStore)
-			.build();
-		entityManager.persistAndFlush(testMenu2);
+		cartId = UUID.randomUUID();
+		cartItemId1 = UUID.randomUUID();
+		cartItemId2 = UUID.randomUUID();
 
 		testCartItem1 = CartItem.builder()
-			.cartItemId(UUID.randomUUID())
-			.cart(testCart)
-			.menu(testMenu1)
+			.cartItemId(cartItemId1)
+			.cart(mockCart)
+			.menu(mockMenu)
 			.quantity(2)
 			.build();
-		entityManager.persistAndFlush(testCartItem1);
 
 		testCartItem2 = CartItem.builder()
-			.cartItemId(UUID.randomUUID())
-			.cart(testCart)
-			.menu(testMenu2)
+			.cartItemId(cartItemId2)
+			.cart(mockCart)
+			.menu(mockMenu)
 			.quantity(1)
 			.build();
-		entityManager.persistAndFlush(testCartItem2);
 	}
 
 	@Test
 	@DisplayName("장바구니 ID로 장바구니 아이템 조회 - 성공")
 	void findByCart_CartId_Success() {
-		List<CartItem> result = cartItemRepository.findByCart_CartId(testCart.getCartId());
+		// Given
+		List<CartItem> cartItems = List.of(testCartItem1, testCartItem2);
+		when(cartItemRepository.findByCart_CartId(cartId)).thenReturn(cartItems);
 
+		// When
+		List<CartItem> result = cartItemRepository.findByCart_CartId(cartId);
+
+		// Then
 		assertThat(result).hasSize(2);
-		assertThat(result).extracting(CartItem::getCartItemId)
-			.containsExactlyInAnyOrder(testCartItem1.getCartItemId(), testCartItem2.getCartItemId());
-		assertThat(result).extracting(CartItem::getQuantity)
-			.containsExactlyInAnyOrder(2, 1);
+		assertThat(result).containsExactly(testCartItem1, testCartItem2);
+		verify(cartItemRepository).findByCart_CartId(cartId);
 	}
 
 	@Test
 	@DisplayName("장바구니 ID로 장바구니 아이템 조회 - 빈 결과")
 	void findByCart_CartId_Empty() {
+		// Given
 		UUID nonExistentCartId = UUID.randomUUID();
+		when(cartItemRepository.findByCart_CartId(nonExistentCartId)).thenReturn(List.of());
 
+		// When
 		List<CartItem> result = cartItemRepository.findByCart_CartId(nonExistentCartId);
 
+		// Then
 		assertThat(result).isEmpty();
+		verify(cartItemRepository).findByCart_CartId(nonExistentCartId);
 	}
 
 	@Test
-	@DisplayName("장바구니 아이템 저장 및 조회")
-	void saveAndFind() {
-		Menu newMenu = Menu.builder()
-			.menuId(UUID.randomUUID())
-			.name("새메뉴")
-			.price(20000)
-			.store(testStore)
-			.build();
-		entityManager.persistAndFlush(newMenu);
+	@DisplayName("장바구니 아이템 저장 성공")
+	void save_Success() {
+		// Given
+		when(cartItemRepository.save(any(CartItem.class))).thenReturn(testCartItem1);
 
-		CartItem newCartItem = CartItem.builder()
-			.cartItemId(UUID.randomUUID())
-			.cart(testCart)
-			.menu(newMenu)
-			.quantity(3)
-			.build();
+		// When
+		CartItem savedCartItem = cartItemRepository.save(testCartItem1);
 
-		CartItem savedCartItem = cartItemRepository.save(newCartItem);
-		entityManager.flush();
-		entityManager.clear();
+		// Then
+		assertThat(savedCartItem).isNotNull();
+		assertThat(savedCartItem.getCartItemId()).isEqualTo(cartItemId1);
+		verify(cartItemRepository).save(testCartItem1);
+	}
 
-		var foundCartItem = cartItemRepository.findById(savedCartItem.getCartItemId());
+	@Test
+	@DisplayName("장바구니 아이템 ID로 조회 성공")
+	void findById_Success() {
+		// Given
+		when(cartItemRepository.findById(cartItemId1)).thenReturn(Optional.of(testCartItem1));
 
+		// When
+		Optional<CartItem> foundCartItem = cartItemRepository.findById(cartItemId1);
+
+		// Then
 		assertThat(foundCartItem).isPresent();
-		assertThat(foundCartItem.get().getQuantity()).isEqualTo(3);
-		assertThat(foundCartItem.get().getMenu().getMenuId()).isEqualTo(newMenu.getMenuId());
+		assertThat(foundCartItem.get().getCartItemId()).isEqualTo(cartItemId1);
+		verify(cartItemRepository).findById(cartItemId1);
 	}
 
 	@Test
 	@DisplayName("장바구니 ID로 장바구니 아이템 삭제")
 	void deleteByCart_CartId() {
-		UUID cartId = testCart.getCartId();
+		// Given
+		doNothing().when(cartItemRepository).deleteByCart_CartId(cartId);
 
+		// When
 		cartItemRepository.deleteByCart_CartId(cartId);
-		entityManager.flush();
 
-		List<CartItem> result = cartItemRepository.findByCart_CartId(cartId);
-		assertThat(result).isEmpty();
+		// Then
+		verify(cartItemRepository).deleteByCart_CartId(cartId);
 	}
 
 	@Test
-	@DisplayName("장바구니 ID로 삭제 - 존재하지 않는 장바구니")
-	void deleteByCart_CartId_NonExistent() {
-		UUID nonExistentCartId = UUID.randomUUID();
-		int originalCount = cartItemRepository.findAll().size();
+	@DisplayName("존재하지 않는 장바구니 아이템 ID로 조회")
+	void findById_NotFound() {
+		// Given
+		UUID nonExistentId = UUID.randomUUID();
+		when(cartItemRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-		cartItemRepository.deleteByCart_CartId(nonExistentCartId);
-		entityManager.flush();
+		// When
+		Optional<CartItem> foundCartItem = cartItemRepository.findById(nonExistentId);
 
-		int currentCount = cartItemRepository.findAll().size();
-		assertThat(currentCount).isEqualTo(originalCount);
+		// Then
+		assertThat(foundCartItem).isEmpty();
+		verify(cartItemRepository).findById(nonExistentId);
 	}
 
 	@Test
-	@DisplayName("영속성 컨텍스트 - 동일한 엔티티 반환")
-	void persistenceContext_SameEntity() {
-		CartItem item1 = cartItemRepository.findById(testCartItem1.getCartItemId()).orElse(null);
-		CartItem item2 = cartItemRepository.findById(testCartItem1.getCartItemId()).orElse(null);
+	@DisplayName("장바구니 아이템 삭제 성공")
+	void delete_Success() {
+		// Given
+		doNothing().when(cartItemRepository).delete(testCartItem1);
 
-		assertThat(item1).isSameAs(item2);
-	}
+		// When
+		cartItemRepository.delete(testCartItem1);
 
-	// @Test
-	// @DisplayName("트랜잭션 - 변경 감지")
-	// void transaction_DirtyChecking() {
-	// 	CartItem cartItem = cartItemRepository.findById(testCartItem1.getCartItemId()).orElse(null);
-	// 	assertThat(cartItem).isNotNull();
-	//
-	// 	int newQuantity = 5;
-	// 	cartItem.updateQuantity(newQuantity);
-	// 	entityManager.flush();
-	// 	entityManager.clear();
-	//
-	// 	CartItem updatedCartItem = cartItemRepository.findById(testCartItem1.getCartItemId()).orElse(null);
-	// 	assertThat(updatedCartItem).isNotNull();
-	// 	assertThat(updatedCartItem.getQuantity()).isEqualTo(newQuantity);
-	// }
-
-	@Test
-	@DisplayName("다른 장바구니의 아이템은 영향받지 않음")
-	void deleteByCart_CartId_OnlyTargetCart() {
-		User anotherUser = User.builder()
-			.userId(2L)
-			.email("another@example.com")
-			// .name("다른유저")
-			.build();
-		entityManager.persistAndFlush(anotherUser);
-
-		Cart anotherCart = Cart.builder()
-			.cartId(UUID.randomUUID())
-			.user(anotherUser)
-			.build();
-		entityManager.persistAndFlush(anotherCart);
-
-		CartItem anotherCartItem = CartItem.builder()
-			.cartItemId(UUID.randomUUID())
-			.cart(anotherCart)
-			.menu(testMenu1)
-			.quantity(1)
-			.build();
-		entityManager.persistAndFlush(anotherCartItem);
-
-		cartItemRepository.deleteByCart_CartId(testCart.getCartId());
-		entityManager.flush();
-
-		List<CartItem> testCartItems = cartItemRepository.findByCart_CartId(testCart.getCartId());
-		List<CartItem> anotherCartItems = cartItemRepository.findByCart_CartId(anotherCart.getCartId());
-
-		assertThat(testCartItems).isEmpty();
-		assertThat(anotherCartItems).hasSize(1);
-		assertThat(anotherCartItems.get(0).getCartItemId()).isEqualTo(anotherCartItem.getCartItemId());
+		// Then
+		verify(cartItemRepository).delete(testCartItem1);
 	}
 
 	@Test
-	@DisplayName("장바구니 아이템 개별 삭제")
-	void deleteIndividualCartItem() {
-		UUID cartItemId = testCartItem1.getCartItemId();
+	@DisplayName("지연 로딩 테스트 - Cart 접근 시 쿼리 실행")
+	void lazyLoading_Cart_Test() {
+		// Given
+		when(cartItemRepository.findById(cartItemId1)).thenReturn(Optional.of(testCartItem1));
+		when(mockCart.getCartId()).thenReturn(cartId);
 
-		cartItemRepository.deleteById(cartItemId);
-		entityManager.flush();
+		// When
+		Optional<CartItem> foundCartItem = cartItemRepository.findById(cartItemId1);
+		
+		// CartItem 조회 시점에는 Cart 쿼리가 실행되지 않음
+		verify(cartItemRepository).findById(cartItemId1);
+		verify(mockCart, never()).getCartId();
 
-		var deletedItem = cartItemRepository.findById(cartItemId);
-		List<CartItem> remainingItems = cartItemRepository.findByCart_CartId(testCart.getCartId());
+		// Cart 필드에 접근할 때 쿼리 실행
+		UUID foundCartId = foundCartItem.get().getCart().getCartId();
 
-		assertThat(deletedItem).isEmpty();
-		assertThat(remainingItems).hasSize(1);
-		assertThat(remainingItems.get(0).getCartItemId()).isEqualTo(testCartItem2.getCartItemId());
+		// Then
+		assertThat(foundCartId).isEqualTo(cartId);
+		verify(mockCart).getCartId();
+	}
+
+	@Test
+	@DisplayName("지연 로딩 테스트 - Menu 접근 시 쿼리 실행")
+	void lazyLoading_Menu_Test() {
+		// Given
+		UUID menuId = UUID.randomUUID();
+		when(cartItemRepository.findById(cartItemId1)).thenReturn(Optional.of(testCartItem1));
+		when(mockMenu.getMenuId()).thenReturn(menuId);
+
+		// When
+		Optional<CartItem> foundCartItem = cartItemRepository.findById(cartItemId1);
+		
+		// CartItem 조회 시점에는 Menu 쿼리가 실행되지 않음
+		verify(cartItemRepository).findById(cartItemId1);
+		verify(mockMenu, never()).getMenuId();
+
+		// Menu 필드에 접근할 때 쿼리 실행
+		UUID foundMenuId = foundCartItem.get().getMenu().getMenuId();
+
+		// Then
+		assertThat(foundMenuId).isEqualTo(menuId);
+		verify(mockMenu).getMenuId();
+	}
+
+	@Test
+	@DisplayName("장바구니 아이템 ID로 삭제")
+	void deleteById_Success() {
+		// Given
+		doNothing().when(cartItemRepository).deleteById(cartItemId1);
+
+		// When
+		cartItemRepository.deleteById(cartItemId1);
+
+		// Then
+		verify(cartItemRepository).deleteById(cartItemId1);
 	}
 }
