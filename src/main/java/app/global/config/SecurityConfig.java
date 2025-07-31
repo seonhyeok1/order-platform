@@ -10,12 +10,25 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import app.domain.user.model.entity.enums.UserRole;
+import app.global.jwt.JwtAccessDeniedHandler;
+import app.global.jwt.JwtAuthenticationEntryPoint;
+import app.global.jwt.JwtAuthenticationFilter;
+import app.global.jwt.JwtTokenProvider;
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+	private final JwtTokenProvider jwtTokenProvider;
+	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
 	// userService/CreateUser 비밀번호 암호화
 	@Bean
@@ -27,26 +40,48 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-			// 1. CORS 설정
+			// CORS 설정
 			.cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-			// 2. CSRF 비활성화 (Stateless 서버에서는 불필요)
+			// CSRF 비활성화
 			.csrf(AbstractHttpConfigurer::disable)
 
-			// 3. 세션 관리 정책을 STATELESS로 설정 (토큰 기반 인증)
+			// 예외 처리 핸들러 등록
+			.exceptionHandling(exceptions -> exceptions
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+				.accessDeniedHandler(jwtAccessDeniedHandler)
+			)
+
+			// 세션 관리 정책을 STATELESS로 설정 (토큰 기반 인증)
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-			// 4. HTTP 요청에 대한 인가 규칙 설정
+			// HTTP 요청에 대한 인가 규칙
 			.authorizeHttpRequests(auth -> auth
+				// 1. 인증 없이 접근 허용
 				.requestMatchers(
 					// Swagger 허용 URL
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
 					"/api/auth/signup", "/api/auth/login"
-				).permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
-				.anyRequest().authenticated() // 나머지 모든 경로는 인증 필요
-			);
+				)
+				.permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
+
+				// 2. 권한에 따른 접근 제한
+				.requestMatchers("/owner/**")
+				.hasRole(UserRole.OWNER.name())
+				.requestMatchers("/customer/**")
+				.hasRole(UserRole.CUSTOMER.name()) // 고객, 점주 모두 접근 가능
+				.requestMatchers("/manager/**")
+				.hasRole(UserRole.MANAGER.name())
+				.requestMatchers("/master/**")
+				.hasRole(UserRole.MASTER.name())
+
+				// 3. 나머지 모든 요청은 인증된 사용자만 접근 가능
+				.anyRequest()
+				.authenticated()
+			)
+			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
