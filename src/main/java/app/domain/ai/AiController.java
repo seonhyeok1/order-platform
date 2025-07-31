@@ -18,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "AI", description = "AI 글쓰기 도우미 관련 API")
-@RequestMapping("/ai")
+@RequestMapping("/owner/ai")
 public class AiController {
 
 	private final AiService aiService;
