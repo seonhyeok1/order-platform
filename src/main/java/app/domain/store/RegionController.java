@@ -27,6 +27,10 @@ public class RegionController {
 			throw new GeneralException(ErrorStatus.REGION_NOT_FOUND);
 		}
 
+		if (regionCode == null) {
+			throw new GeneralException(ErrorStatus.REGIONCODE_NOT_FOUND);
+		}
+
 		return ResponseEntity.ok(regionId);
 	}
 }
