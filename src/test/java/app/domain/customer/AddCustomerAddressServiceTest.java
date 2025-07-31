@@ -1,18 +1,11 @@
-package app.domain.customer.service;
+package app.domain.customer;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import app.domain.customer.CustomerAddressService;
-import app.domain.user.model.UserAddressRepository;
-import app.domain.user.model.UserRepository;
-import app.domain.customer.dto.request.AddCustomerAddressRequest;
-import app.domain.customer.dto.response.AddCustomerAddressResponse;
-import app.domain.user.model.entity.User;
-import app.domain.user.model.entity.UserAddress;
-import app.domain.user.model.entity.enums.UserRole;
-import app.global.apiPayload.code.status.ErrorStatus;
-import app.global.apiPayload.exception.GeneralException;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -25,10 +18,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessResourceFailureException;
 
-import static org.mockito.Mockito.*;
-
-import java.util.Optional;
-import java.util.UUID;
+import app.domain.customer.dto.request.AddCustomerAddressRequest;
+import app.domain.customer.dto.response.AddCustomerAddressResponse;
+import app.domain.user.model.UserAddressRepository;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
+import app.domain.user.model.entity.UserAddress;
+import app.domain.user.model.entity.enums.UserRole;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
 class AddCustomerAddressServiceTest {
