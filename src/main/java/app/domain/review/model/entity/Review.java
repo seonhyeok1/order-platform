@@ -29,7 +29,6 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Review extends BaseEntity {
 
-	public UUID get;
 	@Id
 	@GeneratedValue
 	private UUID reviewId;

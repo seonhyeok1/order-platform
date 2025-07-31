@@ -111,6 +111,8 @@ public enum ErrorStatus implements BaseErrorCode {
 
 	// Review 관련
 	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "REVIEW001", "이미 해당 주문에 대한 리뷰가 존재합니다."),
+	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW002", "리뷰가 존재하지 않습니다."),
+	NO_REVIEWS_FOUND_FOR_USER(HttpStatus.NOT_FOUND, "REVIEW001", "해당 사용자가 작성한 리뷰가 없습니다."),
 
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
@@ -118,8 +120,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	TOKEN_BALANCE_QUERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_003", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다."),
 	TOKEN_BURN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_004", "토큰 소각(burn) 처리 중 오류가 발생했습니다."),
 	BALANCE_MISMATCH(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트와 DB의 토큰 잔액이 일치하지 않습니다."),
-	BALANCE_VERIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다."),
-	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW002", "리뷰가 존재하지 않습니다.");
+	BALANCE_VERIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

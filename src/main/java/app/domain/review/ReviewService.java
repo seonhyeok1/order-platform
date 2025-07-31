@@ -1,8 +1,7 @@
 package app.domain.review;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,10 +10,10 @@ import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.request.CreateReviewRequest;
+import app.domain.review.model.dto.request.GetReviewRequest;
 import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.review.model.entity.Review;
-import app.domain.store.model.StoreRepository;
-import app.domain.store.model.entity.Store;
+import app.domain.store.model.entity.StoreRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.global.apiPayload.code.status.ErrorStatus;
@@ -23,7 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true) // 읽기 전용 트랜잭션 기본 설정
+@Transactional(readOnly = true)
 public class ReviewService {
 
 	private final ReviewRepository reviewRepository;
@@ -32,7 +31,9 @@ public class ReviewService {
 	private final OrdersRepository ordersRepository;
 
 	@Transactional
-	public String createReview(Long userId, CreateReviewRequest request) {
+	public String createReview(CreateReviewRequest request) {
+		// todo try catch 작성
+		Long userId = request.userId();
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
@@ -60,27 +61,27 @@ public class ReviewService {
 		return savedReview.getReviewId() + " 가 생성되었습니다.";
 	}
 
-	public List<GetReviewResponse> getReviews(Long userId, UUID storeId) {
-		List<Review> reviews;
+	public List<GetReviewResponse> getReviews(GetReviewRequest request) {
+		// todo try catch 작성
+		Long userId = request.userId();
 
-		if (userId != null) {
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-			reviews = reviewRepository.findByUser(user);
-		} else if (storeId != null) {
-			Store store = storeRepository.findById(storeId)
-				.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
-			reviews = reviewRepository.findByStore(store);
-		} else {
-			reviews = Collections.emptyList();
-		}
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		if (reviews.isEmpty()) {
-			throw new GeneralException(ErrorStatus.REVIEW_NOT_FOUND);
-		}
+		List<Review> userReviews = reviewRepository.findByUser(user);
 
-		return reviews.stream()
-			.map(GetReviewResponse::from)
-			.toList();
+		if (userReviews.isEmpty())
+			throw new GeneralException(ErrorStatus.NO_REVIEWS_FOUND_FOR_USER);
+
+		return userReviews.stream()
+			.map(review -> new GetReviewResponse(
+				review.getReviewId(),
+				review.getUser().getUsername(),
+				review.getStore().getStoreName(),
+				review.getRating(),
+				review.getContent(),
+				review.getCreatedAt()
+			))
+			.collect(Collectors.toList());
 	}
 }
