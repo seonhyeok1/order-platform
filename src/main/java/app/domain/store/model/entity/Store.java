@@ -68,10 +68,6 @@ public class Store extends BaseEntity {
 	@Builder.Default
 	private StoreAcceptStatus storeAcceptStatus = StoreAcceptStatus.PENDING;
 
-	public void setDeleteAt(LocalDateTime deletedAt) {
-		this.deletedAt = deletedAt;
-	}
-
 	public boolean isDeleted() {
 		return this.deletedAt != null;
 	}
