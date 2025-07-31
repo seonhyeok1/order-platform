@@ -1,4 +1,4 @@
-package app.global;
+package app.global.jwt;
 
 import java.io.IOException;
 

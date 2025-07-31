@@ -1,9 +1,9 @@
-package app.global;
+package app.global.jwt;
 
 import java.io.IOException;
 
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,18 +13,18 @@ import app.global.apiPayload.code.status.ErrorStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-// 필요한 권한 없이 접근 시 처리
+// 인증되지 않은 사용자의 접근 처리
 @Component
-public class JwtAccessDeniedHandler implements AccessDeniedHandler {
+public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 	@Override
-	public void handle(HttpServletRequest request, HttpServletResponse response,
-		AccessDeniedException accessDeniedException) throws IOException {
+	public void commence(HttpServletRequest request, HttpServletResponse response,
+		AuthenticationException authException) throws IOException {
 		response.setContentType("application/json;charset=UTF-8");
-		response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
 		ApiResponse<Object> errorResponse = ApiResponse.onFailure(
-			ErrorStatus._FORBIDDEN.getCode(),
-			ErrorStatus._FORBIDDEN.getMessage(),
+			ErrorStatus._UNAUTHORIZED.getCode(),
+			ErrorStatus._UNAUTHORIZED.getMessage(),
 			null
 		);
 
@@ -32,3 +32,4 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
 		mapper.writeValue(response.getWriter(), errorResponse);
 	}
 }
+
