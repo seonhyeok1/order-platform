@@ -1,10 +1,13 @@
 package app.domain.store.model.dto.request;
 
+import java.util.UUID;
+
 public record StoreInfoUpdateRequest(
+	UUID storeId,
 	String name,
 	String address,
 	String phoneNumber,
-	String minOrderAmount,
+	Long minOrderAmount,
 	String desc
 ) {
 }
