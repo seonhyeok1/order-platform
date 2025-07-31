@@ -5,12 +5,16 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/region")
 public class RegionController {
 
 	private final RegionService regionService;
@@ -18,6 +22,11 @@ public class RegionController {
 	@PostMapping("/region/id")
 	public ResponseEntity<UUID> getRegionIdByCode(@RequestBody String regionCode) {
 		UUID regionId = regionService.getRegionIdByCode(regionCode);
+
+		if (regionId == null) {
+			throw new GeneralException(ErrorStatus.REGION_NOT_FOUND);
+		}
+
 		return ResponseEntity.ok(regionId);
 	}
 }
