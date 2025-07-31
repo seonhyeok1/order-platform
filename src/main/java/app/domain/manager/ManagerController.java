@@ -102,7 +102,7 @@ public class ManagerController {
 					                   "addresses": [
 					                       {
 					                           "addressId": 100,
-					                           "alias":
+					                           "alias": "Home",
 					                           "address": "서울시 강남구 테헤란로 1",
 					                           "isDefault": true
 					                       },
