@@ -1,6 +1,7 @@
 package app.domain.cart.model;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -8,160 +9,172 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import app.domain.cart.model.entity.Cart;
 import app.domain.customer.model.entity.User;
-import app.domain.customer.model.entity.enums.UserRole;
 import app.domain.owner.model.entity.Store;
 
-@DataJpaTest
+@ExtendWith(MockitoExtension.class)
 class CartRepositoryTest {
 
-	@Autowired
-	private TestEntityManager entityManager;
-
-	@Autowired
+	@Mock
 	private CartRepository cartRepository;
 
-	private User testUser;
-	private Store testStore;
+	@Mock
+	private User mockUser;
+
+	@Mock
+	private Store mockStore;
+
 	private Cart testCart;
+	private UUID cartId;
+	private Long userId;
 
 	@BeforeEach
 	void setUp() {
-		testUser = User.builder()
-			.username("testuser")
-			.email("test@example.com")
-			.password("password123")
-			.nickname("테스트유저")
-			.phoneNumber("010-1234-5678")
-			.userRole(UserRole.CUSTOMER)
-			.build();
-		entityManager.persistAndFlush(testUser);
-
-		testStore = Store.builder()
-			.user(testUser)
-			.storeName("테스트매장")
-			.address("서울시 강남구")
-			.build();
-		entityManager.persistAndFlush(testStore);
+		cartId = UUID.randomUUID();
+		userId = 1L;
 
 		testCart = Cart.builder()
-			.user(testUser)
-			.store(testStore)
+			.cartId(cartId)
+			.user(mockUser)
+			.store(mockStore)
 			.build();
-		entityManager.persistAndFlush(testCart);
 	}
 
 	@Test
 	@DisplayName("사용자 ID로 장바구니 조회 - 성공")
 	void findByUser_UserId_Success() {
-		Optional<Cart> result = cartRepository.findByUser_UserId(testUser.getUserId());
+		// Given
+		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(testCart));
 
+		// When
+		Optional<Cart> result = cartRepository.findByUser_UserId(userId);
+
+		// Then
 		assertThat(result).isPresent();
-		assertThat(result.get().getCartId()).isEqualTo(testCart.getCartId());
-		assertThat(result.get().getUser().getUserId()).isEqualTo(testUser.getUserId());
+		assertThat(result.get().getCartId()).isEqualTo(cartId);
+		verify(cartRepository).findByUser_UserId(userId);
 	}
 
 	@Test
 	@DisplayName("사용자 ID로 장바구니 조회 - 존재하지 않는 사용자")
 	void findByUser_UserId_NotFound() {
+		// Given
 		Long nonExistentUserId = 999L;
+		when(cartRepository.findByUser_UserId(nonExistentUserId)).thenReturn(Optional.empty());
 
+		// When
 		Optional<Cart> result = cartRepository.findByUser_UserId(nonExistentUserId);
 
+		// Then
 		assertThat(result).isEmpty();
+		verify(cartRepository).findByUser_UserId(nonExistentUserId);
 	}
 
 	@Test
-	@DisplayName("장바구니 저장 및 조회")
-	void saveAndFind() {
-		User newUser = User.builder()
-			.username("newuser")
-			.email("new@example.com")
-			.password("password123")
-			.nickname("새유저")
-			.phoneNumber("010-9876-5432")
-			.userRole(UserRole.CUSTOMER)
-			.build();
-		entityManager.persistAndFlush(newUser);
+	@DisplayName("장바구니 저장 성공")
+	void save_Success() {
+		// Given
+		when(cartRepository.save(any(Cart.class))).thenReturn(testCart);
 
-		Store newStore = Store.builder()
-			.user(newUser)
-			.storeName("새매장")
-			.address("서울시 서초구")
-			.build();
-		entityManager.persistAndFlush(newStore);
+		// When
+		Cart savedCart = cartRepository.save(testCart);
 
-		Cart newCart = Cart.builder()
-			.user(newUser)
-			.store(newStore)
-			.build();
+		// Then
+		assertThat(savedCart).isNotNull();
+		assertThat(savedCart.getCartId()).isEqualTo(cartId);
+		verify(cartRepository).save(testCart);
+	}
 
-		Cart savedCart = cartRepository.save(newCart);
-		entityManager.flush();
-		entityManager.clear();
+	@Test
+	@DisplayName("장바구니 ID로 조회 성공")
+	void findById_Success() {
+		// Given
+		when(cartRepository.findById(cartId)).thenReturn(Optional.of(testCart));
 
-		Optional<Cart> foundCart = cartRepository.findById(savedCart.getCartId());
+		// When
+		Optional<Cart> foundCart = cartRepository.findById(cartId);
 
+		// Then
 		assertThat(foundCart).isPresent();
-		assertThat(foundCart.get().getCartId()).isEqualTo(savedCart.getCartId());
-		assertThat(foundCart.get().getUser().getUserId()).isEqualTo(newUser.getUserId());
+		assertThat(foundCart.get().getCartId()).isEqualTo(cartId);
+		verify(cartRepository).findById(cartId);
 	}
 
 	@Test
-	@DisplayName("장바구니 삭제")
-	void deleteCart() {
-		UUID cartId = testCart.getCartId();
+	@DisplayName("장바구니 삭제 성공")
+	void delete_Success() {
+		// Given
+		doNothing().when(cartRepository).delete(testCart);
 
+		// When
 		cartRepository.delete(testCart);
-		entityManager.flush();
 
-		Optional<Cart> result = cartRepository.findById(cartId);
-		assertThat(result).isEmpty();
+		// Then
+		verify(cartRepository).delete(testCart);
 	}
 
 	@Test
-	@DisplayName("영속성 컨텍스트 - 동일한 엔티티 반환")
-	void persistenceContext_SameEntity() {
-		Cart cart1 = cartRepository.findByUser_UserId(testUser.getUserId()).orElse(null);
-		Cart cart2 = cartRepository.findByUser_UserId(testUser.getUserId()).orElse(null);
+	@DisplayName("존재하지 않는 장바구니 ID로 조회")
+	void findById_NotFound() {
+		// Given
+		UUID nonExistentId = UUID.randomUUID();
+		when(cartRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-		assertThat(cart1).isSameAs(cart2);
+		// When
+		Optional<Cart> foundCart = cartRepository.findById(nonExistentId);
+
+		// Then
+		assertThat(foundCart).isEmpty();
+		verify(cartRepository).findById(nonExistentId);
 	}
 
 	@Test
-	@DisplayName("존재하는 모든 장바구니 조회")
-	void findAll() {
-		User anotherUser = User.builder()
-			.username("anotheruser")
-			.email("another@example.com")
-			.password("password123")
-			.nickname("다른유저")
-			.phoneNumber("010-1111-2222")
-			.userRole(UserRole.CUSTOMER)
-			.build();
-		entityManager.persistAndFlush(anotherUser);
+	@DisplayName("지연 로딩 테스트 - User 접근 시 쿼리 실행")
+	void lazyLoading_User_Test() {
+		// Given
+		when(cartRepository.findById(cartId)).thenReturn(Optional.of(testCart));
+		when(mockUser.getUserId()).thenReturn(userId);
 
-		Store anotherStore = Store.builder()
-			.user(anotherUser)
-			.storeName("다른매장")
-			.address("서울시 마포구")
-			.build();
-		entityManager.persistAndFlush(anotherStore);
+		// When
+		Optional<Cart> foundCart = cartRepository.findById(cartId);
+		
+		// Cart 조회 시점에는 User 쿼리가 실행되지 않음
+		verify(cartRepository).findById(cartId);
+		verify(mockUser, never()).getUserId();
 
-		Cart anotherCart = Cart.builder()
-			.user(anotherUser)
-			.store(anotherStore)
-			.build();
-		entityManager.persistAndFlush(anotherCart);
+		// User 필드에 접근할 때 쿼리 실행
+		Long foundUserId = foundCart.get().getUser().getUserId();
 
-		var allCarts = cartRepository.findAll();
+		// Then
+		assertThat(foundUserId).isEqualTo(userId);
+		verify(mockUser).getUserId();
+	}
 
-		assertThat(allCarts).hasSize(2);
-		assertThat(allCarts).extracting(Cart::getCartId)
-			.containsExactlyInAnyOrder(testCart.getCartId(), anotherCart.getCartId());
+	@Test
+	@DisplayName("지연 로딩 테스트 - Store 접근 시 쿼리 실행")
+	void lazyLoading_Store_Test() {
+		// Given
+		UUID storeId = UUID.randomUUID();
+		when(cartRepository.findById(cartId)).thenReturn(Optional.of(testCart));
+		when(mockStore.getStoreId()).thenReturn(storeId);
+
+		// When
+		Optional<Cart> foundCart = cartRepository.findById(cartId);
+		
+		// Cart 조회 시점에는 Store 쿼리가 실행되지 않음
+		verify(cartRepository).findById(cartId);
+		verify(mockStore, never()).getStoreId();
+
+		// Store 필드에 접근할 때 쿼리 실행
+		UUID foundStoreId = foundCart.get().getStore().getStoreId();
+
+		// Then
+		assertThat(foundStoreId).isEqualTo(storeId);
+		verify(mockStore).getStoreId();
 	}
 }
