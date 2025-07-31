@@ -63,18 +63,18 @@ public class SecurityConfig {
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					"/api/auth/signup", "/api/auth/login"
+					"/api/user/signup", "/api/user/login"
 				)
 				.permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
 
 				// 2. 권한에 따른 접근 제한
-				.requestMatchers("/owner/**")
+				.requestMatchers("/api/owner/**")
 				.hasRole(UserRole.OWNER.name())
-				.requestMatchers("/customer/**")
-				.hasRole(UserRole.CUSTOMER.name()) // 고객, 점주 모두 접근 가능
-				.requestMatchers("/manager/**")
+				.requestMatchers("/api/customer/**")
+				.hasRole(UserRole.CUSTOMER.name())
+				.requestMatchers("/api/manager/**")
 				.hasRole(UserRole.MANAGER.name())
-				.requestMatchers("/master/**")
+				.requestMatchers("/api/master/**")
 				.hasRole(UserRole.MASTER.name())
 
 				// 3. 나머지 모든 요청은 인증된 사용자만 접근 가능
