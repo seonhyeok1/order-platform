@@ -1,15 +1,22 @@
 package app.domain.store;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.domain.store.model.dto.request.StoreApproveRequest;
+import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
+import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
 import app.domain.store.model.enums.StoreAcceptStatus;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -21,31 +28,9 @@ public class StoreService {
 
 	@Transactional
 	public StoreApproveResponse createStore(StoreApproveRequest request) {
-		if (request.regionId() == null) {
-			throw new IllegalArgumentException("regionId는 null일 수 없습니다.");
-		}
+		// Controller 검증 후, Service Layer에서 한번 더 검증
 		Region region = regionRepository.findById(request.regionId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
-
-		if (request.address() == null) {
-			throw new IllegalArgumentException("주소는 null일 수 없습니다.");
-		}
-
-		if (request.storeName() == null) {
-			throw new IllegalArgumentException("가게 이름은 null일 수 없습니다.");
-		}
-
-		if (request.minOrderAmount() == null) {
-			throw new IllegalArgumentException("최소 주문 금액은 null일 수 없습니다.");
-		}
-
-		if (request.minOrderAmount() < 0) {
-			throw new IllegalArgumentException("최소 주문 금액 오류");
-		}
-
-		if (storeRepository.existsByStoreNameAndRegion(request.storeName(), region)) {
-			throw new IllegalArgumentException("지역, 가게명 중복");
-		}
 
 		Store store = Store.builder()
 			.storeName(request.storeName())
@@ -63,5 +48,38 @@ public class StoreService {
 			savedStore.getStoreId(),
 			savedStore.getStoreAcceptStatus().name()
 		);
+	}
+
+	@Transactional
+	public StoreInfoUpdateResponse updateStoreInfo(StoreInfoUpdateRequest request) {
+		Store store = storeRepository.findById(request.storeId())
+			.orElseThrow(() -> new IllegalArgumentException("가게 찾을 수 없음"));
+
+		if (request.name() != null) {
+			store.setStoreName(request.name());
+		}
+		if (request.address() != null) {
+			store.setAddress(request.address());
+		}
+		if (request.phoneNumber() != null) {
+			store.setPhoneNumber(request.phoneNumber());
+		}
+		if (request.minOrderAmount() != null) {
+			store.setMinOrderAmount(request.minOrderAmount());
+		}
+		if (request.desc() != null) {
+			store.setDescription(request.desc());
+		}
+
+		Store updatedStore = storeRepository.save(store);
+		return new StoreInfoUpdateResponse(updatedStore.getStoreId()); // update'd'
+	}
+
+	@Transactional
+	public void deleteStore(UUID storeId) {
+		Store store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
+
+		store.setDeleteAt(LocalDateTime.now());
 	}
 }
