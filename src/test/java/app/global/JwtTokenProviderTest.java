@@ -1,4 +1,4 @@
-package app.global.jwt;
+package app.global;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -13,6 +13,7 @@ import org.springframework.security.core.GrantedAuthority;
 
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
+import app.global.jwt.JwtTokenProvider;
 
 @DisplayName("JwtTokenProvider 단위 테스트")
 class JwtTokenProviderTest {
