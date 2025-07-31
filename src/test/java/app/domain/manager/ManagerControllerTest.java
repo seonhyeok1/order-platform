@@ -1,0 +1,216 @@
+package app.domain.manager;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import app.domain.customer.dto.response.GetCustomerAddressListResponse;
+import app.domain.manager.dto.response.GetCustomListResponse;
+import app.domain.manager.dto.response.GetCustomerDetailResponse;
+import app.domain.order.model.dto.response.OrderDetailResponse;
+import app.domain.order.model.entity.enums.OrderChannel;
+import app.domain.order.model.entity.enums.OrderStatus;
+import app.domain.order.model.entity.enums.PaymentMethod;
+import app.domain.order.model.entity.enums.ReceiptMethod;
+import app.global.apiPayload.PagedResponse;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
+import app.global.config.SecurityConfig;
+
+@WebMvcTest(ManagerController.class)
+@Import(SecurityConfig.class)
+class ManagerControllerTest {
+
+	@Autowired
+	private MockMvc mockMvc;
+
+	@MockitoBean
+	private ManagerService managerService;
+
+	@DisplayName("사용자 전체 조회 테스트")
+	@WithMockUser
+	@Test
+	void getAllCustomerTest() throws Exception {
+		// given
+		List<GetCustomListResponse> content = List.of(
+			new GetCustomListResponse(2L, "te@naver.com", "김감자\n", LocalDateTime.parse("2025-07-29T15:32:11")),
+			new GetCustomListResponse(1L, "test@example.com", "홍길동", LocalDateTime.parse("2025-07-28T17:18:29.971213"))
+		);
+		PagedResponse<GetCustomListResponse> response = new PagedResponse<>(content, 0, 20, 2, 1, true);
+
+		when(managerService.getAllCustomer(any(Pageable.class))).thenReturn(response);
+
+		// when & then
+		mockMvc.perform(get("/admin/users")
+				.param("page", "0")
+				.param("size", "20")
+				.param("sort", "createdAt,desc")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.result.content.length()").value(2))
+			.andExpect(jsonPath("$.result.content[0].email").value("te@naver.com"))
+			.andExpect(jsonPath("$.result.content[1].email").value("test@example.com"));
+	}
+
+	@DisplayName("사용자 상세 조회 API 테스트 - 주소 포함")
+	@WithMockUser
+	@Test
+	void getUserDetailWithAddressTest() throws Exception {
+		// given
+		Long userId = 1L;
+
+		GetCustomerAddressListResponse address = new GetCustomerAddressListResponse(
+			"집",
+			"서울특별시 강남구 테헤란로",
+			"101동 202호",
+			true
+		);
+
+		GetCustomerDetailResponse response = new GetCustomerDetailResponse(
+			userId,
+			"test@example.com",
+			"kkk7391",
+			"aaa",
+			"길동이",
+			"01012345678",
+			LocalDateTime.now(),
+			LocalDateTime.now(),
+			List.of(address)
+		);
+
+		when(managerService.getCustomerDetailById(userId)).thenReturn(response);
+
+		// when & then
+		mockMvc.perform(get("/admin/users/{userId}", userId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.result.userId").value(userId))
+			.andExpect(jsonPath("$.result.email").value("test@example.com"))
+			.andExpect(jsonPath("$.result.address[0].alias").value("집"))
+			.andExpect(jsonPath("$.result.address[0].address").value("서울특별시 강남구 테헤란로"))
+			.andExpect(jsonPath("$.result.address[0].addressDetail").value("101동 202호"))
+			.andExpect(jsonPath("$.result.address[0].isDefault").value(true));
+	}
+
+	@DisplayName("유저 주문 내역 조회 API 테스트")
+	@WithMockUser
+	@Test
+	void getUserOrderListTest() throws Exception {
+		// given
+		Long userId = 1L;
+
+		List<OrderDetailResponse.Menu> menus = List.of(
+			new OrderDetailResponse.Menu("불고기 도시락", 2, 7000),
+			new OrderDetailResponse.Menu("치킨마요", 1, 8000)
+		);
+
+		List<OrderDetailResponse> contents = List.of(
+			new OrderDetailResponse(
+				"한솥도시락",
+				menus,
+				22000L,
+				"서울시 강남구",
+				PaymentMethod.SIMPLE_PAY,
+				OrderChannel.OFFLINE,
+				ReceiptMethod.DELIVERY,
+				OrderStatus.IN_DELIVERY,
+				"문 앞에 두세요"
+			)
+		);
+
+		PagedResponse<OrderDetailResponse> response =
+			new PagedResponse<>(contents, 0, 20, 1, 1, true);
+
+		when(managerService.getCustomerOrderListById(eq(userId), any(Pageable.class)))
+			.thenReturn(response);
+
+		// when & then
+		mockMvc.perform(get("/admin/users/{userId}/order", userId)
+				.param("page", "0")
+				.param("size", "20"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.result.content.length()").value(1))
+			.andExpect(jsonPath("$.result.content[0].storeName").value("한솥도시락"))
+			.andExpect(jsonPath("$.result.content[0].totalPrice").value(22000))
+			.andExpect(jsonPath("$.result.content[0].deliveryAddress").value("서울시 강남구"))
+			.andExpect(jsonPath("$.result.content[0].menuList.length()").value(2))
+			.andExpect(jsonPath("$.result.content[0].menuList[0].menuName").value("불고기 도시락"))
+			.andExpect(jsonPath("$.result.content[0].menuList[0].quantity").value(2))
+			.andExpect(jsonPath("$.result.content[0].menuList[0].price").value(7000));
+	}
+
+	@DisplayName("사용자 검색 API 테스트")
+	@WithMockUser
+	@Test
+	void searchCustomerTest() throws Exception {
+		// given
+		String keyword = "홍길동";
+		Pageable pageable = PageRequest.of(0, 20);
+		List<GetCustomListResponse> content = List.of(
+			new GetCustomListResponse(1L, "user1@example.com", "홍길동", LocalDateTime.now())
+		);
+		PagedResponse<GetCustomListResponse> response = new PagedResponse<>(content, 0, 20, 2, 1, true);
+
+		when(managerService.searchCustomer(eq(keyword), any(Pageable.class))).thenReturn(response);
+
+		// when & then
+		mockMvc.perform(get("/admin/users/search")
+				.param("keyWord", keyword)
+				.param("page", "0")
+				.param("size", "20"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.result.content[0].name").value("홍길동"));
+	}
+
+	@DisplayName("존재하지 않는 사용자 조회 시 예외 테스트")
+	@WithMockUser
+	@Test
+	void getUserDetail_NotFoundException_Test() throws Exception {
+		// given
+		Long invalidUserId = 999L;
+
+		when(managerService.getCustomerDetailById(invalidUserId))
+			.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND)); // 예외를 던짐
+
+		// when & then
+		mockMvc.perform(get("/admin/users/{userId}", invalidUserId))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.resultCode").value("USER001"))
+			.andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
+	}
+
+	@DisplayName("존재하지 않는 사용자 주문목록 조회 시 예외 테스트")
+	@WithMockUser
+	@Test
+	void getCustomerOrderList_NotFoundException_Test() throws Exception {
+		// given
+		Long invalidUserId = 999L;
+
+		when(managerService.getCustomerOrderListById(eq(invalidUserId), any(Pageable.class)))
+			.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+		// when & then
+		mockMvc.perform(get("/admin/users/{userId}/order", invalidUserId)
+				.param("page", "0")
+				.param("size", "20"))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.resultCode").value("USER001"))
+			.andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
+	}
+
+}
