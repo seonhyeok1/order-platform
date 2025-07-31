@@ -1,15 +1,21 @@
 package app.domain.auth;
 
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import app.domain.auth.model.dto.request.LoginRequest;
+import app.domain.auth.model.dto.response.LoginResponse;
 import app.domain.customer.model.UserRepository;
 import app.domain.customer.model.dto.CreateUserReq;
 import app.domain.customer.model.entity.User;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
+import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +27,8 @@ public class AuthService {
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
+	private final JwtTokenProvider jwtTokenProvider;
+	private final RedisTemplate<String, String> redisTemplate;
 
 	@Transactional
 	public String createUser(CreateUserReq createUserReq) {
@@ -51,6 +59,36 @@ public class AuthService {
 			log.error("데이터베이스에 사용자 등록을 실패했습니다.", e);
 			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
+	}
+
+	@Transactional
+	public LoginResponse login(LoginRequest request) {
+		// 1. 사용자 인증 (DB에서 사용자 정보 조회)
+		User user = userRepository.findByUsername(request.username())
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+		// 2. 비밀번호 검증
+		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+			throw new GeneralException(ErrorStatus.INVALID_PASSWORD);
+		}
+
+		// 3. AccessToken, RefreshToken 생성
+		String accessToken = jwtTokenProvider.createAccessToken(user);
+		String refreshToken = jwtTokenProvider.createRefreshToken(user);
+
+		// 4. RefreshToken을 Redis에 저장 (Key: "RT:{userId}", Value: refreshToken)
+		redisTemplate.opsForValue().set(
+			"RT:" + user.getUserId(),
+			refreshToken,
+			jwtTokenProvider.getRefreshTokenValidityInMilliseconds(),
+			TimeUnit.MILLISECONDS
+		);
+
+		// 5. 토큰을 DTO에 담아 응답
+		return LoginResponse.builder()
+			.accessToken(accessToken)
+			.refreshToken(refreshToken)
+			.build();
 	}
 
 	/**
