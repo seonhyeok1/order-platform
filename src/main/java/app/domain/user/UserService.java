@@ -29,6 +29,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
+	private static final String REFRESH_TOKEN_PREFIX = "RT:";
 
 	@Transactional
 	public String createUser(CreateUserReq createUserReq) {
@@ -78,7 +79,7 @@ public class UserService {
 
 		// 4. RefreshToken을 Redis에 저장 (Key: "RT:{userId}", Value: refreshToken)
 		redisTemplate.opsForValue().set(
-			"RT:" + user.getUserId(),
+			REFRESH_TOKEN_PREFIX + user.getUserId(),
 			refreshToken,
 			jwtTokenProvider.getRefreshTokenValidityInMilliseconds(),
 			TimeUnit.MILLISECONDS
