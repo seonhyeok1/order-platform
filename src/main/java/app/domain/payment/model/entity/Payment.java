@@ -48,4 +48,8 @@ public class Payment extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private PaymentStatus paymentStatus;
+
+	public void updatePaymentStatus(PaymentStatus paymentStatus) {
+		this.paymentStatus = paymentStatus;
+	}
 }
