@@ -5,7 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 .DS_Store
-
+gen_data.py
 ### STS ###
 .apt_generated
 .classpath
