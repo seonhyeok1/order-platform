@@ -14,6 +14,8 @@ import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
 import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -24,16 +26,21 @@ public class StoreService {
 
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
+	private final UserRepository userRepository;
 
 	@Transactional
-	public StoreApproveResponse createStore(StoreApproveRequest request) {
+	public StoreApproveResponse createStore(Long userId, StoreApproveRequest request) {
 		// Controller 검증 후, Service Layer에서 한번 더 검증
 		Region region = regionRepository.findById(request.regionId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
 
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new IllegalArgumentException("해당 user 존재하지 않음"));
+
 		Store store = Store.builder()
 			.storeName(request.storeName())
 			.region(region)
+			.user(user)
 			.address(request.address())
 			.description(request.desc())
 			.phoneNumber(request.phoneNumber())

@@ -3,6 +3,8 @@ package app.domain.store;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,7 +35,10 @@ public class StoreController {
 	public ResponseEntity<StoreApproveResponse> createStore(@RequestBody StoreApproveRequest request) {
 		validateCreateStoreRequest(request);
 
-		StoreApproveResponse response = storeService.createStore(request);
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		Long userId = Long.parseLong(authentication.getName());
+
+		StoreApproveResponse response = storeService.createStore(userId, request);
 		return ResponseEntity.ok(response);
 	}
 
@@ -42,7 +47,7 @@ public class StoreController {
 		if (request.regionId() == null) {
 			throw new IllegalArgumentException("regionId는 null일 수 없습니다.");
 		}
-		if (regionRepository.existsById(request.regionId())) {
+		if (!regionRepository.existsById(request.regionId())) {
 			throw new IllegalArgumentException("해당 region이 존재하지 않습니다.");
 		}
 		if (request.address() == null) {
