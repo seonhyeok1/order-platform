@@ -42,7 +42,7 @@ public class OrderService {
 	private final MenuRepository menuRepository;
 
 	@Transactional
-	public String createOrder(Long userId, CreateOrderRequest request, LocalDateTime requestTime) {
+	public UUID createOrder(Long userId, CreateOrderRequest request, LocalDateTime requestTime) {
 		try {
 			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
 			if (cartItems.isEmpty()) {
@@ -91,7 +91,7 @@ public class OrderService {
 				orderItemRepository.save(orderItem);
 			}
 
-			return savedOrder.getOrdersId() + " 가 생성되었습니다";
+			return savedOrder.getOrdersId();
 		} catch (IllegalArgumentException e) {
 			log.error("주문 생성 실패 - 유효하지 않은 요청: {}", request, e);
 			throw new GeneralException(ErrorStatus.INVALID_ORDER_REQUEST);

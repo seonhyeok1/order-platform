@@ -30,15 +30,15 @@ public class OrderController {
 
 	@Operation(summary = "주문 생성 API", description = "사용자의 장바구니를 기반으로 주문을 생성합니다.")
 	@PostMapping
-	public ApiResponse<String> createOrder(
+	public ApiResponse<UUID> createOrder(
 		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
 		@RequestBody CreateOrderRequest request) {
 		if (request.totalPrice() <= 0) {
 			throw new GeneralException(ErrorStatus.INVALID_TOTAL_PRICE);
 		}
 		Long userId = Long.parseLong(principal.getUsername());
-		String result = orderService.createOrder(userId, request, LocalDateTime.now());
-		return ApiResponse.onSuccess(result);
+		UUID orderId = orderService.createOrder(userId, request, LocalDateTime.now());
+		return ApiResponse.onSuccess(orderId);
 	}
 
 	@Operation(summary = "주문 상세 조회 API", description = "주문 ID로 주문 상세 정보를 조회합니다.")
