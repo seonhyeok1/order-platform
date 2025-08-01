@@ -67,4 +67,9 @@ public class Store extends BaseEntity {
 	@Builder.Default
 	private StoreAcceptStatus storeAcceptStatus = StoreAcceptStatus.PENDING;
 
+
+	public void updateAcceptStatus(StoreAcceptStatus newStatus) {
+		this.storeAcceptStatus = newStatus;
+	}
+
 }
