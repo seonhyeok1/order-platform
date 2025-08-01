@@ -1,6 +1,8 @@
 package app.domain.payment;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -52,12 +54,19 @@ public class PaymentService {
 			outputStream.write(obj.toString().getBytes("UTF-8"));
 
 			int code = connection.getResponseCode();
+
 			boolean isSuccess = code == 200;
 
 			InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
-
+			BufferedReader reader = new BufferedReader(new InputStreamReader(responseStream, StandardCharsets.UTF_8));
+			StringBuilder responseBuilder = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				responseBuilder.append(line);
+			}
+			String responseBody = responseBuilder.toString();
 			if (isSuccess) {
-				return "결제 승인이 완료되었습니다. PaymentKey: " + request.paymentKey();
+				return "결제 승인이 완료되었습니다. PaymentKey: " + request.paymentKey() + "결제 응답: " + responseBody;
 			} else {
 				throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 			}
