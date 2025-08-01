@@ -14,28 +14,12 @@
 <body>
 <div class="result wrapper">
     <div class="box_section">
-        <h2 style="padding: 20px 0px 10px 0px">
-            <img
-                    width="35px"
-                    src="https://static.toss.im/3d-emojis/u1F389_apng.png"
-            />
-            결제 성공
-        </h2>
-
-        <p id="paymentKey"></p>
-        <p id="orderId"></p>
-        <p id="amount"></p>
         <button id="confirmButton" onclick="confirmPayment()">결제 승인</button>
         <div id="result"></div>
     </div>
 </div>
 <script>
     const urlParams = new URLSearchParams(window.location.search);
-
-    // 페이지 로드 시 정보 표시
-    document.getElementById("paymentKey").textContent = "paymentKey: " + urlParams.get("paymentKey");
-    document.getElementById("orderId").textContent = "주문번호: " + urlParams.get("orderId");
-    document.getElementById("amount").textContent = "결제 금액: " + urlParams.get("amount");
 
     // 결제 승인 함수
     async function confirmPayment() {

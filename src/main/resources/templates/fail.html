@@ -24,6 +24,8 @@
         </h2>
         <p id="code"></p>
         <p id="message"></p>
+        <button id="confirmButton" onclick="confirmFail()">확인</button>
+        <div id="result"></div>
     </div>
 </div>
 </body>
@@ -32,9 +34,34 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search);
 
-    const codeElement = document.getElementById("code");
-    const messageElement = document.getElementById("message");
 
-    codeElement.textContent = "에러코드: " + urlParams.get("code");
-    messageElement.textContent = "실패 사유: " + urlParams.get("message");
+    // 결제 실패 처리 함수
+    async function confirmFail() {
+        const requestData = {
+            orderId: urlParams.get("orderId"),
+            errorCode: urlParams.get("code"),
+            message: urlParams.get("message")
+        };
+
+        try {
+            const response = await fetch("/payment/failSave", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestData),
+            });
+
+            const result = await response.text();
+
+            if (response.ok) {
+                document.getElementById("result").innerHTML = "<p style='color: green;'>" + result + "</p>";
+                document.getElementById("confirmButton").disabled = true;
+            } else {
+                document.getElementById("result").innerHTML = "<p style='color: red;'>실패 처리 오류</p>";
+            }
+        } catch (error) {
+            document.getElementById("result").innerHTML = "<p style='color: red;'>오류가 발생했습니다.</p>";
+        }
+    }
 </script>
