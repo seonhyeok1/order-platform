@@ -3,14 +3,13 @@ package app.domain.order;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
-import app.domain.user.model.UserRepository;
-import app.domain.user.model.entity.User;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.order.model.OrderItemRepository;
@@ -22,6 +21,8 @@ import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import jakarta.transaction.Transactional;
@@ -41,7 +42,7 @@ public class OrderService {
 	private final MenuRepository menuRepository;
 
 	@Transactional
-	public String createOrder(Long userId, CreateOrderRequest request, LocalDateTime requsetTime) {
+	public String createOrder(Long userId, CreateOrderRequest request, LocalDateTime requestTime) {
 		try {
 			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
 			if (cartItems.isEmpty()) {
@@ -70,8 +71,7 @@ public class OrderService {
 				.totalPrice(request.totalPrice())
 				.orderStatus(OrderStatus.PENDING)
 				.deliveryAddress(request.deliveryAddress())
-				.orderHistory(String.format("{\"pending\": \"%s\"}",
-					requsetTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
+				.orderHistory(Map.of("pending", requestTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
 				.isRefundable(true)
 				.build();
 
