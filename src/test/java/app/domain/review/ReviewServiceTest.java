@@ -82,7 +82,7 @@ class ReviewServiceTest {
 		when(reviewRepository.save(any(Review.class))).thenReturn(review);
 
 		// when
-		String result = reviewService.createReview(request);
+		String result = reviewService.createReview(user.getUserId(), request);
 
 		// then
 		assertNotNull(result);
@@ -98,7 +98,8 @@ class ReviewServiceTest {
 		when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
 		// when & then
-		GeneralException exception = assertThrows(GeneralException.class, () -> reviewService.createReview(request));
+		GeneralException exception = assertThrows(GeneralException.class,
+			() -> reviewService.createReview(999L, request));
 		assertEquals(ErrorStatus.USER_NOT_FOUND, exception.getErrorStatus());
 	}
 
@@ -112,7 +113,8 @@ class ReviewServiceTest {
 		when(ordersRepository.findById(nonExistentOrderId)).thenReturn(Optional.empty());
 
 		// when & then
-		GeneralException exception = assertThrows(GeneralException.class, () -> reviewService.createReview(request));
+		GeneralException exception = assertThrows(GeneralException.class,
+			() -> reviewService.createReview(user.getUserId(), request));
 		assertEquals(ErrorStatus.ORDER_NOT_FOUND, exception.getErrorStatus());
 	}
 
@@ -125,7 +127,8 @@ class ReviewServiceTest {
 		when(ordersRepository.findById(order.getOrdersId())).thenReturn(Optional.of(order));
 
 		// when & then
-		GeneralException exception = assertThrows(GeneralException.class, () -> reviewService.createReview(request));
+		GeneralException exception = assertThrows(GeneralException.class,
+			() -> reviewService.createReview(user.getUserId(), request));
 		assertEquals(ErrorStatus._FORBIDDEN, exception.getErrorStatus());
 	}
 
@@ -139,7 +142,8 @@ class ReviewServiceTest {
 		when(reviewRepository.existsByOrders(order)).thenReturn(true);
 
 		// when & then
-		GeneralException exception = assertThrows(GeneralException.class, () -> reviewService.createReview(request));
+		GeneralException exception = assertThrows(GeneralException.class,
+			() -> reviewService.createReview(user.getUserId(), request));
 		assertEquals(ErrorStatus.REVIEW_ALREADY_EXISTS, exception.getErrorStatus());
 	}
 
@@ -152,7 +156,7 @@ class ReviewServiceTest {
 		when(reviewRepository.findByUser(user)).thenReturn(Collections.singletonList(review));
 
 		// when
-		List<GetReviewResponse> responses = reviewService.getReviews(request);
+		List<GetReviewResponse> responses = reviewService.getReviews(user.getUserId(), request);
 
 		// then
 		assertNotNull(responses);
@@ -173,7 +177,8 @@ class ReviewServiceTest {
 		when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
 		// when & then
-		GeneralException exception = assertThrows(GeneralException.class, () -> reviewService.getReviews(request));
+		GeneralException exception = assertThrows(GeneralException.class,
+			() -> reviewService.getReviews(999L, request));
 		assertEquals(ErrorStatus.USER_NOT_FOUND, exception.getErrorStatus());
 	}
 
@@ -186,7 +191,8 @@ class ReviewServiceTest {
 		when(reviewRepository.findByUser(user)).thenReturn(Collections.emptyList());
 
 		// when & then
-		GeneralException exception = assertThrows(GeneralException.class, () -> reviewService.getReviews(request));
+		GeneralException exception = assertThrows(GeneralException.class,
+			() -> reviewService.getReviews(user.getUserId(), request));
 		assertEquals(ErrorStatus.NO_REVIEWS_FOUND_FOR_USER, exception.getErrorStatus());
 	}
 }
