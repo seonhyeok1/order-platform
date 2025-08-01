@@ -71,7 +71,7 @@ public class SecurityConfig {
 				// 2. 권한에 따른 접근 제한
 				.requestMatchers("/api/store/**")
 				.hasRole(UserRole.OWNER.name())
-				.requestMatchers("/api/user/**")
+				.requestMatchers("/api/customer/**")
 				.hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/api/cart/**")
 				.hasRole(UserRole.CUSTOMER.name())
