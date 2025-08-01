@@ -2,9 +2,12 @@ package app.domain.manager;
 
 import static org.springframework.data.domain.Sort.Direction.*;
 
+import java.util.UUID;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,9 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.manager.dto.response.GetCustomListResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
+import app.domain.manager.dto.response.GetStoreDetailResponse;
+import app.domain.manager.dto.response.GetStoreListResponse;
 import app.domain.order.model.dto.response.OrderDetailResponse;
+import app.domain.store.model.enums.StoreAcceptStatus;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.PagedResponse;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -24,14 +32,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/admin/users")
+@RequestMapping("/manager")
 @RequiredArgsConstructor
 @Tag(name = "관리자 API", description = "관리자의 사용자 관리 API")
 public class ManagerController {
 
 	private final ManagerService managerService;
 
-	@GetMapping
+	@GetMapping("/customer")
 	@Operation(
 		summary = "전체 사용자 목록 조회",
 		description = "가입한 사용자 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
@@ -78,7 +86,7 @@ public class ManagerController {
 		return ApiResponse.onSuccess(managerService.getAllCustomer(pageable));
 	}
 
-	@GetMapping("/{userId}")
+	@GetMapping("/customer/{userId}")
 	@Operation(
 		summary = "선택한 유저 정보 조회",
 		description = "선택한 유저의 자세한 정보와 등록한 주소를 확인 합니다."
@@ -120,7 +128,7 @@ public class ManagerController {
 		return ApiResponse.onSuccess(managerService.getCustomerDetailById(userId));
 	}
 
-	@GetMapping("/{userId}/order")
+	@GetMapping("/customer/{userId}/order")
 	@Operation(
 		summary = "선택한 사용자 주문내역 조회",
 		description = "선택한 사용자의 주문 정보를 확인 합니다."
@@ -167,7 +175,7 @@ public class ManagerController {
 		return ApiResponse.onSuccess(managerService.getCustomerOrderListById(userId, pageable));
 	}
 
-	@GetMapping("/search")
+	@GetMapping("/customer/search")
 	@Operation(
 		summary = "전체 사용자 목록 조회",
 		description = "가입한 사용자 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
@@ -213,4 +221,82 @@ public class ManagerController {
 	) {
 		return ApiResponse.onSuccess(managerService.searchCustomer(keyWord, pageable));
 	}
+
+
+
+	@GetMapping("/store")
+	@Operation(
+		summary = "전체 가게 목록 조회",
+		description = "가게 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
+	@ApiResponses({
+		@io.swagger.v3.oas.annotations.responses.ApiResponse(
+			responseCode = "200",
+			description = "가게 목록 조회 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ApiResponse.class),
+				examples = @ExampleObject(value = """
+					{
+					    "resultCode": "COMMON200",
+					    "message": "success",
+					    "result": {
+					        "content": [
+					            {
+					                "userId": 1,
+					                "name":"홍길동"
+					                "email": "user1@example.com",
+					                "createdAt": "2024-01-01T10:00:00"
+					            },
+					            {
+					                "userId": 2,
+					                "name": "사용자2",
+					                "email": "user2@example.com",
+					                "createdAt": "2024-01-02T11:00:00"
+					            }
+					        ],
+					        "page": 0,
+					        "size": 20,
+					        "totalElements": 100,
+					        "totalPages": 5
+					    },
+					}
+					""")
+			)
+		)
+	})
+	public ApiResponse<PagedResponse<GetStoreListResponse>> getAllStore(
+		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable,
+		@RequestParam(defaultValue = "WAITING") StoreAcceptStatus status
+	) {
+		return ApiResponse.onSuccess(managerService.getAllStore( status,pageable));
+	}
+
+
+	@GetMapping("/store/{storeId}")
+	public ApiResponse<GetStoreDetailResponse> getStoreById(
+		@PathVariable UUID storeId
+	){
+		return ApiResponse.onSuccess(managerService.getStoreDetail(storeId));
+	}
+
+	@PatchMapping("/store/{storeId}/accept")
+	public ApiResponse<String> approveStore(
+		@PathVariable UUID storeId,
+		@RequestParam StoreAcceptStatus status
+	) {
+		return ApiResponse.onSuccess(managerService.approveStore(storeId, status));
+	}
+
+
+	@GetMapping("/store/search")
+	public ApiResponse<PagedResponse<GetStoreListResponse>> getAllStore(
+		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable,
+		@RequestParam(required = false) String keyword,
+		@RequestParam(required = false) StoreAcceptStatus status
+	) {
+		return ApiResponse.onSuccess(managerService.searchStore(status, keyword, pageable));
+	}
+
+
+
 }
