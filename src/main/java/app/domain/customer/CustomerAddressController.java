@@ -1,11 +1,5 @@
 package app.domain.customer;
 
-import app.global.apiPayload.ApiResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,12 +7,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.customer.dto.request.AddCustomerAddressRequest;
 import app.domain.customer.dto.response.AddCustomerAddressResponse;
+import app.global.apiPayload.ApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
 @Tag(name = "사용자 API", description = "사용자 정보를 제공, 수정하는 API")
-public class CustomerController {
+public class CustomerAddressController {
 	private final CustomerAddressService customerAddressService;
 
 	//    @GetMapping("/address")
