@@ -64,18 +64,18 @@ public class SecurityConfig {
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					"/api/user/signup", "/api/user/login"
+					"/user/signup", "/user/login"
 				)
 				.permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
 
 				// 2. 권한에 따른 접근 제한
 				.requestMatchers("/api/store/**")
 				.hasRole(UserRole.OWNER.name())
-				.requestMatchers("/api/customer/**")
+				.requestMatchers("/api/user/**")
 				.hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/api/cart/**")
 				.hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/api/manager/**")
+				.requestMatchers("/api/admin/**")
 				.hasRole(UserRole.MANAGER.name())
 				.requestMatchers("/api/master/**")
 				.hasRole(UserRole.MASTER.name())
