@@ -150,4 +150,5 @@ class ReviewControllerTest {
 			.andExpect(jsonPath("$.resultCode").value("REVIEW001"))
 			.andExpect(jsonPath("$.message").value("해당 사용자가 작성한 리뷰가 없습니다."));
 	}
+	// todo 유저 아이디가 빠져있거나, store id 가 없으면 요청에 대한 입력 검증
 }

@@ -13,6 +13,7 @@ import app.domain.review.model.dto.request.GetReviewRequest;
 import app.domain.review.model.dto.response.GetReviewResponse;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "review", description = "리뷰 관련 API")
@@ -25,14 +26,14 @@ public class ReviewController {
 
 	@PostMapping
 	public ApiResponse<String> createReview(
-		@RequestBody CreateReviewRequest request
+		@Valid @RequestBody CreateReviewRequest request
 	) {
 		return ApiResponse.onSuccess(reviewService.createReview(request));
 	}
 
 	@GetMapping
 	public ApiResponse<List<GetReviewResponse>> getReviews(
-		@RequestBody GetReviewRequest request
+		@Valid @RequestBody GetReviewRequest request
 	) {
 		return ApiResponse.onSuccess(reviewService.getReviews(request));
 	}
