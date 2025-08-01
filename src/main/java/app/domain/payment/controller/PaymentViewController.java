@@ -1,35 +1,43 @@
-package app.domain.payment;
+package app.domain.payment.controller;
 
 import java.util.UUID;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import app.domain.payment.model.dto.request.PaymentConfirmRequest;
 import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 @RequestMapping("/payment")
-public class PaymentController {
+public class PaymentViewController {
 
-	private final PaymentService paymentService;
+	@Value("${TOSS_CLIENT_KEY}")
+	private String tossClientKey;
 
 	@GetMapping()
 	public String checkout(Model model) {
-		// Orders order = paymentService.getOrderById(orderId);
 		UUID test = UUID.randomUUID();
+		System.out.println(test);
 		model.addAttribute("orderId", test);
-		model.addAttribute("totalPrice", 13000);
+		model.addAttribute("totalPrice", 10000);
+		model.addAttribute("tossClientKey", tossClientKey);
 
 		return "checkout";
 	}
+
+	// @GetMapping("/checkout")
+	// public String checkout(@Valid @RequestBody CheckoutRequest request, Model model) {
+	// 	model.addAttribute("orderId", request.orderId());
+	// 	model.addAttribute("totalPrice", request.totalPrice());
+	// 	model.addAttribute("tossClientKey", tossClientKey);
+	//
+	// 	return "checkout";
+	// }
 
 	@GetMapping("/success")
 	public String success(@RequestParam String paymentKey,
@@ -42,14 +50,14 @@ public class PaymentController {
 		return "success";
 	}
 
-	@PostMapping("/confirm")
-	public ResponseEntity<String> confirm(@RequestBody PaymentConfirmRequest request) {
-		String result = paymentService.confirmPayment(request);
-		return ResponseEntity.ok(result);
-	}
-
 	@GetMapping("/fail")
-	public String fail() {
+	public String fail(@RequestParam String code,
+		@RequestParam String message,
+		@RequestParam String orderId,
+		Model model) {
+		model.addAttribute("code", code);
+		model.addAttribute("message", message);
+		model.addAttribute("orderId", orderId);
 		return "fail";
 	}
 }
