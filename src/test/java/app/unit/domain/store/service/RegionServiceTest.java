@@ -1,4 +1,4 @@
-package app.domain.store.service;
+package app.unit.domain.store.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.store.RegionService;
 import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
+import app.domain.store.repository.RegionRepository;
 
 @ExtendWith(MockitoExtension.class)
 class RegionServiceTest {

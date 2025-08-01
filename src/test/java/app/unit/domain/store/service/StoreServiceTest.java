@@ -1,4 +1,4 @@
-package app.domain.store.service;
+package app.unit.domain.store.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -24,10 +24,10 @@ import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.repository.RegionRepository;
+import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.global.config.MockSecurityConfig;
@@ -62,15 +62,15 @@ class StoreServiceTest {
 		@Test
 		@DisplayName("Success")
 		void createStoreSuccess() {
-			StoreApproveRequest request = new StoreApproveRequest(
-				regionId,
-				categoryId,
-				"가게주소",
-				"가게이름",
-				"가게설명",
-				"010-1111-2222",
-				10000L
-			);
+			StoreApproveRequest request = StoreApproveRequest.builder()
+				.regionId(regionId)
+				.categoryId(categoryId)
+				.address("가게주소")
+				.storeName("가게이름")
+				.desc("가게설명")
+				.phoneNumber("010-1111-2222")
+				.minOrderAmount(10000L)
+				.build();
 
 			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
 			Store mockStore = Store.builder()
@@ -86,7 +86,7 @@ class StoreServiceTest {
 			StoreApproveResponse response = storeService.createStore(authenticatedUserId, request);
 
 			assertNotNull(response);
-			assertEquals(StoreAcceptStatus.PENDING.name(), response.storeApprovalStatus());
+			assertEquals(StoreAcceptStatus.PENDING.name(), response.getStoreApprovalStatus());
 
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(categoryRepository, times(1)).findById(categoryId);
@@ -97,15 +97,15 @@ class StoreServiceTest {
 		@Test
 		@DisplayName("Success : 선택적 필드가 null인 경우")
 		void createStoreSuccessOptionalFieldsNull() {
-			StoreApproveRequest request = new StoreApproveRequest(
-				regionId,
-				categoryId,
-				"가게주소",
-				"가게이름",
-				null,
-				null,
-				10000L
-			);
+			StoreApproveRequest request = StoreApproveRequest.builder()
+				.regionId(regionId)
+				.categoryId(categoryId)
+				.address("가게주소")
+				.storeName("가게이름")
+				.desc(null)
+				.phoneNumber(null)
+				.minOrderAmount(10000L)
+				.build();
 
 			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
 			Store mockStore = Store.builder()
@@ -121,7 +121,7 @@ class StoreServiceTest {
 			StoreApproveResponse response = storeService.createStore(authenticatedUserId, request);
 
 			assertNotNull(response);
-			assertEquals(StoreAcceptStatus.PENDING.name(), response.storeApprovalStatus());
+			assertEquals(StoreAcceptStatus.PENDING.name(), response.getStoreApprovalStatus());
 
 			verify(userRepository, times(1)).findById(authenticatedUserId);
 			verify(categoryRepository, times(1)).findById(categoryId);
@@ -132,15 +132,15 @@ class StoreServiceTest {
 		@Test
 		@DisplayName("Fail : 지역이 존재하지 않음")
 		void createStoreFailRegionNotFound() {
-			StoreApproveRequest request = new StoreApproveRequest(
-				regionId,
-				categoryId,
-				"가게주소",
-				"가게이름",
-				"가게설명",
-				"010-1111-2222",
-				10000L
-			);
+			StoreApproveRequest request = StoreApproveRequest.builder()
+				.regionId(regionId)
+				.categoryId(categoryId)
+				.address("가게주소")
+				.storeName("가게이름")
+				.desc("가게설명")
+				.phoneNumber("010-1111-2222")
+				.minOrderAmount(10000L)
+				.build();
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
 
@@ -165,15 +165,15 @@ class StoreServiceTest {
 		@Test
 		@DisplayName("Success : Full Request")
 		void updateStoreInfoSuccess() {
-			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
-				storeId,
-				categoryId,
-				"새 가게 이름",
-				"새 주소",
-				"010-2222-3333",
-				5000L,
-				"새 설명"
-			);
+			StoreInfoUpdateRequest request = StoreInfoUpdateRequest.builder()
+				.storeId(storeId)
+				.categoryId(categoryId)
+				.name("새 가게 이름")
+				.address("새 주소")
+				.phoneNumber("010-2222-3333")
+				.minOrderAmount(5000L)
+				.desc("새 설명")
+				.build();
 
 			Store mockStore = Store.builder()
 				.storeId(storeId)
@@ -191,7 +191,7 @@ class StoreServiceTest {
 			StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 
 			assertNotNull(response);
-			assertEquals(storeId, response.storeId());
+			assertEquals(storeId, response.getStoreId());
 
 			verify(storeRepository, times(1)).findById(storeId);
 			verify(categoryRepository, times(1)).findById(categoryId);
@@ -202,15 +202,15 @@ class StoreServiceTest {
 		@DisplayName("Success 선택적 필드 Null")
 		void updateStoreInfoSuccessOptionalNull() {
 			UUID storeId = UUID.randomUUID();
-			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
-				storeId,
-				categoryId,
-				null,
-				null,
-				null,
-				null,
-				null
-			);
+			StoreInfoUpdateRequest request = StoreInfoUpdateRequest.builder()
+				.storeId(storeId)
+				.categoryId(categoryId)
+				.name(null)
+				.address(null)
+				.phoneNumber(null)
+				.minOrderAmount(null)
+				.desc(null)
+				.build();
 
 			Store mockStore = Store.builder()
 				.storeId(storeId)
@@ -228,7 +228,7 @@ class StoreServiceTest {
 			StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 
 			assertNotNull(response);
-			assertEquals(storeId, response.storeId());
+			assertEquals(storeId, response.getStoreId());
 			verify(storeRepository, times(1)).findById(storeId);
 			verify(categoryRepository, times(1)).findById(categoryId);
 			verify(storeRepository, times(1)).save(any(Store.class));
