@@ -12,6 +12,7 @@ import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
+import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
