@@ -26,11 +26,20 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import app.domain.manager.dto.response.GetCustomListResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
+import app.domain.manager.dto.response.GetStoreDetailResponse;
+import app.domain.manager.dto.response.GetStoreListResponse;
+import app.domain.menu.model.entity.Category;
 import app.domain.order.model.OrderItemRepository;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.Orders;
+import app.domain.review.model.ReviewRepository;
+import app.domain.store.model.StoreSearchRepository;
+import app.domain.store.model.StoreSearchRepositoryImpl;
+import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
+import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.model.enums.StoreAcceptStatus;
 import app.domain.user.UserSearchRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.user.model.UserRepository;
@@ -60,6 +69,16 @@ class ManagerServiceTest {
 
 	@Mock
 	private OrderItemRepository orderItemRepository;
+
+	@Mock
+	private StoreRepository storeRepository;
+
+	@Mock
+	private ReviewRepository reviewRepository;
+
+	@Mock
+	private StoreSearchRepository storeSearchRepository;
+
 
 	@InjectMocks
 	private ManagerService managerService;
@@ -339,5 +358,138 @@ class ManagerServiceTest {
 		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
 		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
 	}
+
+	//--------
+	@Test
+	@DisplayName("가게 상세 조회 성공")
+	void getStoreDetail_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Region region = Region.builder().regionName("마포구").build();
+		Category category = Category.builder().categoryName("한식").build();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.description("국내산 족발 사용")
+			.address("서울시 마포구")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(15000L)
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.region(region)
+			.category(category)
+			.build();
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+		when(reviewRepository.getAverageRatingByStore(storeId)).thenReturn(4.7);
+
+		// when
+		GetStoreDetailResponse response = managerService.getStoreDetail(storeId);
+
+		// then
+		assertThat(response.storeId()).isEqualTo(storeId);
+		assertThat(response.storeName()).isEqualTo("맛있는 족발집");
+		assertThat(response.averageRating()).isEqualTo(4.7);
+	}
+
+	@Test
+	@DisplayName("가게 승인 처리 성공")
+	void approveStore_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Region region = Region.builder().regionName("마포구").build();
+		Category category = Category.builder().categoryName("한식").build();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.description("국내산 족발 사용")
+			.address("서울시 마포구")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(15000L)
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.region(region)
+			.category(category)
+			.build();
+		store.updateAcceptStatus(StoreAcceptStatus.PENDING);
+
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+
+		// when
+		String result = managerService.approveStore(storeId, StoreAcceptStatus.APPROVE);
+
+		// then
+		assertThat(result).contains("변경 되었습니다");
+		assertThat(store.getStoreAcceptStatus()).isEqualTo(StoreAcceptStatus.APPROVE);
+	}
+
+	@Test
+	@DisplayName("가게 리스트 조회 성공")
+	void getAllStore_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Region region = Region.builder().regionName("마포구").build();
+		Category category = Category.builder().categoryName("한식").build();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.description("국내산 족발 사용")
+			.address("서울시 마포구")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(15000L)
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.region(region)
+			.category(category)
+			.build();
+		Page<Store> page = new PageImpl<>(List.of(store));
+		Pageable pageable = PageRequest.of(0, 10);
+
+		when(storeRepository.findAllByStoreAcceptStatusAndDeletedAtIsNull(StoreAcceptStatus.APPROVE, pageable))
+			.thenReturn(page);
+		when(reviewRepository.getAverageRatingByStore(store.getStoreId())).thenReturn(4.0);
+
+		// when
+		PagedResponse<GetStoreListResponse> response = managerService.getAllStore(StoreAcceptStatus.APPROVE, pageable);
+
+		// then
+		assertThat(response.content()).hasSize(1);
+		assertThat(response.content().get(0).storeName()).isEqualTo("맛있는 족발집");
+		assertThat(response.content().get(0).averageRating()).isEqualTo(4.0);
+	}
+
+	@Test
+	@DisplayName("가게 키워드 검색 성공")
+	void searchStore_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Region region = Region.builder().regionName("마포구").build();
+		Category category = Category.builder().categoryName("한식").build();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.description("국내산 족발 사용")
+			.address("서울시 마포구")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(15000L)
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.region(region)
+			.category(category)
+			.build();
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Store> storePage = new PageImpl<>(List.of(store));
+
+		when(storeSearchRepository.searchStores("족발", StoreAcceptStatus.PENDING, pageable))
+			.thenReturn(storePage);
+		when(reviewRepository.getAverageRatingByStore(storeId))
+			.thenReturn(4.5);
+
+		// when
+		PagedResponse<GetStoreListResponse> response = managerService.searchStore(StoreAcceptStatus.PENDING, "족발", pageable);
+
+		// then
+		assertThat(response.content()).hasSize(1);
+		GetStoreListResponse dto = response.content().get(0);
+		assertThat(dto.storeId()).isEqualTo(storeId);
+		assertThat(dto.storeName()).isEqualTo("맛있는 족발집");
+		assertThat(dto.averageRating()).isEqualTo(4.5);
+	}
+
 
 }

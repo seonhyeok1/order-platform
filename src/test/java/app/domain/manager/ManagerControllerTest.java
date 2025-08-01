@@ -23,15 +23,19 @@ import org.springframework.test.web.servlet.MockMvc;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.manager.dto.response.GetCustomListResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
+import app.domain.manager.dto.response.GetStoreDetailResponse;
+import app.domain.manager.dto.response.GetStoreListResponse;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
+import app.domain.store.model.enums.StoreAcceptStatus;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.SecurityConfig;
+import app.global.jwt.JwtTokenProvider;
 
 @WebMvcTest(ManagerController.class)
 @Import(SecurityConfig.class)
@@ -42,6 +46,15 @@ class ManagerControllerTest {
 
 	@MockitoBean
 	private ManagerService managerService;
+
+	@MockitoBean
+	private JwtTokenProvider jwtTokenProvider;
+
+	// @MockitoBean
+	// private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+	//
+	// @MockitoBean
+	// private JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
 	@DisplayName("사용자 전체 조회 테스트")
 	@WithMockUser
@@ -212,5 +225,69 @@ class ManagerControllerTest {
 			.andExpect(jsonPath("$.resultCode").value("USER001"))
 			.andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
 	}
+
+
+	@Test
+	@DisplayName("가게 리스트 조회 - 승인 상태로 필터링")
+	void testGetAllStoreWithStatus() throws Exception {
+		// given
+		PagedResponse<GetStoreListResponse> mockResponse =
+			new PagedResponse<>(List.of(), 0, 0,0,0,true);
+
+		when(managerService.getAllStore(eq(StoreAcceptStatus.PENDING), any(Pageable.class)))
+			.thenReturn(mockResponse);
+
+		// when & then
+		mockMvc.perform(get("/manager/store")
+				.param("status", "WAITING")
+				.param("page", "0")
+				.param("size", "20"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data").exists());
+	}
+
+	@Test
+	@DisplayName("가게 상세 조회")
+	void testGetStoreById() throws Exception {
+		// given
+		UUID storeId = UUID.randomUUID();
+
+		GetStoreDetailResponse response = new GetStoreDetailResponse(
+			storeId,
+			"감자탕 명가",
+			"진한 국물의 감자탕",
+			"서울시 종로구 종로1가",
+			"010-2222-3333",
+			15000L,
+			"종로구",
+			"한식",
+			4.3
+		);
+		when(managerService.getStoreDetail(storeId)).thenReturn(response);
+
+		// when & then
+		mockMvc.perform(get("/manager/store/{storeId}", storeId))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data").exists());
+	}
+
+	@Test
+	@DisplayName("가게 승인 처리")
+	void testApproveStore() throws Exception {
+		// given
+		UUID storeId = UUID.randomUUID();
+		StoreAcceptStatus status = StoreAcceptStatus.APPROVE;
+		String message = "가게 상태가 APPROVED 처리되었습니다.";
+
+		when(managerService.approveStore(storeId, status)).thenReturn(message);
+
+		// when & then
+		mockMvc.perform(patch("/manager/store/{storeId}/accept", storeId)
+				.param("status", status.name()))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.data").value(message));
+	}
+
+
 
 }
