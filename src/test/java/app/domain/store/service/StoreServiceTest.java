@@ -16,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.annotation.Import;
 
+import app.domain.menu.model.entity.Category;
+import app.domain.menu.model.entity.CategoryRepository;
 import app.domain.store.StoreService;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
@@ -47,18 +49,22 @@ class StoreServiceTest {
 	@Mock
 	private UserRepository userRepository;
 
+	@Mock
+	private CategoryRepository categoryRepository;
+
 	@Nested
 	@DisplayName("createStore Test")
 	class CreateStoreTest {
 		Long authenticatedUserId = 1L;
+		UUID regionId = UUID.randomUUID();
+		UUID categoryId = UUID.randomUUID();
 
 		@Test
 		@DisplayName("Success")
 		void createStoreSuccess() {
-			UUID regionId = UUID.randomUUID();
-
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				"가게주소",
 				"가게이름",
 				"가게설명",
@@ -75,6 +81,7 @@ class StoreServiceTest {
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 			when(userRepository.findById(authenticatedUserId)).thenReturn(Optional.of(mock(User.class)));
 			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
+			when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mock(Category.class)));
 
 			StoreApproveResponse response = storeService.createStore(authenticatedUserId, request);
 
@@ -82,6 +89,7 @@ class StoreServiceTest {
 			assertEquals(StoreAcceptStatus.PENDING.name(), response.storeApprovalStatus());
 
 			verify(regionRepository, times(1)).findById(regionId);
+			verify(categoryRepository, times(1)).findById(categoryId);
 			verify(userRepository, times(1)).findById(authenticatedUserId);
 			verify(storeRepository, times(1)).save(any(Store.class));
 		}
@@ -89,10 +97,9 @@ class StoreServiceTest {
 		@Test
 		@DisplayName("Success : 선택적 필드가 null인 경우")
 		void createStoreSuccessOptionalFieldsNull() {
-			UUID regionId = UUID.randomUUID();
-
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				"가게주소",
 				"가게이름",
 				null,
@@ -107,6 +114,7 @@ class StoreServiceTest {
 				.build();
 
 			when(userRepository.findById(authenticatedUserId)).thenReturn(Optional.of(mock(User.class)));
+			when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mock(Category.class)));
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
 
@@ -116,6 +124,7 @@ class StoreServiceTest {
 			assertEquals(StoreAcceptStatus.PENDING.name(), response.storeApprovalStatus());
 
 			verify(userRepository, times(1)).findById(authenticatedUserId);
+			verify(categoryRepository, times(1)).findById(categoryId);
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(storeRepository, times(1)).save(any(Store.class));
 		}
@@ -123,9 +132,9 @@ class StoreServiceTest {
 		@Test
 		@DisplayName("Fail : 지역이 존재하지 않음")
 		void createStoreFailRegionNotFound() {
-			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				"가게주소",
 				"가게이름",
 				"가게설명",
@@ -148,13 +157,17 @@ class StoreServiceTest {
 	@Nested
 	@DisplayName("updateStoreInfo api 테스트")
 	class UpdateStoreInfoTest {
+		UUID storeId = UUID.randomUUID();
+		UUID categoryId = UUID.randomUUID();
+
+		Category mockCategory = mock(Category.class);
 
 		@Test
 		@DisplayName("Success : Full Request")
 		void updateStoreInfoSuccess() {
-			UUID storeId = UUID.randomUUID();
 			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
 				storeId,
+				categoryId,
 				"새 가게 이름",
 				"새 주소",
 				"010-2222-3333",
@@ -170,8 +183,10 @@ class StoreServiceTest {
 				.minOrderAmount(1000L)
 				.description("기존 설명")
 				.build();
+
 			when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
 			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
+			when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mockCategory));
 
 			StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 
@@ -179,6 +194,7 @@ class StoreServiceTest {
 			assertEquals(storeId, response.storeId());
 
 			verify(storeRepository, times(1)).findById(storeId);
+			verify(categoryRepository, times(1)).findById(categoryId);
 			verify(storeRepository, times(1)).save(any(Store.class));
 		}
 
@@ -188,6 +204,7 @@ class StoreServiceTest {
 			UUID storeId = UUID.randomUUID();
 			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
 				storeId,
+				categoryId,
 				null,
 				null,
 				null,
@@ -206,12 +223,14 @@ class StoreServiceTest {
 
 			when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
 			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
+			when(categoryRepository.findById(categoryId)).thenReturn(Optional.of(mockCategory));
 
 			StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 
 			assertNotNull(response);
 			assertEquals(storeId, response.storeId());
 			verify(storeRepository, times(1)).findById(storeId);
+			verify(categoryRepository, times(1)).findById(categoryId);
 			verify(storeRepository, times(1)).save(any(Store.class));
 
 			assertEquals("기존 가게", mockStore.getStoreName());

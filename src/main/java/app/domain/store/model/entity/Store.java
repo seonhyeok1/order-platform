@@ -80,6 +80,10 @@ public class Store extends BaseEntity {
 		this.storeName = storeName;
 	}
 
+	public void setCategory(Category category) {
+		this.category = category;
+	}
+
 	public void setDescription(String description) {
 		this.description = description;
 	}

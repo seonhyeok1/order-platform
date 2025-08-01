@@ -6,11 +6,11 @@ import jakarta.validation.constraints.NotNull;
 
 public record StoreApproveRequest(
 	@NotNull UUID regionId,
+	@NotNull UUID categoryId,
 	@NotNull String address,
 	@NotNull String storeName,
 	String desc,
 	String phoneNumber,
 	@NotNull Long minOrderAmount
-
 ) {
 }

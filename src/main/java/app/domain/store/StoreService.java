@@ -5,6 +5,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import app.domain.menu.model.entity.Category;
+import app.domain.menu.model.entity.CategoryRepository;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
@@ -27,6 +29,7 @@ public class StoreService {
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
 	private final UserRepository userRepository;
+	private final CategoryRepository categoryRepository;
 
 	@Transactional
 	public StoreApproveResponse createStore(Long userId, StoreApproveRequest request) {
@@ -37,10 +40,14 @@ public class StoreService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 user 존재하지 않음"));
 
+		Category category = categoryRepository.findById(request.categoryId())
+			.orElseThrow(() -> new IllegalArgumentException("Category NotFound"));
+
 		Store store = Store.builder()
 			.storeName(request.storeName())
 			.region(region)
 			.user(user)
+			.category(category)
 			.address(request.address())
 			.description(request.desc())
 			.phoneNumber(request.phoneNumber())
@@ -61,6 +68,11 @@ public class StoreService {
 		Store store = storeRepository.findById(request.storeId())
 			.orElseThrow(() -> new IllegalArgumentException("가게 찾을 수 없음"));
 
+		if (request.categoryId() != null) {
+			Category category = categoryRepository.findById(request.categoryId())
+				.orElseThrow(() -> new IllegalArgumentException("Category not found"));
+			store.setCategory(category);
+		}
 		if (request.name() != null) {
 			store.setStoreName(request.name());
 		}

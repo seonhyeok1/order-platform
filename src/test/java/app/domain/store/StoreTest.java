@@ -76,9 +76,10 @@ public class StoreTest {
 	@DisplayName("Success: 가게 등록")
 	void createStoreSuccess() throws Exception {
 		Long authenticatedUserId = 1L;
-
+		UUID categoryId = UUID.randomUUID();
 		StoreApproveRequest request = new StoreApproveRequest(
 			testRegionId,
+			categoryId,
 			"광화문",
 			"광화문 가게",
 			"가게 설명",

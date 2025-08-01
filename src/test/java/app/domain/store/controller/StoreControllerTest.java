@@ -44,6 +44,8 @@ public class StoreControllerTest {
 	@Mock
 	private RegionRepository regionRepository;
 
+	UUID categoryId = UUID.randomUUID();
+
 	@Nested
 	@DisplayName("Create Store Test")
 	class CreateStoreTest {
@@ -66,6 +68,7 @@ public class StoreControllerTest {
 
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				"주소",
 				"가게 명",
 				"설명",
@@ -97,6 +100,7 @@ public class StoreControllerTest {
 		void CreateStoreInvalidRegionId() {
 			StoreApproveRequest request = new StoreApproveRequest(
 				null,
+				categoryId,
 				"주소",
 				"가게 명",
 				"설명",
@@ -116,6 +120,7 @@ public class StoreControllerTest {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				null,
 				"가게 명",
 				"설명",
@@ -132,6 +137,7 @@ public class StoreControllerTest {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				"주소",
 				null,
 				"설명",
@@ -148,6 +154,7 @@ public class StoreControllerTest {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
+				categoryId,
 				"주소",
 				"가게 명",
 				"설명",
@@ -168,6 +175,7 @@ public class StoreControllerTest {
 		void StoreInfoUpdateSuccess() {
 			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
 				UUID.randomUUID(),
+				categoryId,
 				"가게 명",
 				"주소",
 				"01012345678",
@@ -190,6 +198,7 @@ public class StoreControllerTest {
 		void StoreInfoUpdateOptionalNull() {
 			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
 				UUID.randomUUID(),
+				categoryId,
 				null,
 				null,
 				null,
@@ -212,6 +221,7 @@ public class StoreControllerTest {
 		void StoreInfoUpdateInvalidStoreId() {
 			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
 				null,
+				categoryId,
 				"가게 명",
 				"주소",
 				"01012345678",
@@ -227,6 +237,7 @@ public class StoreControllerTest {
 		void StoreInfoUpdateMinOrderAmountError() {
 			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
 				UUID.randomUUID(),
+				categoryId,
 				"가게 명",
 				"주소",
 				"01012345678",

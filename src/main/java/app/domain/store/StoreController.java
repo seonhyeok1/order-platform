@@ -50,6 +50,9 @@ public class StoreController {
 		if (!regionRepository.existsById(request.regionId())) {
 			throw new IllegalArgumentException("해당 region이 존재하지 않습니다.");
 		}
+		if (request.categoryId() == null) {
+			throw new IllegalArgumentException("카테고리는 null일 수 없습니다.");
+		}
 		if (request.address() == null) {
 			throw new IllegalArgumentException("주소는 null일 수 없습니다.");
 		}
@@ -71,12 +74,14 @@ public class StoreController {
 
 	@PutMapping("/store")
 	public ResponseEntity<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
-		if (request.storeId() == null) {
+		if (request.storeId() == null)
 			throw new IllegalArgumentException("storeId error");
-		}
-		if (request.minOrderAmount() != null && request.minOrderAmount() < 0) {
+
+		if (request.minOrderAmount() != null && request.minOrderAmount() < 0)
 			throw new IllegalArgumentException("minOrderAmount error");
-		}
+
+		if (request.categoryId() == null)
+			throw new IllegalArgumentException("categoryId error");
 
 		StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 		return ResponseEntity.ok(response);
