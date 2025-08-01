@@ -7,6 +7,8 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
@@ -20,8 +22,10 @@ import org.springframework.stereotype.Service;
 import app.domain.cart.service.CartService;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
+import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.payment.model.PaymentEtcRepository;
 import app.domain.payment.model.PaymentRepository;
+import app.domain.payment.model.dto.request.CancelPaymentRequest;
 import app.domain.payment.model.dto.request.PaymentConfirmRequest;
 import app.domain.payment.model.dto.request.PaymentFailRequest;
 import app.domain.payment.model.entity.Payment;
@@ -38,6 +42,8 @@ public class PaymentService {
 
 	@Value("${TOSS_SECRET_KEY}")
 	private String tossSecretKey;
+	@Value("{TOSS_URL}")
+	private String tossUrl;
 
 	private final OrdersRepository ordersRepository;
 	private final PaymentRepository paymentRepository;
@@ -59,6 +65,17 @@ public class PaymentService {
 		throw new GeneralException(ErrorStatus._UNAUTHORIZED);
 	}
 
+	private String generateIdempotencyKey(Long userId, String orderId) {
+		try {
+			String input = userId + orderId;
+			MessageDigest digest = MessageDigest.getInstance("SHA-256");
+			byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+			return Base64.getEncoder().encodeToString(hash);
+		} catch (Exception e) {
+			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+		}
+	}
+
 	@Transactional
 	public String confirmPayment(PaymentConfirmRequest request) {
 
@@ -76,15 +93,19 @@ public class PaymentService {
 			String responseBody;
 			boolean isSuccess;
 			try {
+				Long userId = getCurrentUserId();
+				String idempotencyKey = generateIdempotencyKey(userId, request.orderId());
+
 				JSONObject obj = new JSONObject();
 				obj.put("orderId", request.orderId());
 				obj.put("amount", request.amount());
 				obj.put("paymentKey", request.paymentKey());
 
-				URL url = new URL("https://api.tosspayments.com/v1/payments/confirm");
+				URL url = new URL(tossUrl + "/confirm");
 				HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 				connection.setRequestProperty("Authorization", authorizations);
 				connection.setRequestProperty("Content-Type", "application/json");
+				connection.setRequestProperty("Idempotency-Key", idempotencyKey);
 				connection.setRequestMethod("POST");
 				connection.setDoOutput(true);
 
@@ -167,6 +188,83 @@ public class PaymentService {
 			paymentEtcRepository.save(paymentEtc);
 
 			return "결제 실패 처리가 완료되었습니다.";
+		} catch (GeneralException e) {
+			throw e;
+		} catch (Exception e) {
+			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@Transactional
+	public String cancelPayment(CancelPaymentRequest request) {
+		try {
+			Orders order = getOrderById(request.getOrderId());
+			Payment payment = paymentRepository.findByOrdersId(request.getOrderId())
+				.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+
+			String widgetSecretKey = tossSecretKey;
+			Base64.Encoder encoder = Base64.getEncoder();
+			byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
+			String authorizations = "Basic " + new String(encodedBytes);
+
+			String responseBody;
+			boolean isSuccess;
+			try {
+				Long userId = getCurrentUserId();
+				String idempotencyKey = generateIdempotencyKey(userId, request.getOrderId().toString());
+
+				JSONObject obj = new JSONObject();
+				obj.put("cancelReason", request.getCancelReason());
+
+				URL url = new URL(tossUrl + "/payments/" + payment.getPaymentKey() + "/cancel");
+				HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+				connection.setRequestProperty("Authorization", authorizations);
+				connection.setRequestProperty("Content-Type", "application/json");
+				connection.setRequestProperty("Idempotency-Key", idempotencyKey);
+				connection.setRequestMethod("POST");
+				connection.setDoOutput(true);
+
+				OutputStream outputStream = connection.getOutputStream();
+				outputStream.write(obj.toString().getBytes("UTF-8"));
+
+				int code = connection.getResponseCode();
+				isSuccess = code == 200;
+
+				InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
+				BufferedReader reader = new BufferedReader(
+					new InputStreamReader(responseStream, StandardCharsets.UTF_8));
+				StringBuilder responseBuilder = new StringBuilder();
+				String line;
+				while ((line = reader.readLine()) != null) {
+					responseBuilder.append(line);
+				}
+				responseBody = responseBuilder.toString();
+			} catch (Exception e) {
+				throw new GeneralException(ErrorStatus.TOSS_API_ERROR);
+			}
+
+			JSONObject responseJson = new JSONObject(responseBody);
+
+			if (isSuccess) {
+				order.updateOrderStatus(OrderStatus.REFUNDED);
+				order.addHistory("cancel", LocalDateTime.now());
+
+				payment.updatePaymentStatus(PaymentStatus.CANCELLED);
+				paymentRepository.save(payment);
+			}
+
+			PaymentEtc paymentEtc = PaymentEtc.builder()
+				.payment(payment)
+				.paymentResponse(responseJson.toMap())
+				.build();
+
+			paymentEtcRepository.save(paymentEtc);
+
+			if (isSuccess) {
+				return "결제 취소가 완료되었습니다.";
+			} else {
+				throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+			}
 		} catch (GeneralException e) {
 			throw e;
 		} catch (Exception e) {
