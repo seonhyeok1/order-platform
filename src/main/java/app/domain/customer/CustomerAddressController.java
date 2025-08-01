@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,15 +30,36 @@ public class CustomerAddressController {
 	@GetMapping("/list")
 	@Operation(summary = "사용자 주소지 목록 조회", description = "")
 	public ApiResponse<List<GetCustomerAddressListResponse>> GetCustomerAddresses (
-		@PathVariable("userId") Long userId	) {
-		return ApiResponse.onSuccess(customerAddressService.getCustomerAddresses(userId));
+		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+		@RequestBody @Valid AddCustomerAddressRequest request	) {
+		if (request.userId() == null) {
+			throw new IllegalArgumentException("User ID cannot be null.");
+		}
+		return ApiResponse.onSuccess(customerAddressService.getCustomerAddresses(request.userId()));
 	}
 
 	@PostMapping("/add")
 	@Operation(summary = "사용자 주소지 등록", description = "")
 	public ApiResponse<AddCustomerAddressResponse> AddCustomerAddress(
-		@RequestBody @Valid AddCustomerAddressRequest request) {
-		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(request);
+		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
+		@RequestBody @Valid AddCustomerAddressRequest request){
+
+		// --- START: Input Validation ---
+		if (request.userId() == null) {
+			throw new IllegalArgumentException("User ID cannot be null.");
+		}
+		if (!StringUtils.hasText(request.alias())) {
+			throw new IllegalArgumentException("Address alias is required.");
+		}
+		if (!StringUtils.hasText(request.address())) {
+			throw new IllegalArgumentException("Address is required.");
+		}
+		if (!StringUtils.hasText(request.addressDetail())) {
+			throw new IllegalArgumentException("상세 주소는 필수입니다.");
+		}
+		// --- END: Input Validation ---
+
+		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(request.userId(), request);
 		return ApiResponse.onSuccess(response);
 	}
 }

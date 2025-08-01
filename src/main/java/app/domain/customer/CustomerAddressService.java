@@ -27,59 +27,63 @@ public class CustomerAddressService {
 	private final UserRepository userRepository;
 
 	@Transactional
-	public AddCustomerAddressResponse addCustomerAddress(AddCustomerAddressRequest request) {
-		// --- START: Input Validation ---
-		if (request.userId() == null) {
-			throw new IllegalArgumentException("User ID cannot be null.");
-		}
-		if (!StringUtils.hasText(request.alias())) {
-			throw new IllegalArgumentException("Address alias is required.");
-		}
-		if (!StringUtils.hasText(request.address())) {
-			throw new IllegalArgumentException("Address is required.");
-		}
-		// --- END: Input Validation ---
+	public AddCustomerAddressResponse addCustomerAddress(Long userId, AddCustomerAddressRequest request) {
 
-		User user = userRepository.findById(request.userId())
+		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		// --- START: isDefault logic ---
-		if (request.isDefault()) { // New address is intended to be default
-			// Find existing default address for this user using repository
+		// 새로운 중복 주소 검증
+		if (userAddressRepository.existsByUserAndAddressAndAddressDetail(user, request.address(), request.addressDetail())) {
+			throw new GeneralException(ErrorStatus.ADDRESS_ALREADY_EXISTS);
+		}
+
+		boolean finalIsDefault = request.isDefault();
+
+		if (!finalIsDefault) {
+			if (userAddressRepository.findAllByUserUserId(user.getUserId()).isEmpty()) {
+				finalIsDefault = true;
+			}
+		}
+
+		if (finalIsDefault) {
 			userAddressRepository.findByUser_UserIdAndIsDefaultTrue(user.getUserId())
 				.ifPresent(existingDefault -> {
-					existingDefault.setDefault(false); // Unset existing default
-					userAddressRepository.save(existingDefault); // Save the updated existing address
+					existingDefault.setDefault(false);
+					userAddressRepository.save(existingDefault);
 				});
 		}
-		// --- END: isDefault logic ---
 
 		UserAddress address = UserAddress.builder()
 			.user(user)
 			.alias(request.alias())
 			.address(request.address())
 			.addressDetail(request.addressDetail())
-			.isDefault(request.isDefault()) // Set isDefault based on request
+			.isDefault(finalIsDefault) // Set isDefault based on request
 			.build();
 
 		try {
 			UserAddress savedAddress = userAddressRepository.save(address);
 			if (savedAddress.getAddressId() == null) {
-				throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+				throw new GeneralException(ErrorStatus.ADDRESS_ADD_FAILED);
 			}
 			return new AddCustomerAddressResponse(savedAddress.getAddressId());
 		} catch (DataAccessException e) {
-			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+			throw new GeneralException(ErrorStatus.ADDRESS_ADD_FAILED);
 		}
 	}
 
 	@Transactional(readOnly = true)
 	public List<GetCustomerAddressListResponse> getCustomerAddresses(Long userId) {
-		User user = userRepository.findById(userId)
+		userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-		return userAddressRepository.findAllByUserUserId(userId)
-			.stream().map(GetCustomerAddressListResponse::from).toList();
+
+		try {
+			return userAddressRepository.findAllByUserUserId(userId)
+				.stream()
+				.map(GetCustomerAddressListResponse::from)
+				.toList();
+		} catch (DataAccessException e) {
+			throw new GeneralException(ErrorStatus.ADDRESS_READ_FAILED);
+		}
 	}
-
-
 }
