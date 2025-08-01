@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import app.domain.user.model.entity.User;
@@ -19,12 +21,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	// 실제 사용
 	Page<User> findAllByUserRole(UserRole role, Pageable pageable);
 
-	boolean existsByUsername(String username);
-
-	boolean existsByEmail(String email);
-
-	boolean existsByNickname(String nickname);
-
-	boolean existsByPhoneNumber(String phoneNumber);
+	// TODO : QUERYDSL로 수정 필요
+	@Query("SELECT u FROM User u WHERE u.username = :username OR u.email = :email OR u.nickname = :nickname OR u.phoneNumber = :phoneNumber")
+	Optional<User> findFirstByUniqueFields(
+		@Param("username") String username,
+		@Param("email") String email,
+		@Param("nickname") String nickname,
+		@Param("phoneNumber") String phoneNumber
+	);
 
 }

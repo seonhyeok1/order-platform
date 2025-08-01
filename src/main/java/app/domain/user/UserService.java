@@ -3,9 +3,9 @@ package app.domain.user;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -126,22 +126,49 @@ public class UserService {
 		}
 	}
 
+	@Transactional
+	public void withdrawMembership() {
+		// 1. 현재 인증된 사용자 정보 가져오기
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		Long currentUserId = Long.parseLong(authentication.getName());
+
+		// 2. DB에서 사용자 정보 조회
+		User user = userRepository.findById(currentUserId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+		// 3. 개인정보 익명화 처리
+		user.anonymizeForWithdrawal();
+
+		// 4. Soft Delete 수행
+		userRepository.delete(user);
+
+		// 5. 현재 세션 무효화 (로그아웃 처리 코드 재사용)
+		logout();
+	}
+
 	/**
 	 * 사용자의 고유 필드(아이디, 이메일, 닉네임, 전화번호) 중복 여부 검사 - 회원가입에서만 사용
-	 * @param createUserReq 회원가입 요청 DTO -> controller단에서 체크 이후 service에서
+	 * @param createUserReq 회원가입 요청 DTO
 	 */
 	private void validateUserUniqueness(CreateUserReq createUserReq) {
-		if (userRepository.existsByUsername(createUserReq.getUsername())) {
-			throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
-		}
-		if (userRepository.existsByEmail(createUserReq.getEmail())) {
-			throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
-		}
-		if (userRepository.existsByNickname(createUserReq.getNickname())) {
-			throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
-		}
-		if (userRepository.existsByPhoneNumber(createUserReq.getPhoneNumber())) {
-			throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
-		}
+		userRepository.findFirstByUniqueFields(
+			createUserReq.getUsername(),
+			createUserReq.getEmail(),
+			createUserReq.getNickname(),
+			createUserReq.getPhoneNumber()
+		).ifPresent(user -> { // 중복된 사용자가 존재하면
+			if (user.getUsername().equals(createUserReq.getUsername())) {
+				throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
+			}
+			if (user.getEmail().equals(createUserReq.getEmail())) {
+				throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
+			}
+			if (user.getNickname().equals(createUserReq.getNickname())) {
+				throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
+			}
+			if (user.getPhoneNumber().equals(createUserReq.getPhoneNumber())) {
+				throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
+			}
+		});
 	}
 }
