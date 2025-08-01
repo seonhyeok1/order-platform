@@ -30,7 +30,7 @@ import app.global.apiPayload.exception.GeneralException;
 import app.global.config.SecurityConfig;
 
 @WebMvcTest(controllers = UserController.class)
-@Import({SecurityConfig.class, UserControllerTest.TestConfig.class})    // securityConfig, TestConfig 명시적 선언
+@Import({SecurityConfig.class, UserControllerTest.TestConfig.class})
 @DisplayName("AuthController 테스트")
 class UserControllerTest {
 

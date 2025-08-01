@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -24,7 +26,7 @@ import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("AuthService.createUser 테스트")
+@DisplayName("UserService.createUser 테스트")
 class UserServiceCreateUserTest {
 
 	@Mock
@@ -34,7 +36,6 @@ class UserServiceCreateUserTest {
 	@InjectMocks
 	private UserService userService;
 
-	// 테스트용 요청 DTO를 생성하는 헬퍼 메서드
 	private CreateUserReq createValidUserReq(UserRole role) {
 		CreateUserReq req = new CreateUserReq();
 		req.setUsername("testuser");
@@ -47,11 +48,13 @@ class UserServiceCreateUserTest {
 		return req;
 	}
 
-	private void givenNoDuplicates(CreateUserReq req) {
-		given(userRepository.existsByUsername(req.getUsername())).willReturn(false);
-		given(userRepository.existsByEmail(req.getEmail())).willReturn(false);
-		given(userRepository.existsByNickname(req.getNickname())).willReturn(false);
-		given(userRepository.existsByPhoneNumber(req.getPhoneNumber())).willReturn(false);
+	private void givenNoDuplicatesFound(CreateUserReq req) {
+		given(userRepository.findFirstByUniqueFields(
+			req.getUsername(),
+			req.getEmail(),
+			req.getNickname(),
+			req.getPhoneNumber()
+		)).willReturn(Optional.empty());
 	}
 
 	@Nested
@@ -70,8 +73,7 @@ class UserServiceCreateUserTest {
 				.userRole(UserRole.CUSTOMER)
 				.build();
 
-			// 중복 검사 통과
-			givenNoDuplicates(req);
+			givenNoDuplicatesFound(req);
 			given(passwordEncoder.encode(req.getPassword())).willReturn("encodedPassword");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
@@ -79,21 +81,15 @@ class UserServiceCreateUserTest {
 			String resultUserId = userService.createUser(req);
 
 			// then
-			// 1. ArgumentCaptor를 사용하여 save 메서드에 전달된 User 객체를 캡처합니다.
 			ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
 			verify(userRepository).save(userArgumentCaptor.capture());
 			User capturedUser = userArgumentCaptor.getValue();
 
-			// 2. 캡처된 객체의 필드들을 명시적으로 검증합니다.
-			// 결과가 출력되도록 각 필드를 개별적으로 검증하여 어떤 값이 잘못되었는지 명확히 알 수 있습니다.
 			assertThat(capturedUser.getUsername()).isEqualTo(req.getUsername());
 			assertThat(capturedUser.getPassword()).isEqualTo("encodedPassword");
 			assertThat(capturedUser.getEmail()).isEqualTo(req.getEmail());
 			assertThat(capturedUser.getNickname()).isEqualTo(req.getNickname());
-			// **요청한 Role(CUSTOMER)이 정확히 들어갔는지 확인**
 			assertThat(capturedUser.getUserRole()).isEqualTo(UserRole.CUSTOMER);
-
-			// 3. 반환된 userId가 올바른지 확인합니다.
 			assertThat(resultUserId).isEqualTo("1");
 		}
 
@@ -109,7 +105,7 @@ class UserServiceCreateUserTest {
 				.userRole(UserRole.OWNER)
 				.build();
 
-			givenNoDuplicates(req);
+			givenNoDuplicatesFound(req);
 			given(passwordEncoder.encode(req.getPassword())).willReturn("encodedPassword");
 			given(userRepository.save(any(User.class))).willReturn(user);
 
@@ -121,7 +117,6 @@ class UserServiceCreateUserTest {
 			verify(userRepository).save(userArgumentCaptor.capture());
 			User capturedUser = userArgumentCaptor.getValue();
 
-			// **요청한 Role(OWNER)이 정확히 들어갔는지 확인**
 			assertThat(capturedUser.getUserRole()).isEqualTo(UserRole.OWNER);
 			assertThat(resultUserId).isEqualTo("2");
 		}
@@ -136,17 +131,18 @@ class UserServiceCreateUserTest {
 		void duplicateUsername_ThrowsException() {
 			// given
 			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
-			// existsByUsername이 true를 반환하도록 설정
-			given(userRepository.existsByUsername(req.getUsername())).willReturn(true);
+
+			User existingUser = User.builder().username(req.getUsername()).build();
+			given(userRepository.findFirstByUniqueFields(
+				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
+			)).willReturn(Optional.of(existingUser));
 
 			// when & then
-			// 1. 예외가 발생하는지 검증
 			assertThatThrownBy(() -> userService.createUser(req))
 				.isInstanceOf(GeneralException.class)
 				.extracting("errorReasonHttpStatus.code")
 				.isEqualTo(ErrorStatus.USER_ALREADY_EXISTS.getCode());
 
-			// 2. 중복 확인 후 save 메서드가 절대 호출되지 않았는지 확인
 			verify(userRepository, never()).save(any(User.class));
 		}
 
@@ -155,9 +151,11 @@ class UserServiceCreateUserTest {
 		void duplicateEmail_ThrowsException() {
 			// given
 			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
-			given(userRepository.existsByUsername(req.getUsername())).willReturn(false);
-			// existsByEmail이 true를 반환하도록 설정
-			given(userRepository.existsByEmail(req.getEmail())).willReturn(true);
+
+			User existingUser = User.builder().email(req.getEmail()).build();
+			given(userRepository.findFirstByUniqueFields(
+				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
+			)).willReturn(Optional.of(existingUser));
 
 			// when & then
 			assertThatThrownBy(() -> userService.createUser(req))
@@ -173,10 +171,11 @@ class UserServiceCreateUserTest {
 		void duplicateNickname_ThrowsException() {
 			// given
 			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
-			given(userRepository.existsByUsername(req.getUsername())).willReturn(false);
-			given(userRepository.existsByEmail(req.getEmail())).willReturn(false);
-			// existsByNickname이 true를 반환하도록 설정
-			given(userRepository.existsByNickname(req.getNickname())).willReturn(true);
+
+			User existingUser = User.builder().nickname(req.getNickname()).build();
+			given(userRepository.findFirstByUniqueFields(
+				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
+			)).willReturn(Optional.of(existingUser));
 
 			// when & then
 			assertThatThrownBy(() -> userService.createUser(req))
@@ -192,11 +191,11 @@ class UserServiceCreateUserTest {
 		void duplicatePhoneNumber_ThrowsException() {
 			// given
 			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
-			given(userRepository.existsByUsername(req.getUsername())).willReturn(false);
-			given(userRepository.existsByEmail(req.getEmail())).willReturn(false);
-			given(userRepository.existsByNickname(req.getNickname())).willReturn(false);
-			// existsByPhoneNumber가 true를 반환하도록 설정
-			given(userRepository.existsByPhoneNumber(req.getPhoneNumber())).willReturn(true);
+
+			User existingUser = User.builder().phoneNumber(req.getPhoneNumber()).build();
+			given(userRepository.findFirstByUniqueFields(
+				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
+			)).willReturn(Optional.of(existingUser));
 
 			// when & then
 			assertThatThrownBy(() -> userService.createUser(req))
@@ -217,9 +216,8 @@ class UserServiceCreateUserTest {
 		void databaseError_OnSave_ThrowsException() {
 			// given
 			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
-			// 모든 중복 검사를 통과하도록 설정
-			givenNoDuplicates(req);
-			// save 메서드에서 예외 발생
+
+			givenNoDuplicatesFound(req);
 			given(userRepository.save(any(User.class))).willThrow(new DataAccessException("DB connection failed") {
 			});
 
@@ -235,9 +233,8 @@ class UserServiceCreateUserTest {
 		void passwordEncoding_Fail_ThrowsException() {
 			// given
 			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
-			// 중복 검사는 통과하도록 설정
-			givenNoDuplicates(req);
-			// passwordEncoder에서 예외가 발생하도록 설정
+
+			givenNoDuplicatesFound(req);
 			given(passwordEncoder.encode(req.getPassword())).willThrow(new RuntimeException("Encoding failed"));
 
 			// when & then
@@ -245,7 +242,6 @@ class UserServiceCreateUserTest {
 				.isInstanceOf(RuntimeException.class)
 				.hasMessage("Encoding failed");
 
-			// 예외 발생 후 save가 호출되지 않았는지 확인
 			verify(userRepository, never()).save(any(User.class));
 		}
 	}
