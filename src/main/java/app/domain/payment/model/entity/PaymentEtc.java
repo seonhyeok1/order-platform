@@ -2,8 +2,10 @@ package app.domain.payment.model.entity;
 
 import java.util.UUID;
 
+import app.domain.payment.model.JsonConverter;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -33,6 +35,7 @@ public class PaymentEtc extends BaseEntity {
 	@JoinColumn(name = "payment_id", nullable = false)
 	private Payment payment;
 
-	@Column(nullable = false)
-	private String paymentResponse; // JSON 문자열
+	@Column(nullable = false, columnDefinition = "json")
+	@Convert(converter = JsonConverter.class)
+	private Object paymentResponse;
 }
