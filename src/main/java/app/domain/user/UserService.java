@@ -148,20 +148,27 @@ public class UserService {
 
 	/**
 	 * 사용자의 고유 필드(아이디, 이메일, 닉네임, 전화번호) 중복 여부 검사 - 회원가입에서만 사용
-	 * @param createUserReq 회원가입 요청 DTO -> controller단에서 체크 이후 service에서
+	 * @param createUserReq 회원가입 요청 DTO
 	 */
 	private void validateUserUniqueness(CreateUserReq createUserReq) {
-		if (userRepository.existsByUsername(createUserReq.getUsername())) {
-			throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
-		}
-		if (userRepository.existsByEmail(createUserReq.getEmail())) {
-			throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
-		}
-		if (userRepository.existsByNickname(createUserReq.getNickname())) {
-			throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
-		}
-		if (userRepository.existsByPhoneNumber(createUserReq.getPhoneNumber())) {
-			throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
-		}
+		userRepository.findFirstByUniqueFields(
+			createUserReq.getUsername(),
+			createUserReq.getEmail(),
+			createUserReq.getNickname(),
+			createUserReq.getPhoneNumber()
+		).ifPresent(user -> { // 중복된 사용자가 존재하면
+			if (user.getUsername().equals(createUserReq.getUsername())) {
+				throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
+			}
+			if (user.getEmail().equals(createUserReq.getEmail())) {
+				throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
+			}
+			if (user.getNickname().equals(createUserReq.getNickname())) {
+				throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
+			}
+			if (user.getPhoneNumber().equals(createUserReq.getPhoneNumber())) {
+				throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
+			}
+		});
 	}
 }
