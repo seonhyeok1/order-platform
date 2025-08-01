@@ -2,7 +2,7 @@ package app.domain.payment.model.entity;
 
 import java.util.UUID;
 
-import app.domain.payment.model.JsonConverter;
+import app.global.converter.JsonConverter;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
