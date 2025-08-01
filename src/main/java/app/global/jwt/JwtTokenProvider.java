@@ -132,4 +132,12 @@ public class JwtTokenProvider implements InitializingBean {
 	public long getRefreshTokenValidityInMilliseconds() {
 		return refreshTokenValidityInMilliseconds;
 	}
+
+	public Long getExpiration(String accessToken) {
+		// accessToken 남은 유효시간
+		Date expiration = getClaims(accessToken).getExpiration();
+		// 현재 시간
+		long now = new Date().getTime();
+		return (expiration.getTime() - now);
+	}
 }

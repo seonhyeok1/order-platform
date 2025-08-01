@@ -3,6 +3,8 @@ package app.domain.user;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class UserService {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
 	private static final String REFRESH_TOKEN_PREFIX = "RT:";
+	private static final String BLACKLIST_PREFIX = "BL:";
 
 	@Transactional
 	public String createUser(CreateUserReq createUserReq) {
@@ -90,6 +93,37 @@ public class UserService {
 			.accessToken(accessToken)
 			.refreshToken(refreshToken)
 			.build();
+	}
+
+	@Transactional
+	public void logout() {
+		// 1. SecurityContext에서 인증 정보 가져오기
+		// SecurityConfig에서 .authenticated()로 보호되므로, 인증 정보가 없으면 이 코드에 도달할 수 없음
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		// 2. 인증 정보에서 사용자 ID와 Access Token 추출
+		// authentication.getName()은 JwtTokenProvider에서 토큰의 subject로 설정한 사용자 ID임
+		String userId = authentication.getName();
+		// authentication.getCredentials()는 JwtTokenProvider에서 토큰 자체를 저장해두었음
+		String accessToken = (String)authentication.getCredentials();
+
+		// 3. Redis에서 해당 유저의 Refresh Token 삭제 (핵심 로그아웃 로직)
+		String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
+		if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
+			redisTemplate.delete(refreshTokenKey);
+		}
+
+		// 4. Access Token을 블랙리스트에 추가 (보안 강화 로직)
+		// 남은 유효 시간을 계산하여 TTL로 설정
+		Long expiration = jwtTokenProvider.getExpiration(accessToken);
+		if (expiration > 0) { // 만료되지 않은 토큰만 블랙리스트에 추가
+			redisTemplate.opsForValue().set(
+				BLACKLIST_PREFIX + accessToken,
+				"logout",
+				expiration,
+				TimeUnit.MILLISECONDS
+			);
+		}
 	}
 
 	/**

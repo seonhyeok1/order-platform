@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "Auth", description = "인증 및 로그인, 회원가입")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/auth")
+@RequestMapping("/user")
 public class UserController {
 
 	private final UserService userService;
@@ -92,5 +92,12 @@ public class UserController {
 	public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 		LoginResponse response = userService.login(request);
 		return ApiResponse.onSuccess(response);
+	}
+
+	@PostMapping("/logout")
+	@Operation(summary = "로그아웃 API", description = "서버에 저장된 Refresh Token을 삭제하고 현재 Access Token을 비활성화 처리합니다.")
+	public ApiResponse<String> logout() {
+		userService.logout();
+		return ApiResponse.onSuccess("로그아웃 되었습니다.");
 	}
 }
