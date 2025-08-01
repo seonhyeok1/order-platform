@@ -31,9 +31,7 @@ public class ReviewService {
 	private final OrdersRepository ordersRepository;
 
 	@Transactional
-	public String createReview(CreateReviewRequest request) {
-		// todo try catch 작성
-		Long userId = request.userId();
+	public String createReview(Long userId, CreateReviewRequest request) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
@@ -61,10 +59,7 @@ public class ReviewService {
 		return savedReview.getReviewId() + " 가 생성되었습니다.";
 	}
 
-	public List<GetReviewResponse> getReviews(GetReviewRequest request) {
-		// todo try catch 작성
-		Long userId = request.userId();
-
+	public List<GetReviewResponse> getReviews(Long userId, GetReviewRequest request) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
