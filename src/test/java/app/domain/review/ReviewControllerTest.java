@@ -61,7 +61,7 @@ class ReviewControllerTest {
 	void createReview_Success() throws Exception {
 		// given
 		CreateReviewRequest request = new CreateReviewRequest(1L, UUID.randomUUID(), 5L, "맛있어요");
-		String successMessage = request.orderId() + " 가 생성되었습니다.";
+		String successMessage = "오더 : " + request.orderId() + "에 대한 리뷰가 생성되었습니다.";
 		when(reviewService.createReview(any(CreateReviewRequest.class))).thenReturn(successMessage);
 
 		// when & then
