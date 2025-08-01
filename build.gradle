@@ -40,6 +40,7 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
@@ -62,6 +63,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 
+    // JSON
+    implementation 'org.json:json:20231013'
+
     //Query DSL
     implementation 'com.querydsl:querydsl-jpa:5.1.0:jakarta'
     annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
@@ -73,7 +77,6 @@ dependencies {
 clean {
     delete file('src/main/generated')
 }
-
 
 
 tasks.named('test') {
