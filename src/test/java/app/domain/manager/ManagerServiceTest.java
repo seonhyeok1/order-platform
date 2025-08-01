@@ -491,5 +491,62 @@ class ManagerServiceTest {
 		assertThat(dto.averageRating()).isEqualTo(4.5);
 	}
 
+	@Test
+	@DisplayName("가게 상세 조회 실패 - 존재하지 않는 storeId")
+	void getStoreDetail_notFound_shouldThrowException() {
+		// given
+		UUID invalidId = UUID.randomUUID();
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(invalidId)).thenReturn(Optional.empty());
 
+		// when
+		GeneralException ex = catchThrowableOfType(
+			() -> managerService.getStoreDetail(invalidId),
+			GeneralException.class
+		);
+
+		// then
+		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+	}
+
+
+	@Test
+	@DisplayName("가게 승인 실패 - 존재하지 않는 storeId")
+	void approveStore_notFound_shouldThrowException() {
+		// given
+		UUID invalidId = UUID.randomUUID();
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(invalidId)).thenReturn(Optional.empty());
+
+		// when
+		GeneralException ex = catchThrowableOfType(
+			() -> managerService.approveStore(invalidId, StoreAcceptStatus.APPROVE),
+			GeneralException.class
+		);
+
+		// then
+		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+	}
+
+
+	@Test
+	@DisplayName("가게 승인 실패 - 이미 같은 상태")
+	void approveStore_sameStatus_shouldThrowException() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.build();
+
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+
+		// when
+		GeneralException ex = catchThrowableOfType(
+			() -> managerService.approveStore(storeId, StoreAcceptStatus.APPROVE),
+			GeneralException.class
+		);
+
+		// then
+		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.INVALID_STORE_STATUS);
+	}
 }
