@@ -13,7 +13,6 @@ import app.global.apiPayload.exception.GeneralException;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
@@ -25,6 +24,21 @@ public class CustomerAddressService {
 
 	private final UserAddressRepository userAddressRepository;
 	private final UserRepository userRepository;
+
+	@Transactional(readOnly = true)
+	public List<GetCustomerAddressListResponse> getCustomerAddresses(Long userId) {
+		userRepository.findById(userId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+		try {
+			return userAddressRepository.findAllByUserUserId(userId)
+				.stream()
+				.map(GetCustomerAddressListResponse::from)
+				.toList();
+		} catch (DataAccessException e) {
+			throw new GeneralException(ErrorStatus.ADDRESS_READ_FAILED);
+		}
+	}
 
 	@Transactional
 	public AddCustomerAddressResponse addCustomerAddress(Long userId, AddCustomerAddressRequest request) {
@@ -69,21 +83,6 @@ public class CustomerAddressService {
 			return new AddCustomerAddressResponse(savedAddress.getAddressId());
 		} catch (DataAccessException e) {
 			throw new GeneralException(ErrorStatus.ADDRESS_ADD_FAILED);
-		}
-	}
-
-	@Transactional(readOnly = true)
-	public List<GetCustomerAddressListResponse> getCustomerAddresses(Long userId) {
-		userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-
-		try {
-			return userAddressRepository.findAllByUserUserId(userId)
-				.stream()
-				.map(GetCustomerAddressListResponse::from)
-				.toList();
-		} catch (DataAccessException e) {
-			throw new GeneralException(ErrorStatus.ADDRESS_READ_FAILED);
 		}
 	}
 }

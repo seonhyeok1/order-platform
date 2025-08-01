@@ -4,6 +4,8 @@ import app.domain.customer.dto.request.AddCustomerAddressRequest;
 import app.domain.customer.dto.response.AddCustomerAddressResponse;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.global.apiPayload.ApiResponse;
+import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -30,12 +32,21 @@ public class CustomerAddressController {
 	@GetMapping("/list")
 	@Operation(summary = "사용자 주소지 목록 조회", description = "")
 	public ApiResponse<List<GetCustomerAddressListResponse>> GetCustomerAddresses (
-		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
-		@RequestBody @Valid AddCustomerAddressRequest request	) {
-		if (request.userId() == null) {
-			throw new IllegalArgumentException("User ID cannot be null.");
+		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
+
+		if (principal == null || !StringUtils.hasText(principal.getUsername())) {
+			throw new GeneralException(ErrorStatus._UNAUTHORIZED);
 		}
-		return ApiResponse.onSuccess(customerAddressService.getCustomerAddresses(request.userId()));
+
+		Long userId;
+
+		try {
+			userId = Long.parseLong(principal.getUsername());
+		} catch (NumberFormatException e) {
+			throw new GeneralException(ErrorStatus._BAD_REQUEST);
+		}
+
+		return ApiResponse.onSuccess(customerAddressService.getCustomerAddresses(userId));
 	}
 
 	@PostMapping("/add")
@@ -44,10 +55,18 @@ public class CustomerAddressController {
 		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
 		@RequestBody @Valid AddCustomerAddressRequest request){
 
-		// --- START: Input Validation ---
-		if (request.userId() == null) {
-			throw new IllegalArgumentException("User ID cannot be null.");
+		if (principal == null || !StringUtils.hasText(principal.getUsername())) {
+			throw new GeneralException(ErrorStatus._UNAUTHORIZED);
 		}
+
+		Long userId;
+
+		try {
+			userId = Long.parseLong(principal.getUsername());
+		} catch (NumberFormatException e) {
+			throw new GeneralException(ErrorStatus._BAD_REQUEST);
+		}
+
 		if (!StringUtils.hasText(request.alias())) {
 			throw new IllegalArgumentException("Address alias is required.");
 		}
@@ -57,9 +76,8 @@ public class CustomerAddressController {
 		if (!StringUtils.hasText(request.addressDetail())) {
 			throw new IllegalArgumentException("상세 주소는 필수입니다.");
 		}
-		// --- END: Input Validation ---
 
-		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(request.userId(), request);
+		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(userId, request);
 		return ApiResponse.onSuccess(response);
 	}
 }
