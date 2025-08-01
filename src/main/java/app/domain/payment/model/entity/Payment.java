@@ -2,6 +2,7 @@ package app.domain.payment.model.entity;
 
 import java.util.UUID;
 
+import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.payment.model.entity.enums.PaymentStatus;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -29,14 +30,8 @@ public class Payment extends BaseEntity {
 	@GeneratedValue
 	private UUID paymentId;
 
-	@Column(nullable = false, length = 50)
-	private String pgCode;
-
 	@Column(nullable = false)
-	private int resultCode;
-
-	@Column(nullable = false)
-	private String tid;
+	private String paymentKey;
 
 	@Column(nullable = false, unique = true)
 	private UUID ordersId;
@@ -45,10 +40,10 @@ public class Payment extends BaseEntity {
 	private String signature;
 
 	@Column(nullable = false, length = 50)
-	private String paymentMethod;
+	private PaymentMethod paymentMethod;
 
 	@Column(nullable = false)
-	private int amount;
+	private Long amount;
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
