@@ -110,7 +110,7 @@ public class ManagerController {
 					                   "addresses": [
 					                       {
 					                           "addressId": 100,
-					                           "alias":
+					                           "alias": "Home",
 					                           "address": "서울시 강남구 테헤란로 1",
 					                           "isDefault": true
 					                       },
@@ -177,8 +177,8 @@ public class ManagerController {
 
 	@GetMapping("/customer/search")
 	@Operation(
-		summary = "전체 사용자 목록 조회",
-		description = "가입한 사용자 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
+		summary = "사용자 검색",
+		description = "키워드를 사용하여 가입한 사용자를 검색하고, 결과를 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
 	@ApiResponses({
 		@io.swagger.v3.oas.annotations.responses.ApiResponse(
 			responseCode = "200",
@@ -194,7 +194,7 @@ public class ManagerController {
 					        "content": [
 					            {
 					                "userId": 1,
-					                "name":"홍길동"
+					                "name":"홍길동",
 					                "email": "user1@example.com",
 					                "createdAt": "2024-01-01T10:00:00"
 					            },
