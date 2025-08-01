@@ -3,6 +3,7 @@ package app.domain.store.controller;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import app.domain.store.StoreController;
 import app.domain.store.StoreService;
@@ -48,11 +51,21 @@ public class StoreControllerTest {
 		@Test
 		@DisplayName("Success : 가게 등록 요청 성공")
 		void CreateStoreSuccess() {
+
+			Long fakeUserId = 1L;
+			UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+				fakeUserId.toString(),
+				null,
+				List.of()
+			);
+
+			SecurityContextHolder.getContext().setAuthentication(auth);
+
 			UUID regionId = UUID.randomUUID();
 			Region mockRegion = mock(Region.class);
+
 			//Given
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(),
 				regionId,
 				"주소",
 				"가게 명",
@@ -60,26 +73,32 @@ public class StoreControllerTest {
 				"01012345678",
 				1000L
 			);
-			StoreApproveResponse response = new StoreApproveResponse(UUID.randomUUID(), "PENDING");
+			StoreApproveResponse expectedResponse = new StoreApproveResponse(UUID.randomUUID(), "PENDING");
 
-			when(regionRepository.existsById(request.regionId())).thenReturn(false);
+			when(regionRepository.existsById(request.regionId())).thenReturn(true);
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 			when(storeRepository.existsByStoreNameAndRegion(anyString(), any())).thenReturn(false);
-			when(storeService.createStore(request)).thenReturn(response);
+			when(storeService.createStore(eq(fakeUserId), eq(request))).thenReturn(expectedResponse);
 
 			//When
 			ResponseEntity<StoreApproveResponse> result = storeController.createStore(request);
 
 			//Then
 			assertEquals(HttpStatus.OK, result.getStatusCode());
-			assertEquals(response, result.getBody());
+			assertEquals(expectedResponse, result.getBody());
+
+			verify(regionRepository, times(1)).existsById(regionId);
+			verify(regionRepository, times(1)).findById(regionId);
+			verify(storeRepository, times(1)).existsByStoreNameAndRegion(request.storeName(), mockRegion);
+			verify(storeService, times(1)).createStore(anyLong(), eq(request));
+
+			SecurityContextHolder.clearContext();
 		}
 
 		@Test
 		@DisplayName("Fail : 유효하지 않은 지역 ID 가게 등록 요청")
 		void CreateStoreInvalidRegionId() {
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(),
 				null,
 				"주소",
 				"가게 명",
@@ -88,7 +107,10 @@ public class StoreControllerTest {
 				10000L
 			);
 
-			assertThrows(IllegalArgumentException.class, () -> storeController.createStore(request));
+			IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+				storeController.createStore(request);
+			});
+			assertEquals("regionId는 null일 수 없습니다.", ex.getMessage());
 		}
 
 		@Test
@@ -96,7 +118,6 @@ public class StoreControllerTest {
 		void CreateStoreAddressNotFound() {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(),
 				regionId,
 				null,
 				"가게 명",
@@ -113,7 +134,6 @@ public class StoreControllerTest {
 		void CreateStoreStoreNameNotFound() {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(),
 				regionId,
 				"주소",
 				null,
@@ -130,7 +150,6 @@ public class StoreControllerTest {
 		void CreateStoreMinOrderAmountError() {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(),
 				regionId,
 				"주소",
 				"가게 명",
