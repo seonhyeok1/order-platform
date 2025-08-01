@@ -3,9 +3,9 @@ package app.domain.user;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -124,6 +124,26 @@ public class UserService {
 				TimeUnit.MILLISECONDS
 			);
 		}
+	}
+
+	@Transactional
+	public void withdrawMembership() {
+		// 1. 현재 인증된 사용자 정보 가져오기
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		Long currentUserId = Long.parseLong(authentication.getName());
+
+		// 2. DB에서 사용자 정보 조회
+		User user = userRepository.findById(currentUserId)
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+
+		// 3. 개인정보 익명화 처리
+		user.anonymizeForWithdrawal();
+
+		// 4. Soft Delete 수행
+		userRepository.delete(user);
+
+		// 5. 현재 세션 무효화 (로그아웃 처리 코드 재사용)
+		logout();
 	}
 
 	/**
