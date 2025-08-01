@@ -13,8 +13,11 @@ import java.util.UUID;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import app.domain.cart.service.CartService;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.payment.model.PaymentEtcRepository;
@@ -26,6 +29,7 @@ import app.domain.payment.model.entity.PaymentEtc;
 import app.domain.payment.model.entity.enums.PaymentStatus;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,12 +42,24 @@ public class PaymentService {
 	private final OrdersRepository ordersRepository;
 	private final PaymentRepository paymentRepository;
 	private final PaymentEtcRepository paymentEtcRepository;
+	private final CartService cartService;
 
 	public Orders getOrderById(UUID orderId) {
 		return ordersRepository.findById(orderId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 	}
 
+	private Long getCurrentUserId() {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication != null
+			&& authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.User) {
+			org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User)authentication.getPrincipal();
+			return Long.parseLong(user.getUsername());
+		}
+		throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+	}
+
+	@Transactional
 	public String confirmPayment(PaymentConfirmRequest request) {
 
 		try {
@@ -112,6 +128,8 @@ public class PaymentService {
 			paymentEtcRepository.save(paymentEtc);
 
 			if (isSuccess) {
+				Long userId = getCurrentUserId();
+				cartService.clearCartItems(userId);
 				return "결제 승인이 완료되었습니다. PaymentKey: " + request.paymentKey();
 			} else {
 				throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
@@ -123,6 +141,7 @@ public class PaymentService {
 		}
 	}
 
+	@Transactional
 	public String failSave(PaymentFailRequest request) {
 		try {
 			Orders order = getOrderById(request.orderId());
