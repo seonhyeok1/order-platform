@@ -29,6 +29,7 @@ public class SecurityConfig {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
 	// userService/CreateUser 비밀번호 암호화
 	@Bean
@@ -68,9 +69,11 @@ public class SecurityConfig {
 				.permitAll() // 위에 명시된 경로는 인증 없이 접근 허용
 
 				// 2. 권한에 따른 접근 제한
-				.requestMatchers("/api/owner/**")
+				.requestMatchers("/api/store/**")
 				.hasRole(UserRole.OWNER.name())
 				.requestMatchers("/api/customer/**")
+				.hasRole(UserRole.CUSTOMER.name())
+				.requestMatchers("/api/cart/**")
 				.hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/api/manager/**")
 				.hasRole(UserRole.MANAGER.name())
@@ -81,7 +84,7 @@ public class SecurityConfig {
 				.anyRequest()
 				.authenticated()
 			)
-			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
 	}
