@@ -19,8 +19,8 @@ import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
-import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.repository.RegionRepository;
+import app.domain.store.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,55 +45,53 @@ public class StoreController {
 
 	// 유효성 검증 메서드 (Controller 안에 추가)
 	private void validateCreateStoreRequest(StoreApproveRequest request) {
-		if (request.regionId() == null) {
+		if (request.getRegionId() == null) {
 			throw new IllegalArgumentException("regionId는 null일 수 없습니다.");
 		}
-		if (!regionRepository.existsById(request.regionId())) {
+		if (!regionRepository.existsById(request.getRegionId())) {
 			throw new IllegalArgumentException("해당 region이 존재하지 않습니다.");
 		}
-		if (request.categoryId() == null) {
+		if (request.getCategoryId() == null) {
 			throw new IllegalArgumentException("카테고리는 null일 수 없습니다.");
 		}
-		if (request.address() == null) {
+		if (request.getAddress() == null) {
 			throw new IllegalArgumentException("주소는 null일 수 없습니다.");
 		}
-		if (request.storeName() == null) {
+		if (request.getStoreName() == null) {
 			throw new IllegalArgumentException("가게 이름은 null일 수 없습니다.");
 		}
-		if (request.minOrderAmount() == null) {
+		if (request.getMinOrderAmount() == null) {
 			throw new IllegalArgumentException("최소 주문 금액은 null일 수 없습니다.");
 		}
-		if (request.minOrderAmount() < 0) {
+		if (request.getMinOrderAmount() < 0) {
 			throw new IllegalArgumentException("최소 주문 금액 오류");
 		}
-		Region region = regionRepository.findById(request.regionId())
+		Region region = regionRepository.findById(request.getRegionId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
-		if (storeRepository.existsByStoreNameAndRegion(request.storeName(), region)) {
+		if (storeRepository.existsByStoreNameAndRegion(request.getStoreName(), region)) {
 			throw new IllegalArgumentException("지역, 가게명 중복");
 		}
 	}
 
 	@PutMapping("/store")
 	public ResponseEntity<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
-		if (request.storeId() == null)
+		if (request.getStoreId() == null)
 			throw new IllegalArgumentException("storeId error");
 
-		if (request.minOrderAmount() != null && request.minOrderAmount() < 0)
+		if (request.getMinOrderAmount() != null && request.getMinOrderAmount() < 0)
 			throw new IllegalArgumentException("minOrderAmount error");
 
-		if (request.categoryId() == null)
+		if (request.getCategoryId() == null)
 			throw new IllegalArgumentException("categoryId error");
 
 		StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 		return ResponseEntity.ok(response);
 	}
 
-	@DeleteMapping("/{storeId}")
+	@DeleteMapping("/store/{storeId}")
 	public ResponseEntity<String> deleteStore(@PathVariable UUID storeId) {
 		storeService.deleteStore(storeId);
-		return ResponseEntity
-			.status(HttpStatus.NO_CONTENT)
-			.body("가게 삭제 완료");
+		return ResponseEntity.ok("가게 삭제가 완료되었습니다.");
 	}
 }
 

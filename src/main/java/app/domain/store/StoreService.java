@@ -12,14 +12,15 @@ import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.repository.RegionRepository;
+import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.domain.store.status.StoreErrorCode;
 import app.global.apiPayload.exception.GeneralException;
+import app.domain.store.status.StoreException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -34,69 +35,69 @@ public class StoreService {
 	@Transactional
 	public StoreApproveResponse createStore(Long userId, StoreApproveRequest request) {
 
-		Region region = regionRepository.findById(request.regionId())
+		Region region = regionRepository.findById(request.getRegionId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
 
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("해당 user 존재하지 않음"));
 
-		Category category = categoryRepository.findById(request.categoryId())
+		Category category = categoryRepository.findById(request.getCategoryId())
 			.orElseThrow(() -> new IllegalArgumentException("Category NotFound"));
 
 		Store store = Store.builder()
-			.storeName(request.storeName())
+			.storeName(request.getStoreName())
 			.region(region)
 			.user(user)
 			.category(category)
-			.address(request.address())
-			.description(request.desc())
-			.phoneNumber(request.phoneNumber())
-			.minOrderAmount(request.minOrderAmount().intValue())
+			.address(request.getAddress())
+			.description(request.getDesc())
+			.phoneNumber(request.getPhoneNumber())
+			.minOrderAmount(request.getMinOrderAmount().intValue())
 			.storeAcceptStatus(StoreAcceptStatus.PENDING)
 			.build();
 
 		Store savedStore = storeRepository.save(store);
 
-		return new StoreApproveResponse(
-			savedStore.getStoreId(),
-			savedStore.getStoreAcceptStatus().name()
-		);
+		return StoreApproveResponse.builder()
+			.storeId(savedStore.getStoreId())
+			.storeApprovalStatus(savedStore.getStoreAcceptStatus().name())
+			.build();
 	}
 
 	@Transactional
 	public StoreInfoUpdateResponse updateStoreInfo(StoreInfoUpdateRequest request) {
-		Store store = storeRepository.findById(request.storeId())
+		Store store = storeRepository.findById(request.getStoreId())
 			.orElseThrow(() -> new IllegalArgumentException("가게 찾을 수 없음"));
 
-		if (request.categoryId() != null) {
-			Category category = categoryRepository.findById(request.categoryId())
+		if (request.getCategoryId() != null) {
+			Category category = categoryRepository.findById(request.getCategoryId())
 				.orElseThrow(() -> new IllegalArgumentException("Category not found"));
 			store.setCategory(category);
 		}
-		if (request.name() != null) {
-			store.setStoreName(request.name());
+		if (request.getName() != null) {
+			store.setStoreName(request.getName());
 		}
-		if (request.address() != null) {
-			store.setAddress(request.address());
+		if (request.getAddress() != null) {
+			store.setAddress(request.getAddress());
 		}
-		if (request.phoneNumber() != null) {
-			store.setPhoneNumber(request.phoneNumber());
+		if (request.getPhoneNumber() != null) {
+			store.setPhoneNumber(request.getPhoneNumber());
 		}
-		if (request.minOrderAmount() != null) {
-			store.setMinOrderAmount(request.minOrderAmount());
+		if (request.getMinOrderAmount() != null) {
+			store.setMinOrderAmount(request.getMinOrderAmount());
 		}
-		if (request.desc() != null) {
-			store.setDescription(request.desc());
+		if (request.getDesc() != null) {
+			store.setDescription(request.getDesc());
 		}
 
 		Store updatedStore = storeRepository.save(store);
-		return new StoreInfoUpdateResponse(updatedStore.getStoreId()); // update'd'
+		return StoreInfoUpdateResponse.builder().storeId(updatedStore.getStoreId()).build();
 	}
 
 	@Transactional
 	public void deleteStore(UUID storeId) {
 		Store store = storeRepository.findById(storeId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
+			.orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
 		store.markAsDeleted();
 	}

@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import app.domain.menu.model.entity.Category;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;

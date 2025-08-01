@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
+import app.domain.store.repository.RegionRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service

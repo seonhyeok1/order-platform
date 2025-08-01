@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
+import app.domain.store.status.StoreException;
+import app.domain.store.status.StoreErrorCode;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,7 +25,7 @@ public class RegionController {
 	public ResponseEntity<UUID> getRegionIdByCode(@PathVariable("regionId") String regionCode) {
 		UUID regionId = regionService.getRegionIdByCode(regionCode);
 		if (regionCode == null || regionCode.isBlank()) {
-			throw new GeneralException(ErrorStatus.REGIONCODE_NOT_FOUND);
+			throw new StoreException(StoreErrorCode.REGIONCODE_NOT_FOUND);
 		}
 
 		return ResponseEntity.ok(regionId);

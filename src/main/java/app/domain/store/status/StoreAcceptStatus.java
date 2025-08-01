@@ -1,4 +1,4 @@
-package app.domain.store.model.enums;
+package app.domain.store.status;
 
 public enum StoreAcceptStatus {
 	PENDING,
