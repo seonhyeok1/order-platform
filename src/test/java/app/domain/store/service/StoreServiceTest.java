@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.Import;
 
 import app.domain.store.StoreService;
 import app.domain.store.model.dto.request.StoreApproveRequest;
@@ -25,7 +26,12 @@ import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
 import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
+import app.global.config.MockSecurityConfig;
+import app.global.config.SecurityConfig;
 
+@Import({SecurityConfig.class, MockSecurityConfig.class})
 @ExtendWith(MockitoExtension.class)
 class StoreServiceTest {
 
@@ -38,16 +44,20 @@ class StoreServiceTest {
 	@Mock
 	private RegionRepository regionRepository;
 
+	@Mock
+	private UserRepository userRepository;
+
 	@Nested
 	@DisplayName("createStore Test")
 	class CreateStoreTest {
+		Long authenticatedUserId = 1L;
 
 		@Test
 		@DisplayName("Success")
 		void createStoreSuccess() {
 			UUID regionId = UUID.randomUUID();
+
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(), // userId
 				regionId, // regionId
 				"가게주소", // address
 				"가게이름", // storeName
@@ -63,13 +73,16 @@ class StoreServiceTest {
 				.build();
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+			when(userRepository.findById(authenticatedUserId)).thenReturn(Optional.of(mock(User.class)));
 			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
 
-			StoreApproveResponse response = storeService.createStore(request);
+			StoreApproveResponse response = storeService.createStore(authenticatedUserId, request);
 
 			assertNotNull(response);
 			assertEquals(StoreAcceptStatus.PENDING.name(), response.storeApprovalStatus());
+
 			verify(regionRepository, times(1)).findById(regionId);
+			verify(userRepository, times(1)).findById(authenticatedUserId);
 			verify(storeRepository, times(1)).save(any(Store.class));
 		}
 
@@ -77,8 +90,8 @@ class StoreServiceTest {
 		@DisplayName("Success : 선택적 필드가 null인 경우")
 		void createStoreSuccessOptionalFieldsNull() {
 			UUID regionId = UUID.randomUUID();
+
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(), // userId
 				regionId, // regionId
 				"가게주소", // address
 				"가게이름", // storeName
@@ -93,13 +106,16 @@ class StoreServiceTest {
 				.storeAcceptStatus(StoreAcceptStatus.PENDING)
 				.build();
 
+			when(userRepository.findById(authenticatedUserId)).thenReturn(Optional.of(mock(User.class)));
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
 
-			StoreApproveResponse response = storeService.createStore(request);
+			StoreApproveResponse response = storeService.createStore(authenticatedUserId, request);
 
 			assertNotNull(response);
 			assertEquals(StoreAcceptStatus.PENDING.name(), response.storeApprovalStatus());
+
+			verify(userRepository, times(1)).findById(authenticatedUserId);
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(storeRepository, times(1)).save(any(Store.class));
 		}
@@ -109,7 +125,6 @@ class StoreServiceTest {
 		void createStoreFailRegionNotFound() {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(),
 				regionId,
 				"가게주소",
 				"가게이름",
@@ -121,9 +136,10 @@ class StoreServiceTest {
 			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
 
 			IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
+				storeService.createStore(authenticatedUserId, request);
 			});
 			assertEquals("해당 region이 존재하지 않습니다.", exception.getMessage());
+
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(storeRepository, never()).save(any(Store.class));
 		}
