@@ -258,7 +258,7 @@ public class StoreControllerTest {
 		void DeleteStoreTestSuccess() {
 			UUID storeId = UUID.randomUUID();
 
-			ResponseEntity<Void> result = storeController.deleteStore(storeId);
+			ResponseEntity<String> result = storeController.deleteStore(storeId);
 
 			assertEquals(HttpStatus.NO_CONTENT, result.getStatusCode());
 		}

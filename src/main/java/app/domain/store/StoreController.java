@@ -2,6 +2,7 @@ package app.domain.store;
 
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -88,9 +89,11 @@ public class StoreController {
 	}
 
 	@DeleteMapping("/{storeId}")
-	public ResponseEntity<Void> deleteStore(@PathVariable UUID storeId) {
+	public ResponseEntity<String> deleteStore(@PathVariable UUID storeId) {
 		storeService.deleteStore(storeId);
-		return ResponseEntity.noContent().build();
+		return ResponseEntity
+			.status(HttpStatus.NO_CONTENT)
+			.body("가게 삭제 완료");
 	}
 }
 
