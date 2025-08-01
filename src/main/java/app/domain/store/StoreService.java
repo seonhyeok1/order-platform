@@ -30,7 +30,7 @@ public class StoreService {
 
 	@Transactional
 	public StoreApproveResponse createStore(Long userId, StoreApproveRequest request) {
-		// Controller 검증 후, Service Layer에서 한번 더 검증
+
 		Region region = regionRepository.findById(request.regionId())
 			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
 

@@ -34,7 +34,6 @@ class RegionServiceTest {
 		@Test
 		@DisplayName("Success")
 		void getRegionIdByCodeSuccess() {
-			// Given
 			String regionCode = "SEOUL";
 			UUID expectedRegionId = UUID.randomUUID();
 			Region mockRegion = Region.builder()
@@ -44,9 +43,9 @@ class RegionServiceTest {
 				.build();
 
 			when(regionRepository.findByRegionCode(regionCode)).thenReturn(Optional.of(mockRegion));
-			// When
+
 			UUID actualRegionId = regionService.getRegionIdByCode(regionCode);
-			// Then
+
 			assertNotNull(actualRegionId);
 			assertEquals(expectedRegionId, actualRegionId);
 			verify(regionRepository, times(1)).findByRegionCode(regionCode);

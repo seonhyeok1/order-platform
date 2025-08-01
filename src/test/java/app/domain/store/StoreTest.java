@@ -64,7 +64,7 @@ public class StoreTest {
 			.sido("서울특별시")
 			.sigungu("종로구")
 			.eupmyendong("세종로")
-			.isActive(true) // isActive 필드 추가
+			.isActive(true)
 			.build();
 
 		regionRepository.save(region);
@@ -72,7 +72,7 @@ public class StoreTest {
 	}
 
 	@Test
-	@WithMockUser(username = "1")  // 여기서 인증된 사용자로 처리 (userId 1)
+	@WithMockUser(username = "1")
 	@DisplayName("Success: 가게 등록")
 	void createStoreSuccess() throws Exception {
 		Long authenticatedUserId = 1L;

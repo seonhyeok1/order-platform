@@ -58,12 +58,12 @@ class StoreServiceTest {
 			UUID regionId = UUID.randomUUID();
 
 			StoreApproveRequest request = new StoreApproveRequest(
-				regionId, // regionId
-				"가게주소", // address
-				"가게이름", // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				10000L // minOrderAmount
+				regionId,
+				"가게주소",
+				"가게이름",
+				"가게설명",
+				"010-1111-2222",
+				10000L
 			);
 
 			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
@@ -92,12 +92,12 @@ class StoreServiceTest {
 			UUID regionId = UUID.randomUUID();
 
 			StoreApproveRequest request = new StoreApproveRequest(
-				regionId, // regionId
-				"가게주소", // address
-				"가게이름", // storeName
-				null, // desc
-				null, // phoneNumber
-				10000L // minOrderAmount
+				regionId,
+				"가게주소",
+				"가게이름",
+				null,
+				null,
+				10000L
 			);
 
 			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();

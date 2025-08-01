@@ -64,7 +64,6 @@ public class StoreControllerTest {
 			UUID regionId = UUID.randomUUID();
 			Region mockRegion = mock(Region.class);
 
-			//Given
 			StoreApproveRequest request = new StoreApproveRequest(
 				regionId,
 				"주소",
@@ -80,10 +79,8 @@ public class StoreControllerTest {
 			when(storeRepository.existsByStoreNameAndRegion(anyString(), any())).thenReturn(false);
 			when(storeService.createStore(eq(fakeUserId), eq(request))).thenReturn(expectedResponse);
 
-			//When
 			ResponseEntity<StoreApproveResponse> result = storeController.createStore(request);
 
-			//Then
 			assertEquals(HttpStatus.OK, result.getStatusCode());
 			assertEquals(expectedResponse, result.getBody());
 

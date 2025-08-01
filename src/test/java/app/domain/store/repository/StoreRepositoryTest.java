@@ -26,11 +26,9 @@ class StoreRepositoryTest {
 	@Test
 	@DisplayName("Success : 사용자 ID로 가게 조회 정상 동작 Test")
 	void findByUserUserIdSuccess() {
-		//Given - userId, storeId 정의
-		Long userId = 1L; // 단순 테스트 용도
+		Long userId = 1L;
 		UUID storeId = UUID.randomUUID();
 
-		// Mock User 객체 - Store 연결 사용자
 		User mockUser = User.builder()
 			.userId(userId)
 			.username("testuser")
@@ -42,7 +40,6 @@ class StoreRepositoryTest {
 			.userRole(app.domain.user.model.entity.enums.UserRole.OWNER)
 			.build();
 
-		// Mock Store 객체 - User 객체 포함 Store 객체
 		Store mockStore = Store.builder()
 			.storeId(storeId)
 			.user(mockUser)
@@ -51,35 +48,27 @@ class StoreRepositoryTest {
 			.minOrderAmount(0)
 			.build();
 
-		// when - 실제 DB x, mockStore 반환
 		when(storeRepository.findByUser_UserId(userId)).thenReturn(Optional.of(mockStore));
 
-		// when - 메서드 실행
 		Optional<Store> foundStoreOptional = storeRepository.findByUser_UserId(userId);
 
-		// Then
 		assertTrue(foundStoreOptional.isPresent());
 		Store foundStore = foundStoreOptional.get();
 		assertEquals(storeId, foundStore.getStoreId());
 		assertEquals(userId, foundStore.getUser().getUserId());
-		assertEquals("테스트 가게", foundStore.getStoreName()); // Store 반환 값 == 설정 값
-
-		// storeRepository.findByUser_UserId(userId) 메서드가 1번 호출되었는지 검증
+		assertEquals("테스트 가게", foundStore.getStoreName());
 		verify(storeRepository, times(1)).findByUser_UserId(userId);
 	}
 
 	@Test
 	@DisplayName("Fail : 사용자ID로 가게 조회 - 사용자 존재하지 않음 ")
 	void findByUserUserIdFailNotFound() {
-		// Given 존재하지 않는 사용자 ID
 		Long nonExistentUserId = 999L;
 
 		when(storeRepository.findByUser_UserId(nonExistentUserId)).thenReturn(Optional.empty());
 
-		// When
 		Optional<Store> foundStoreOptional = storeRepository.findByUser_UserId(nonExistentUserId);
 
-		// Then
 		assertFalse(foundStoreOptional.isPresent());
 
 		verify(storeRepository, times(1)).findByUser_UserId(nonExistentUserId);

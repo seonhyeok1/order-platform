@@ -11,5 +11,6 @@ public record StoreApproveRequest(
 	String desc,
 	String phoneNumber,
 	@NotNull Long minOrderAmount
+
 ) {
 }
