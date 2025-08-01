@@ -20,14 +20,9 @@ public class RegionController {
 	private final RegionService regionService;
 
 	@PostMapping("/code/{regionId}")
-	public ResponseEntity<UUID> getRegionIdByCode(@PathVariable String regionCode) {
+	public ResponseEntity<UUID> getRegionIdByCode(@PathVariable("regionId") String regionCode) {
 		UUID regionId = regionService.getRegionIdByCode(regionCode);
-
-		if (regionId == null) {
-			throw new GeneralException(ErrorStatus.REGION_NOT_FOUND);
-		}
-
-		if (regionCode == null) {
+		if (regionCode == null || regionCode.isBlank()) {
 			throw new GeneralException(ErrorStatus.REGIONCODE_NOT_FOUND);
 		}
 
