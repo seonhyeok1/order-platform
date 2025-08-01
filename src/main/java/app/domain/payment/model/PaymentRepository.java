@@ -1,5 +1,6 @@
 package app.domain.payment.model;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,4 +10,5 @@ import app.domain.payment.model.entity.Payment;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
+	Optional<Payment> findByOrdersId(UUID ordersId);
 }
