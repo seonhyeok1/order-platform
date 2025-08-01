@@ -21,6 +21,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	// 실제 사용
 	Page<User> findAllByUserRole(UserRole role, Pageable pageable);
 
+	// TODO : QUERYDSL로 수정 필요
 	@Query("SELECT u FROM User u WHERE u.username = :username OR u.email = :email OR u.nickname = :nickname OR u.phoneNumber = :phoneNumber")
 	Optional<User> findFirstByUniqueFields(
 		@Param("username") String username,
