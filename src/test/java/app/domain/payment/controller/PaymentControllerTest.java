@@ -1,4 +1,4 @@
-package app.domain.payment;
+package app.domain.payment.controller;
 
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -16,6 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import app.domain.order.model.entity.Orders;
+import app.domain.payment.PaymentService;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.SecurityConfig;
