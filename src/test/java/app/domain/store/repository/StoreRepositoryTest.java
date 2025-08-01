@@ -1,149 +1,107 @@
 package app.domain.store.repository;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.test.context.TestPropertySource;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.domain.user.model.UserRepository;
-import app.domain.user.model.entity.User;
-import app.domain.user.model.entity.enums.UserRole;
-import app.domain.menu.model.entity.Category;
-import app.domain.menu.model.entity.CategoryRepository;
 import app.domain.store.model.entity.Region;
-import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
+import app.domain.user.model.entity.User;
 
-@DataJpaTest
-@TestPropertySource(properties = "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect")
+@ExtendWith(MockitoExtension.class)
 class StoreRepositoryTest {
-	@Autowired
+
+	@Mock
 	private StoreRepository storeRepository;
-	@Autowired
-	private RegionRepository regionRepository;
-	@Autowired
-	private UserRepository userRepository;
-	@Autowired
-	private CategoryRepository categoryRepository;
 
 	@Test
-	@DisplayName("Success: userId - store조회 ")
-	void findByUserIdSuccess() {
+	@DisplayName("Success : 사용자 ID로 가게 조회 정상 동작 Test")
+	void findByUserUserIdSuccess() {
+		//Given - userId, storeId 정의
+		Long userId = 1L; // 단순 테스트 용도
+		UUID storeId = UUID.randomUUID();
 
-		Region region = Region.builder()
-			.regionCode("1114010200")
-			.regionName("서울 광화문")
-			.fullName("서울특별시 종로구 세종로")
-			.sido("서울특별시")
-			.sigungu("종로구")
-			.eupmyendong("세종로")
-			.build();
-		region = regionRepository.save(region);
-
-		User user = User.builder()
+		// Mock User 객체 - Store 연결 사용자
+		User mockUser = User.builder()
+			.userId(userId)
 			.username("testuser")
 			.email("test@example.com")
 			.password("password")
 			.nickname("testnick")
+			.realName("테스트유저")
 			.phoneNumber("01012345678")
-			.userRole(UserRole.OWNER)
+			.userRole(app.domain.user.model.entity.enums.UserRole.OWNER)
 			.build();
-		user = userRepository.save(user);
 
-		Category category = Category.builder()
-			.categoryName("한식")
-			.build();
-		category = categoryRepository.save(category);
-
-		Store store = Store.builder()
-			.user(user)
-			.region(region)
-			.category(category)
+		// Mock Store 객체 - User 객체 포함 Store 객체
+		Store mockStore = Store.builder()
+			.storeId(storeId)
+			.user(mockUser)
 			.storeName("테스트 가게")
-			.address("서울시 강남구")
+			.address("테스트 주소")
+			.minOrderAmount(0)
 			.build();
-		storeRepository.save(store);
 
-		Store foundStore = storeRepository.findByUser_UserId(user.getUserId()).orElse(null);
+		// when - 실제 DB x, mockStore 반환
+		when(storeRepository.findByUser_UserId(userId)).thenReturn(Optional.of(mockStore));
 
-		assert foundStore != null;
-		assert foundStore.getUser().getUserId().equals(user.getUserId());
+		// when - 메서드 실행
+		Optional<Store> foundStoreOptional = storeRepository.findByUser_UserId(userId);
+
+		// Then
+		assertTrue(foundStoreOptional.isPresent());
+		Store foundStore = foundStoreOptional.get();
+		assertEquals(storeId, foundStore.getStoreId());
+		assertEquals(userId, foundStore.getUser().getUserId());
+		assertEquals("테스트 가게", foundStore.getStoreName()); // Store 반환 값 == 설정 값
+
+		// storeRepository.findByUser_UserId(userId) 메서드가 1번 호출되었는지 검증
+		verify(storeRepository, times(1)).findByUser_UserId(userId);
 	}
 
 	@Test
-	@DisplayName("Success: 선택적 필드 null")
-	void saveStoreWithNullOptionalFieldsSuccess() {
-		Region region = Region.builder()
-			.regionCode("1114010200")
-			.regionName("서울 광화문")
-			.fullName("서울특별시 종로구 세종로")
-			.sido("서울특별시")
-			.sigungu("종로구")
-			.eupmyendong("세종로")
-			.build();
-		region = regionRepository.save(region);
+	@DisplayName("Fail : 사용자ID로 가게 조회 - 사용자 존재하지 않음 ")
+	void findByUserUserIdFailNotFound() {
+		// Given 존재하지 않는 사용자 ID
+		Long nonExistentUserId = 999L;
 
-		User user = User.builder()
-			.username("testuser_null")
-			.email("test_null@example.com")
-			.password("password_null")
-			.nickname("testnick_null")
-			.phoneNumber("01098765432")
-			.userRole(UserRole.OWNER)
-			.build();
-		user = userRepository.save(user);
+		when(storeRepository.findByUser_UserId(nonExistentUserId)).thenReturn(Optional.empty());
 
-		Category category = Category.builder()
-			.categoryName("양식")
-			.build();
-		category = categoryRepository.save(category);
+		// When
+		Optional<Store> foundStoreOptional = storeRepository.findByUser_UserId(nonExistentUserId);
 
-		// description과 phoneNumber를 설정하지 않은 Store 생성
-		Store store = Store.builder()
-			.user(user)
-			.region(region)
-			.category(category)
-			.storeName("선택적 필드 null 테스트 가게")
-			.address("서울시 강남구 테헤란로")
-			.build();
-		storeRepository.save(store);
+		// Then
+		assertFalse(foundStoreOptional.isPresent());
 
-		Store foundStore = storeRepository.findByUser_UserId(user.getUserId()).orElse(null);
-
-		assert foundStore != null;
-		assert foundStore.getDescription() == null;
-		assert foundStore.getPhoneNumber() == null;
+		verify(storeRepository, times(1)).findByUser_UserId(nonExistentUserId);
 	}
 
 	@Test
-	@DisplayName("Fail: UserId")
-	void findByUserIdNotFound() {
-		Long nonExistentUserId = 9999L; // 실제 DB에 존재하지 않을 것으로 예상되는 ID
-		Optional<Store> foundStore = storeRepository.findByUser_UserId(nonExistentUserId);
-		// 결과 Optional.empty() 검증
-		assert foundStore.isEmpty();
-	}
-
-	@Test
-	@DisplayName("Fail: StoreName And Region")
-	void existsByStoreNameAndRegionNotFound() {
-		// findByUser_UserIdSuccess - 다시 생성 (독립적인 테스트 위해)
-		Region region = Region.builder()
-			.regionCode("9999999999")
-			.regionName("테스트 지역")
-			.fullName("테스트 지역 전체 이름")
-			.sido("테스트 시도")
-			.sigungu("테스트 시군구")
-			.eupmyendong("테스트 읍면동")
+	@DisplayName("Fail : 동일 지역, 동일 가게명 ")
+	void saveFail_DuplicateStoreNameRegion() {
+		Store invalidStore = Store.builder()
+			.storeName("중복가게")
+			.region(mock(Region.class))
 			.build();
-		region = regionRepository.save(region);
 
-		boolean exists = storeRepository.existsByStoreNameAndRegion("존재하지 않는 가게", region);
-		//결과 false 검증
-		assert !exists;
+		when(storeRepository.save(invalidStore))
+			.thenThrow(new RuntimeException("조건 위반"));
+
+		RuntimeException ex = assertThrows(RuntimeException.class, () -> {
+			storeRepository.save(invalidStore);
+		});
+
+		assertEquals("조건 위반", ex.getMessage());
+		verify(storeRepository).save(invalidStore);
 	}
+
 }

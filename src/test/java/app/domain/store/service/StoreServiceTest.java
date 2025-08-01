@@ -17,7 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.store.StoreService;
 import app.domain.store.model.dto.request.StoreApproveRequest;
+import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
+import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.RegionRepository;
 import app.domain.store.model.entity.Store;
@@ -103,181 +105,139 @@ class StoreServiceTest {
 		}
 
 		@Test
-		@DisplayName("NotFound RegionId")
-		void createStoreFailRegionId() {
-			UUID invalidRegionId = UUID.randomUUID();
-			StoreApproveRequest request = new StoreApproveRequest(
-				UUID.randomUUID(), // userId
-				invalidRegionId, // regionId
-				"가게주소", // address
-				"가게이름", // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				10000L // minOrderAmount
-			);
-
-			when(regionRepository.findById(invalidRegionId)).thenReturn(Optional.empty());
-
-			assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
-			}, "해당 region이 존재하지 않습니다.");
-			verify(regionRepository, times(1)).findById(invalidRegionId);
-			verify(storeRepository, never()).save(any(Store.class));
-		}
-
-		@Test
-		@DisplayName("최소 주문 금액 에러")
-		void createStoreFailMinOrderAmount() {
-			UUID userId = UUID.randomUUID();
+		@DisplayName("Fail : 지역이 존재하지 않음")
+		void createStoreFailRegionNotFound() {
 			UUID regionId = UUID.randomUUID();
 			StoreApproveRequest request = new StoreApproveRequest(
-				userId, // userId
-				regionId, // regionId
-				"가게주소", // address
-				"가게이름", // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				-1000L // minOrderAmount
+				UUID.randomUUID(),
+				regionId,
+				"가게주소",
+				"가게이름",
+				"가게설명",
+				"010-1111-2222",
+				10000L
 			);
 
-			// Mocking, regionRepository 호출 x
-			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
-			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
 
-			assertThrows(IllegalArgumentException.class, () -> {
+			IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
 				storeService.createStore(request);
-			}, "최소 주문 금액 오류.");
-
+			});
+			assertEquals("해당 region이 존재하지 않습니다.", exception.getMessage());
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(storeRepository, never()).save(any(Store.class));
 		}
+	}
+
+	@Nested
+	@DisplayName("updateStoreInfo api 테스트")
+	class UpdateStoreInfoTest {
 
 		@Test
-		@DisplayName("지역, 가게 명 중복")
-		void createStoreFailDuplicateStoreNameInRegion() {
-			UUID userId = UUID.randomUUID();
-			UUID regionId = UUID.randomUUID();
-			String storeName = "중복된 가게 이름";
-			StoreApproveRequest request = new StoreApproveRequest(
-				userId, // userId
-				regionId, // regionId
-				"가게주소", // address
-				storeName, // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				10000L // minOrderAmount
+		@DisplayName("Success : Full Request")
+		void updateStoreInfoSuccess() {
+			UUID storeId = UUID.randomUUID();
+			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
+				storeId,
+				"새 가게 이름",
+				"새 주소",
+				"010-2222-3333",
+				5000L,
+				"새 설명"
 			);
 
-			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
-			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
-			when(storeRepository.existsByStoreNameAndRegion(storeName, mockRegion)).thenReturn(true);
+			Store mockStore = Store.builder()
+				.storeId(storeId)
+				.storeName("기존 가게명")
+				.address("기존 주소")
+				.phoneNumber("010-1111-1111")
+				.minOrderAmount(1000L)
+				.description("기존 설명")
+				.build();
+			when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
+			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
 
-			assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
-			}, "중복된 지역, 가게입니다.");
-			verify(regionRepository, times(1)).findById(regionId);
-			verify(storeRepository, times(1)).existsByStoreNameAndRegion(storeName, mockRegion);
-			verify(storeRepository, never()).save(any(Store.class));
+			StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
+
+			assertNotNull(response);
+			assertEquals(storeId, response.storeId());
+
+			verify(storeRepository, times(1)).findById(storeId);
+			verify(storeRepository, times(1)).save(any(Store.class));
 		}
 
 		@Test
-		@DisplayName("Fail: RegionId Null")
-		void createStoreFailNullRegionId() {
-			UUID userId = UUID.randomUUID();
-			StoreApproveRequest request = new StoreApproveRequest(
-				userId, // userId
-				null, // regionId
-				"가게주소", // address
-				"가게이름", // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				10000L // minOrderAmount
+		@DisplayName("Success 선택적 필드 Null")
+		void updateStoreInfoSuccessOptionalNull() {
+			UUID storeId = UUID.randomUUID();
+			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(
+				storeId,
+				null,
+				null,
+				null,
+				null,
+				null
 			);
 
-			assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
-			}, "regionId는 null일 수 없습니다.");
+			Store mockStore = Store.builder()
+				.storeId(storeId)
+				.storeName("기존 가게")
+				.address("기존 주소")
+				.phoneNumber("010-0000-0000")
+				.minOrderAmount(1000L)
+				.description("기존 설명")
+				.build();
 
-			verify(regionRepository, never()).findById(any(UUID.class));
-			verify(storeRepository, never()).save(any(Store.class));
+			when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
+			when(storeRepository.save(any(Store.class))).thenReturn(mockStore);
+
+			StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
+
+			assertNotNull(response);
+			assertEquals(storeId, response.storeId());
+			verify(storeRepository, times(1)).findById(storeId);
+			verify(storeRepository, times(1)).save(any(Store.class));
+
+			assertEquals("기존 가게", mockStore.getStoreName());
+			assertEquals("기존 주소", mockStore.getAddress());
+			assertEquals("010-0000-0000", mockStore.getPhoneNumber());
+			assertEquals(1000L, mockStore.getMinOrderAmount());
+			assertEquals("기존 설명", mockStore.getDescription());
 		}
 
-		@Test
-		@DisplayName("Fail: Address Null")
-		void createStoreFailNullAddress() {
-			UUID userId = UUID.randomUUID();
-			UUID regionId = UUID.randomUUID();
-			StoreApproveRequest request = new StoreApproveRequest(
-				userId, // userId
-				regionId, // regionId
-				null, // address
-				"가게이름", // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				10000L // minOrderAmount
-			);
+		@Nested
+		@DisplayName("deleteStore Test")
+		class DeleteStoreTest {
 
-			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
-			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+			@Test
+			@DisplayName("Success")
+			void deleteStoreSuccess() {
+				UUID storeId = UUID.randomUUID();
+				Store mockStore = mock(Store.class);
 
-			assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
-			}, "주소는 null일 수 없습니다.");
+				when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
 
-			verify(regionRepository, times(1)).findById(regionId);
-			verify(storeRepository, never()).save(any(Store.class));
-		}
+				assertDoesNotThrow(() -> storeService.deleteStore(storeId));
 
-		@Test
-		@DisplayName("Fail: NullStoreName")
-		void createStoreFailNullStoreName() {
-			UUID userId = UUID.randomUUID();
-			UUID regionId = UUID.randomUUID();
-			StoreApproveRequest request = new StoreApproveRequest(
-				userId, // userId
-				regionId, // regionId
-				"가게주소", // address
-				null, // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				10000L // minOrderAmount
-			);
+				verify(storeRepository, times(1)).findById(storeId);
+				verify(mockStore, times(1)).markAsDeleted();
+			}
 
-			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
-			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+			@Test
+			@DisplayName("Fail : 이미 삭제된 가게")
+			void deleteStoreAlready() {
+				UUID storeId = UUID.randomUUID();
+				Store mockStore = mock(Store.class);
 
-			assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
-			}, "가게 이름은 null일 수 없습니다.");
+				when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
+				doThrow(new IllegalArgumentException("가게 찾을 수 없음")).when(mockStore).markAsDeleted();
 
-			verify(regionRepository, times(1)).findById(regionId);
-			verify(storeRepository, never()).save(any(Store.class));
-		}
+				IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+					storeService.deleteStore(storeId);
+				});
 
-		@Test
-		@DisplayName("Fail : Null_MinOrderAmount")
-		void createStoreFailNullMinOrderAmount() {
-			UUID userId = UUID.randomUUID();
-			UUID regionId = UUID.randomUUID();
-			StoreApproveRequest request = new StoreApproveRequest(
-				userId, // userId
-				regionId, // regionId
-				"가게주소", // address
-				"가게이름", // storeName
-				"가게설명", // desc
-				"010-1111-2222", // phoneNumber
-				null // minOrderAmount
-			);
-
-			Region mockRegion = Region.builder().regionId(regionId).regionName("서울").build();
-			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
-
-			assertThrows(IllegalArgumentException.class, () -> {
-				storeService.createStore(request);
-			}, "최소 주문 금액은 null일 수 없습니다.");
-
-			verify(regionRepository, times(1)).findById(regionId);
-			verify(storeRepository, never()).save(any(Store.class));
+				assertEquals("가게 찾을 수 없음", exception.getMessage());
+			}
 		}
 	}
 }

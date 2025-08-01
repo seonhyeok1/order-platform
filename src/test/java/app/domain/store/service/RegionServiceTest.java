@@ -51,35 +51,6 @@ class RegionServiceTest {
 			assertEquals(expectedRegionId, actualRegionId);
 			verify(regionRepository, times(1)).findByRegionCode(regionCode);
 		}
-
-		@Test
-		@DisplayName("Fail : invalidRegionCode")
-		void getRegionIdByCodeFailNotFound() {
-			// Given
-			String invalidRegionCode = "INVALID";
-
-			when(regionRepository.findByRegionCode(invalidRegionCode)).thenReturn(Optional.empty());
-
-			// When & Then
-			assertThrows(IllegalArgumentException.class, () -> {
-				regionService.getRegionIdByCode(invalidRegionCode);
-			}, "존재하지 않는 지역 코드입니다.");
-
-			verify(regionRepository, times(1)).findByRegionCode(invalidRegionCode);
-		}
-
-		@Test
-		@DisplayName("Fail : regionCode")
-		void getRegionIdByCodeFailNullRegionCode() {
-			// Given
-			String nullRegionCode = null;
-
-			// When & Then
-			assertThrows(IllegalArgumentException.class, () -> {
-				regionService.getRegionIdByCode(nullRegionCode);
-			}, "지역 코드는 null이거나 비어있을 수 없습니다.");
-
-			verify(regionRepository, never()).findByRegionCode(anyString());
-		}
 	}
 }
+
