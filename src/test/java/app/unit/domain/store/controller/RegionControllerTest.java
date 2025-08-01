@@ -1,4 +1,4 @@
-package app.domain.store.controller;
+package app.unit.domain.store.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -14,6 +14,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import app.domain.store.status.StoreException;
+import app.domain.store.status.StoreErrorCode;
 import app.domain.store.RegionController;
 import app.domain.store.RegionService;
 import app.global.apiPayload.code.status.ErrorStatus;
@@ -46,10 +48,10 @@ class RegionControllerTest {
 	@Test
 	@DisplayName("Fail : RegionCode 존재하지 않음")
 	void getRegionIdByCodeRegionCodeNotFound() {
-		GeneralException exception = assertThrows(GeneralException.class, () -> {
+		StoreException exception = assertThrows(StoreException.class, () -> {
 			regionController.getRegionIdByCode(null);
 		});
-		assertEquals("REGIONCODE_NOT_FOUND", exception.getErrorStatus().name());
+		assertEquals(StoreErrorCode.REGIONCODE_NOT_FOUND.name(), exception.getCode().name());
 	}
 
 	@Test
@@ -57,11 +59,11 @@ class RegionControllerTest {
 	void getRegionIdByCodeRegionIdNotFound() {
 		String regionCode = "1111010600";
 
-		when(regionService.getRegionIdByCode(regionCode)).thenThrow(new GeneralException(ErrorStatus.REGION_NOT_FOUND));
+		when(regionService.getRegionIdByCode(regionCode)).thenThrow(new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
-		GeneralException exception = assertThrows(GeneralException.class, () -> {
+		StoreException exception = assertThrows(StoreException.class, () -> {
 			regionController.getRegionIdByCode(regionCode);
 		});
-		assertEquals("REGION_NOT_FOUND", exception.getErrorStatus().name());
+		assertEquals(StoreErrorCode.REGION_NOT_FOUND.name(), exception.getCode().name());
 	}
 }
