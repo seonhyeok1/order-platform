@@ -109,6 +109,10 @@ public enum ErrorStatus implements BaseErrorCode {
 	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
 	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
 
+	// Payment 관련
+	PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT001", "결제 승인 정보가 결제 요청할 때의 정보와 다릅니다."),
+	TOSS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT002", "토스페이먼츠 API 오류가 발생했습니다."),
+
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
 	TOKEN_MINT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_002", "토큰 발행(mint) 처리 중 오류가 발생했습니다."),
