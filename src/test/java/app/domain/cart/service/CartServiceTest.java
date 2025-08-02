@@ -24,9 +24,12 @@ import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
-import app.domain.user.model.entity.User;
+import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.store.model.entity.Store;
+import app.domain.store.model.entity.StoreRepository;
+import app.domain.user.model.entity.User;
+import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceTest {
@@ -39,6 +42,12 @@ class CartServiceTest {
 
 	@Mock
 	private CartItemRepository cartItemRepository;
+
+	@Mock
+	private MenuRepository menuRepository;
+
+	@Mock
+	private StoreRepository storeRepository;
 
 	@InjectMocks
 	private CartService cartService;
@@ -60,6 +69,8 @@ class CartServiceTest {
 	@DisplayName("장바구니에 새로운 아이템을 추가할 수 있다")
 	void addItem() {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(true);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
@@ -78,6 +89,8 @@ class CartServiceTest {
 	void addExistingItem() {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		cartItems.add(RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(1).build());
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(true);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
@@ -95,6 +108,8 @@ class CartServiceTest {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		UUID otherStoreId = UUID.randomUUID();
 		cartItems.add(RedisCartItem.builder().menuId(UUID.randomUUID()).storeId(otherStoreId).quantity(1).build());
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(true);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
@@ -250,5 +265,46 @@ class CartServiceTest {
 		verify(cartItemRepository).deleteByCart_CartId(cart1.getCartId());
 		verify(cartItemRepository).deleteByCart_CartId(cart2.getCartId());
 		verify(cartItemRepository, times(2)).saveAll(any());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 menuId로 장바구니 추가 시 예외 발생")
+	void addCartItem_MenuNotFound() {
+		// Given
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		when(menuRepository.existsById(menuId)).thenReturn(false);
+
+		// When & Then
+		assertThatThrownBy(() -> cartService.addCartItem(userId, request))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException) ex;
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("메뉴를 찾을 수 없습니다.");
+			});
+
+		verify(menuRepository).existsById(menuId);
+		verify(storeRepository, never()).existsById(any());
+		verify(cartRedisService, never()).getCartFromRedis(any());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 storeId로 장바구니 추가 시 예외 발생")
+	void addCartItem_StoreNotFound() {
+		// Given
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(false);
+
+		// When & Then
+		assertThatThrownBy(() -> cartService.addCartItem(userId, request))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException) ex;
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
+			});
+
+		verify(menuRepository).existsById(menuId);
+		verify(storeRepository).existsById(storeId);
+		verify(cartRedisService, never()).getCartFromRedis(any());
 	}
 }
