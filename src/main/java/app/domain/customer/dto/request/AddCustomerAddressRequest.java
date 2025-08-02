@@ -1,9 +1,15 @@
 package app.domain.customer.dto.request;
 
-public record AddCustomerAddressRequest(
-	String alias,
-	String address,
-	String addressDetail,
-	boolean isDefault
-) {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class AddCustomerAddressRequest {
+	private String alias;
+	private String address;
+	private String addressDetail;
+	private boolean isDefault;
 }

@@ -46,8 +46,7 @@ public class CustomerAddressService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		// 새로운 중복 주소 검증
-		if (userAddressRepository.existsByUserAndAddressAndAddressDetail(user, request.address(), request.addressDetail())) {
+		if (userAddressRepository.existsByUserAndAddressAndAddressDetail(user, request.getAddress(), request.getAddressDetail())) {
 			throw new GeneralException(ErrorStatus.ADDRESS_ALREADY_EXISTS);
 		}
 
@@ -69,10 +68,10 @@ public class CustomerAddressService {
 
 		UserAddress address = UserAddress.builder()
 			.user(user)
-			.alias(request.alias())
-			.address(request.address())
-			.addressDetail(request.addressDetail())
-			.isDefault(finalIsDefault) // Set isDefault based on request
+			.alias(request.getAlias())
+			.address(request.getAddress())
+			.addressDetail(request.getAddressDetail())
+			.isDefault(finalIsDefault)
 			.build();
 
 		try {

@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,54 +29,42 @@ public class CustomerAddressController {
 	private final CustomerAddressService customerAddressService;
 
 	@GetMapping("/list")
-	@Operation(summary = "사용자 주소지 목록 조회", description = "")
+	@Operation(summary = "/api/customer/address/list", description = "사용자 주소지 목록 조회")
 	public ApiResponse<List<GetCustomerAddressListResponse>> GetCustomerAddresses (
 		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal) {
-
-		if (principal == null || !StringUtils.hasText(principal.getUsername())) {
-			throw new GeneralException(ErrorStatus._UNAUTHORIZED);
-		}
-
-		Long userId;
-
-		try {
-			userId = Long.parseLong(principal.getUsername());
-		} catch (NumberFormatException e) {
-			throw new GeneralException(ErrorStatus._BAD_REQUEST);
-		}
-
+		Long userId = getUserIdFromPrincipal(principal);
 		return ApiResponse.onSuccess(customerAddressService.getCustomerAddresses(userId));
 	}
 
 	@PostMapping("/add")
-	@Operation(summary = "사용자 주소지 등록", description = "")
+	@Operation(summary = "/api/customer/address/add", description = "사용자 주소지 등록")
 	public ApiResponse<AddCustomerAddressResponse> AddCustomerAddress(
 		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
 		@RequestBody @Valid AddCustomerAddressRequest request){
+		Long userId = getUserIdFromPrincipal(principal);
 
-		if (principal == null || !StringUtils.hasText(principal.getUsername())) {
-			throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+		if (!StringUtils.hasText(request.getAlias())) {
+			throw new IllegalArgumentException("주소 별명은 필수입니다.");
 		}
-
-		Long userId;
-
-		try {
-			userId = Long.parseLong(principal.getUsername());
-		} catch (NumberFormatException e) {
-			throw new GeneralException(ErrorStatus._BAD_REQUEST);
+		if (!StringUtils.hasText(request.getAddress())) {
+			throw new IllegalArgumentException("주소는 필수입니다.");
 		}
-
-		if (!StringUtils.hasText(request.alias())) {
-			throw new IllegalArgumentException("Address alias is required.");
-		}
-		if (!StringUtils.hasText(request.address())) {
-			throw new IllegalArgumentException("Address is required.");
-		}
-		if (!StringUtils.hasText(request.addressDetail())) {
+		if (!StringUtils.hasText(request.getAddressDetail())) {
 			throw new IllegalArgumentException("상세 주소는 필수입니다.");
 		}
 
 		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(userId, request);
 		return ApiResponse.onSuccess(response);
+	}
+
+	private Long getUserIdFromPrincipal(org.springframework.security.core.userdetails.User principal) {
+		if (principal == null || !StringUtils.hasText(principal.getUsername())) {
+			throw new GeneralException(ErrorStatus._UNAUTHORIZED);
+		}
+		try {
+			return Long.parseLong(principal.getUsername());
+		} catch (NumberFormatException e) {
+			throw new GeneralException(ErrorStatus._BAD_REQUEST);
+		}
 	}
 }
