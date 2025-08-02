@@ -1,4 +1,4 @@
-package app.domain.user.model.dto;
+package app.domain.user.model.dto.request;
 
 import app.domain.user.model.entity.enums.UserRole;
 import app.global.validation.annotation.ValidUserRole;
