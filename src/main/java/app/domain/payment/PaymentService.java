@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.Map;
 import java.util.UUID;
 
 import org.json.JSONObject;
@@ -42,7 +41,7 @@ public class PaymentService {
 
 	@Value("${TOSS_SECRET_KEY}")
 	private String tossSecretKey;
-	@Value("{TOSS_URL}")
+	@Value("${TOSS_URL}")
 	private String tossUrl;
 
 	private final OrdersRepository ordersRepository;
@@ -80,8 +79,8 @@ public class PaymentService {
 	public String confirmPayment(PaymentConfirmRequest request) {
 
 		try {
-			Orders order = getOrderById(UUID.fromString(request.orderId()));
-			long requestAmount = Long.parseLong(request.amount());
+			Orders order = getOrderById(UUID.fromString(request.getOrderId()));
+			long requestAmount = Long.parseLong(request.getAmount());
 			if (order.getTotalPrice() != requestAmount) {
 				throw new GeneralException(ErrorStatus.PAYMENT_AMOUNT_MISMATCH);
 			}
@@ -90,18 +89,20 @@ public class PaymentService {
 			byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
 			String authorizations = "Basic " + new String(encodedBytes);
 
-			String responseBody;
-			boolean isSuccess;
+			String fullUrl = tossUrl + "/confirm";
+			String responseBody = "";
+			boolean isSuccess = false;
+			int code = 0;
+			Long userId = getCurrentUserId();
 			try {
-				Long userId = getCurrentUserId();
-				String idempotencyKey = generateIdempotencyKey(userId, request.orderId());
+				String idempotencyKey = generateIdempotencyKey(userId, request.getOrderId());
 
 				JSONObject obj = new JSONObject();
-				obj.put("orderId", request.orderId());
-				obj.put("amount", request.amount());
-				obj.put("paymentKey", request.paymentKey());
+				obj.put("orderId", request.getAmount());
+				obj.put("amount", request.getAmount());
+				obj.put("paymentKey", request.getPaymentKey());
 
-				URL url = new URL(tossUrl + "/confirm");
+				URL url = new URL(fullUrl);
 				HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 				connection.setRequestProperty("Authorization", authorizations);
 				connection.setRequestProperty("Content-Type", "application/json");
@@ -112,7 +113,7 @@ public class PaymentService {
 				OutputStream outputStream = connection.getOutputStream();
 				outputStream.write(obj.toString().getBytes("UTF-8"));
 
-				int code = connection.getResponseCode();
+				code = connection.getResponseCode();
 				isSuccess = code == 200;
 
 				InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
@@ -127,13 +128,12 @@ public class PaymentService {
 			} catch (Exception e) {
 				throw new GeneralException(ErrorStatus.TOSS_API_ERROR);
 			}
-
 			JSONObject responseJson = new JSONObject(responseBody);
 			PaymentStatus paymentStatus = isSuccess ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
 
 			Payment payment = Payment.builder()
 				.ordersId(order.getOrdersId())
-				.paymentKey(request.paymentKey())
+				.paymentKey(request.getPaymentKey())
 				.paymentMethod(order.getPaymentMethod())
 				.paymentStatus(paymentStatus)
 				.amount(order.getTotalPrice())
@@ -143,17 +143,16 @@ public class PaymentService {
 
 			PaymentEtc paymentEtc = PaymentEtc.builder()
 				.payment(savedPayment)
-				.paymentResponse(responseJson.toMap())
+				.paymentResponse(responseJson.toString())
 				.build();
 
 			paymentEtcRepository.save(paymentEtc);
 
 			if (isSuccess) {
-				Long userId = getCurrentUserId();
 				cartService.clearCartItems(userId);
-				return "결제 승인이 완료되었습니다. PaymentKey: " + request.paymentKey();
+				return "결제 승인이 완료되었습니다. PaymentKey: " + request.getAmount();
 			} else {
-				throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+				throw new GeneralException(ErrorStatus.PAYMENT_CONFIRM_FAILED);
 			}
 		} catch (GeneralException e) {
 			throw e;
@@ -165,28 +164,8 @@ public class PaymentService {
 	@Transactional
 	public String failSave(PaymentFailRequest request) {
 		try {
-			Orders order = getOrderById(request.orderId());
-
-			Payment payment = Payment.builder()
-				.ordersId(order.getOrdersId())
-				.paymentKey("FAILED_" + System.currentTimeMillis())
-				.paymentMethod(order.getPaymentMethod())
-				.paymentStatus(PaymentStatus.FAILED)
-				.amount(order.getTotalPrice())
-				.build();
-
-			Payment savedPayment = paymentRepository.save(payment);
-
-			PaymentEtc paymentEtc = PaymentEtc.builder()
-				.payment(savedPayment)
-				.paymentResponse(Map.of(
-					"errorCode", request.errorCode(),
-					"message", request.message()
-				))
-				.build();
-
-			paymentEtcRepository.save(paymentEtc);
-
+			Orders order = getOrderById(request.getOrderId());
+			order.updateOrderStatus(OrderStatus.FAILED);
 			return "결제 실패 처리가 완료되었습니다.";
 		} catch (GeneralException e) {
 			throw e;
@@ -199,6 +178,7 @@ public class PaymentService {
 	public String cancelPayment(CancelPaymentRequest request) {
 		try {
 			Orders order = getOrderById(request.getOrderId());
+
 			Payment payment = paymentRepository.findByOrdersId(request.getOrderId())
 				.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 
@@ -207,8 +187,9 @@ public class PaymentService {
 			byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
 			String authorizations = "Basic " + new String(encodedBytes);
 
-			String responseBody;
-			boolean isSuccess;
+			String responseBody = "";
+			boolean isSuccess = false;
+			int code = 0;
 			try {
 				Long userId = getCurrentUserId();
 				String idempotencyKey = generateIdempotencyKey(userId, request.getOrderId().toString());
@@ -216,7 +197,9 @@ public class PaymentService {
 				JSONObject obj = new JSONObject();
 				obj.put("cancelReason", request.getCancelReason());
 
-				URL url = new URL(tossUrl + "/payments/" + payment.getPaymentKey() + "/cancel");
+				String cancelUrl = tossUrl + "/" + payment.getPaymentKey() + "/cancel";
+
+				URL url = new URL(cancelUrl);
 				HttpURLConnection connection = (HttpURLConnection)url.openConnection();
 				connection.setRequestProperty("Authorization", authorizations);
 				connection.setRequestProperty("Content-Type", "application/json");
@@ -227,7 +210,7 @@ public class PaymentService {
 				OutputStream outputStream = connection.getOutputStream();
 				outputStream.write(obj.toString().getBytes("UTF-8"));
 
-				int code = connection.getResponseCode();
+				code = connection.getResponseCode();
 				isSuccess = code == 200;
 
 				InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
@@ -248,13 +231,12 @@ public class PaymentService {
 			if (isSuccess) {
 				order.updateOrderStatus(OrderStatus.REFUNDED);
 				order.addHistory("cancel", LocalDateTime.now());
-
 				payment.updatePaymentStatus(PaymentStatus.CANCELLED);
 			}
 
 			PaymentEtc paymentEtc = PaymentEtc.builder()
 				.payment(payment)
-				.paymentResponse(responseJson.toMap())
+				.paymentResponse(responseJson.toString())
 				.build();
 
 			paymentEtcRepository.save(paymentEtc);
