@@ -1,5 +1,8 @@
 package app.domain.user.model.entity;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
 import app.domain.user.model.entity.enums.UserRole;
 import app.global.entity.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +26,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
+@SQLDelete(sql = "UPDATE p_user SET deleted_at = NOW() WHERE user_id = ?")
+@Where(clause = "deleted_at IS NULL")
 public class User extends BaseEntity {
 
 	@Id
@@ -59,4 +64,17 @@ public class User extends BaseEntity {
 	@Column(nullable = false, length = 20)
 	@Schema(description = "사용자 역할(UserRole관련)")
 	private UserRole userRole;
+
+	/**
+	 * 회원 탈퇴 시 개인정보를 익명화하는 메서드
+	 * userRole은 유지하여 통계 등에 활용
+	 */
+	public void anonymizeForWithdrawal() {
+		this.username = "withdrawn_user_" + this.userId;
+		this.password = "withdrawn_password"; // 더 이상 로그인 불가
+		this.email = "withdrawn_" + this.userId + "@example.com";
+		this.nickname = "탈퇴한 사용자";
+		this.realName = "탈퇴한 사용자";
+		this.phoneNumber = "000-0000-0000";
+	}
 }
