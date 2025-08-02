@@ -17,10 +17,6 @@ public enum ErrorStatus implements BaseCode {
 	// USER
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "GLOBAL001", "존재하지 않는 사용자입니다."),
 
-	// AI 관련
-	AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "AI 콘텐츠 생성에 실패했습니다."),
-	AI_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "AI002", "잘못된 입력값입니다"),
-
 	// 가장 일반적인 응답
 	_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
 	_BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
@@ -101,11 +97,6 @@ public enum ErrorStatus implements BaseCode {
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER004", "메뉴를 찾을 수 없습니다."),
 	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
 	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
-
-	// Review 관련
-	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "REVIEW001", "이미 해당 주문에 대한 리뷰가 존재합니다."),
-	REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW002", "리뷰가 존재하지 않습니다."),
-	NO_REVIEWS_FOUND_FOR_USER(HttpStatus.NOT_FOUND, "REVIEW001", "해당 사용자가 작성한 리뷰가 없습니다."),
 
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),

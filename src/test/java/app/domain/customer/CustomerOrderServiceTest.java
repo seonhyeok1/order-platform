@@ -18,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.customer.dto.response.CustomerOrderResponse;
+import app.domain.customer.status.CustomerErrorStatus;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderChannel;
@@ -98,7 +99,7 @@ class CustomerOrderServiceTest {
 
 		assertThatThrownBy(() -> customerOrderService.getCustomerOrders(nonExistentUserId))
 			.isInstanceOf(GeneralException.class)
-			.extracting("errorStatus")
+			.extracting("code")
 			.isEqualTo(ErrorStatus.USER_NOT_FOUND);
 
 		verify(userRepository, times(1)).findById(nonExistentUserId);
@@ -106,15 +107,15 @@ class CustomerOrderServiceTest {
 	}
 
 	@Test
-	@DisplayName("고객 주문 내역 조회 성공 - 주문이 없는 경우")
+	@DisplayName("고객 주문 내역 조회 실패 - 주문이 없는 경우")
 	void getCustomerOrders_NoOrdersFound() {
 		when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 		when(ordersRepository.findByUser(testUser)).thenReturn(Collections.emptyList());
 
-		List<CustomerOrderResponse> result = customerOrderService.getCustomerOrders(testUser.getUserId());
-
-		assertThat(result).isNotNull();
-		assertThat(result).isEmpty();
+		assertThatThrownBy(() -> customerOrderService.getCustomerOrders(testUser.getUserId()))
+			.isInstanceOf(GeneralException.class)
+			.extracting("code")
+			.isEqualTo(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND); // 수정된 부분
 
 		verify(userRepository, times(1)).findById(testUser.getUserId());
 		verify(ordersRepository, times(1)).findByUser(testUser);

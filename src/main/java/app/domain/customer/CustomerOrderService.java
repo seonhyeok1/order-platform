@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.domain.customer.dto.response.CustomerOrderResponse;
+import app.domain.customer.status.CustomerErrorStatus;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.user.model.UserRepository;
@@ -27,7 +28,9 @@ public class CustomerOrderService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 		List<Orders> orders = ordersRepository.findByUser(user);
-
+		if (orders.isEmpty()) {
+			throw new GeneralException(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND);
+		}
 		return orders.stream()
 			.map(CustomerOrderResponse::of)
 			.collect(Collectors.toList());
