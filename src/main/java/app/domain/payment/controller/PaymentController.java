@@ -31,7 +31,7 @@ public class PaymentController {
 	}
 
 	@Operation(summary = "결제 실패 처리 API", description = "결제 실패 정보를 DB에 저장합니다.")
-	@PostMapping("/fail")
+	@PostMapping("/failsave")
 	public ApiResponse<String> processFail(@Valid @RequestBody PaymentFailRequest request) {
 		String result = paymentService.failSave(request);
 		return ApiResponse.onSuccess(result);
