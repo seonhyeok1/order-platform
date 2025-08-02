@@ -68,11 +68,11 @@ public class UserService {
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
 		// 1. 사용자 인증 (DB에서 사용자 정보 조회)
-		User user = userRepository.findByUsername(request.username())
+		User user = userRepository.findByUsername(request.getUsername())
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
 		// 2. 비밀번호 검증
-		if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
 			throw new GeneralException(ErrorStatus.INVALID_PASSWORD);
 		}
 
