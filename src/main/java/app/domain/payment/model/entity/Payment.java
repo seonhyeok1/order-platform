@@ -36,9 +36,6 @@ public class Payment extends BaseEntity {
 	@Column(nullable = false, unique = true)
 	private UUID ordersId;
 
-	@Column(nullable = false)
-	private String signature;
-
 	@Column(nullable = false, length = 50)
 	private PaymentMethod paymentMethod;
 
