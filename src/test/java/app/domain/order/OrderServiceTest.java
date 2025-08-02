@@ -19,8 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
-import app.domain.user.model.UserRepository;
-import app.domain.user.model.entity.User;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.order.model.OrderItemRepository;
@@ -34,6 +32,8 @@ import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
+import app.domain.user.model.UserRepository;
+import app.domain.user.model.entity.User;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -71,7 +71,6 @@ class OrderServiceTest {
 		userId = 1L;
 		storeId = UUID.randomUUID();
 		menuId = UUID.randomUUID();
-		requestTime = LocalDateTime.now();
 
 		request = new CreateOrderRequest(
 			PaymentMethod.CREDIT_CARD,
@@ -106,10 +105,10 @@ class OrderServiceTest {
 		when(ordersRepository.save(any(Orders.class))).thenReturn(savedOrder);
 
 		// When
-		String result = orderService.createOrder(userId, request, requestTime);
+		UUID result = orderService.createOrder(userId, request);
 
 		// Then
-		assertThat(result).contains("가 생성되었습니다");
+		assertThat(result).isInstanceOf(UUID.class);
 		verify(cartService).getCartFromCache(userId);
 		verify(userRepository).findById(userId);
 		verify(storeRepository).findById(storeId);
@@ -133,7 +132,7 @@ class OrderServiceTest {
 		when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
 		// When & Then
-		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
+		assertThatThrownBy(() -> orderService.createOrder(userId, request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
@@ -164,7 +163,7 @@ class OrderServiceTest {
 		when(storeRepository.findById(storeId)).thenReturn(Optional.empty());
 
 		// When & Then
-		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
+		assertThatThrownBy(() -> orderService.createOrder(userId, request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
@@ -200,7 +199,7 @@ class OrderServiceTest {
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
 		// When & Then
-		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
+		assertThatThrownBy(() -> orderService.createOrder(userId, request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
@@ -222,7 +221,7 @@ class OrderServiceTest {
 		when(cartService.getCartFromCache(userId)).thenReturn(cartItems);
 
 		// When & Then
-		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
+		assertThatThrownBy(() -> orderService.createOrder(userId, request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
@@ -231,6 +230,50 @@ class OrderServiceTest {
 
 		verify(cartService).getCartFromCache(userId);
 		verify(userRepository, never()).findById(any());
+		verify(ordersRepository, never()).save(any());
+	}
+
+	@Test
+	@DisplayName("요청 총액과 장바구니 아이템 총액 불일치")
+	void createOrder_PriceMismatch() {
+		// Given
+		RedisCartItem cartItem = RedisCartItem.builder()
+			.menuId(menuId)
+			.storeId(storeId)
+			.quantity(2)
+			.build();
+		List<RedisCartItem> cartItems = List.of(cartItem);
+
+		User user = User.builder().userId(userId).build();
+		Store store = Store.builder().storeId(storeId).build();
+		Menu menu = Menu.builder().menuId(menuId).name("테스트메뉴").price(5000).build();
+
+		CreateOrderRequest mismatchRequest = new CreateOrderRequest(
+			PaymentMethod.CREDIT_CARD,
+			OrderChannel.ONLINE,
+			ReceiptMethod.DELIVERY,
+			"문 앞에 놓아주세요",
+			15000L,
+			"서울시 강남구"
+		);
+
+		when(cartService.getCartFromCache(userId)).thenReturn(cartItems);
+		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+		when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+		// When & Then
+		assertThatThrownBy(() -> orderService.createOrder(userId, mismatchRequest))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException)ex;
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("요청 총액과 장바구니 아이템 총액이 일치하지 않습니다.");
+			});
+
+		verify(cartService).getCartFromCache(userId);
+		verify(userRepository).findById(userId);
+		verify(storeRepository).findById(storeId);
+		verify(menuRepository).findById(menuId);
 		verify(ordersRepository, never()).save(any());
 	}
 
@@ -247,16 +290,14 @@ class OrderServiceTest {
 
 		User user = User.builder().userId(userId).build();
 		Store store = Store.builder().storeId(storeId).build();
-		Orders savedOrder = Orders.builder().ordersId(UUID.randomUUID()).build();
 
 		when(cartService.getCartFromCache(userId)).thenReturn(cartItems);
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 		when(storeRepository.findById(storeId)).thenReturn(Optional.of(store));
-		when(ordersRepository.save(any(Orders.class))).thenReturn(savedOrder);
 		when(menuRepository.findById(menuId)).thenReturn(Optional.empty());
 
 		// When & Then
-		assertThatThrownBy(() -> orderService.createOrder(userId, request, requestTime))
+		assertThatThrownBy(() -> orderService.createOrder(userId, request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
@@ -266,8 +307,7 @@ class OrderServiceTest {
 		verify(cartService).getCartFromCache(userId);
 		verify(userRepository).findById(userId);
 		verify(storeRepository).findById(storeId);
-		verify(ordersRepository).save(any(Orders.class));
-		verify(menuRepository).findById(menuId);
+		verify(ordersRepository, never()).save(any());
 		verify(orderItemRepository, never()).save(any());
 	}
 
@@ -306,18 +346,18 @@ class OrderServiceTest {
 		OrderDetailResponse result = orderService.getOrderDetail(orderId);
 
 		// Then
-		assertThat(result.storeName()).isEqualTo("테스트매장");
-		assertThat(result.menuList()).hasSize(1);
-		assertThat(result.menuList().get(0).menuName()).isEqualTo("테스트메뉴");
-		assertThat(result.menuList().get(0).quantity()).isEqualTo(2);
-		assertThat(result.menuList().get(0).price()).isEqualTo(5000);
-		assertThat(result.totalPrice()).isEqualTo(10000L);
-		assertThat(result.deliveryAddress()).isEqualTo("서울시 강남구");
-		assertThat(result.paymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
-		assertThat(result.orderChannel()).isEqualTo(OrderChannel.ONLINE);
-		assertThat(result.receiptMethod()).isEqualTo(ReceiptMethod.DELIVERY);
-		assertThat(result.orderStatus()).isEqualTo(app.domain.order.model.entity.enums.OrderStatus.PENDING);
-		assertThat(result.requestMessage()).isEqualTo("문 앞에 놓아주세요");
+		assertThat(result.getStoreName()).isEqualTo("테스트매장");
+		assertThat(result.getMenuList()).hasSize(1);
+		assertThat(result.getMenuList().get(0).getMenuName()).isEqualTo("테스트메뉴");
+		assertThat(result.getMenuList().get(0).getQuantity()).isEqualTo(2);
+		assertThat(result.getMenuList().get(0).getPrice()).isEqualTo(5000);
+		assertThat(result.getTotalPrice()).isEqualTo(10000L);
+		assertThat(result.getDeliveryAddress()).isEqualTo("서울시 강남구");
+		assertThat(result.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
+		assertThat(result.getOrderChannel()).isEqualTo(OrderChannel.ONLINE);
+		assertThat(result.getReceiptMethod()).isEqualTo(ReceiptMethod.DELIVERY);
+		assertThat(result.getOrderStatus()).isEqualTo(app.domain.order.model.entity.enums.OrderStatus.PENDING);
+		assertThat(result.getRequestMessage()).isEqualTo("문 앞에 놓아주세요");
 
 		verify(ordersRepository).findById(orderId);
 		verify(orderItemRepository).findByOrders(order);

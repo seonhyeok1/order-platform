@@ -2,6 +2,7 @@ package app.domain.order;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +43,7 @@ public class OrderService {
 	private final MenuRepository menuRepository;
 
 	@Transactional
-	public UUID createOrder(Long userId, CreateOrderRequest request, LocalDateTime requestTime) {
+	public UUID createOrder(Long userId, CreateOrderRequest request) {
 		try {
 			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
 			if (cartItems.isEmpty()) {
@@ -61,26 +62,40 @@ public class OrderService {
 			Store store = storeRepository.findById(storeId)
 				.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
 
+			Map<UUID, Menu> menuMap = new HashMap<>();
+			for (RedisCartItem cartItem : cartItems) {
+				Menu menu = menuRepository.findById(cartItem.getMenuId())
+					.orElseThrow(() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
+				menuMap.put(cartItem.getMenuId(), menu);
+			}
+
+			long calculatedTotalPrice = cartItems.stream()
+				.mapToLong(cartItem -> menuMap.get(cartItem.getMenuId()).getPrice() * cartItem.getQuantity())
+				.sum();
+
+			if (request.getTotalPrice() != calculatedTotalPrice) {
+				throw new GeneralException(ErrorStatus.ORDER_PRICE_MISMATCH);
+			}
+
 			Orders order = Orders.builder()
 				.user(user)
 				.store(store)
-				.paymentMethod(request.paymentMethod())
-				.orderChannel(request.orderChannel())
-				.receiptMethod(request.receiptMethod())
-				.requestMessage(request.requestMessage())
-				.totalPrice(request.totalPrice())
+				.paymentMethod(request.getPaymentMethod())
+				.orderChannel(request.getOrderChannel())
+				.receiptMethod(request.getReceiptMethod())
+				.requestMessage(request.getRequestMessage())
+				.totalPrice(request.getTotalPrice())
 				.orderStatus(OrderStatus.PENDING)
-				.deliveryAddress(request.deliveryAddress())
-				.orderHistory(Map.of("pending", requestTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
+				.deliveryAddress(request.getDeliveryAddress())
+				.orderHistory(
+					"pending:" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
 				.isRefundable(true)
 				.build();
 
 			Orders savedOrder = ordersRepository.save(order);
 
 			for (RedisCartItem cartItem : cartItems) {
-
-				Menu menu = menuRepository.findById(cartItem.getMenuId())
-					.orElseThrow(() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
+				Menu menu = menuMap.get(cartItem.getMenuId());
 
 				OrderItem orderItem = OrderItem.builder()
 					.orders(savedOrder)
