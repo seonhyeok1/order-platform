@@ -2,8 +2,6 @@ package app.domain.order.model.entity;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 import app.domain.order.model.entity.enums.OrderChannel;
@@ -12,10 +10,8 @@ import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.entity.User;
-import app.global.converter.JsonConverter;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -75,9 +71,8 @@ public class Orders extends BaseEntity {
 	@Column(nullable = false)
 	private boolean isRefundable;
 
-	@Column(nullable = false, columnDefinition = "json")
-	@Convert(converter = JsonConverter.class)
-	private Object orderHistory;
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String orderHistory;
 
 	private String requestMessage;
 
@@ -86,11 +81,12 @@ public class Orders extends BaseEntity {
 	}
 
 	public void addHistory(String state, LocalDateTime dateTime) {
-		Map<String, Object> currentHistory = new HashMap<>();
-		if (this.orderHistory instanceof Map) {
-			currentHistory.putAll((Map<String, Object>)this.orderHistory);
+		String newEntry = state + ":" + dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+		if (this.orderHistory == null || this.orderHistory.toString().isEmpty()) {
+			this.orderHistory = newEntry;
+		} else {
+			this.orderHistory = this.orderHistory.toString() + "\n" + newEntry;
 		}
-		currentHistory.put(state, dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-		this.orderHistory = currentHistory;
 	}
 }
