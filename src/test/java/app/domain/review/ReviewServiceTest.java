@@ -21,7 +21,6 @@ import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.request.CreateReviewRequest;
-import app.domain.review.model.dto.request.GetReviewRequest;
 import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.review.model.entity.Review;
 import app.domain.store.model.entity.Store;
@@ -31,6 +30,7 @@ import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("ReviewService 테스트")
 class ReviewServiceTest {
 
 	@Mock
@@ -70,7 +70,7 @@ class ReviewServiceTest {
 	@Test
 	@DisplayName("리뷰 생성 - 성공")
 	void createReview_Success() {
-		CreateReviewRequest request = new CreateReviewRequest(user.getUserId(), order.getOrdersId(), 5L, "Great!");
+		CreateReviewRequest request = new CreateReviewRequest(order.getOrdersId(), 5L, "Great!");
 		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 		when(ordersRepository.findById(order.getOrdersId())).thenReturn(Optional.of(order));
 		when(reviewRepository.existsByOrders(order)).thenReturn(false);
@@ -81,16 +81,18 @@ class ReviewServiceTest {
 		assertNotNull(result);
 		assertTrue(result.contains(review.getReviewId().toString()));
 		assertTrue(result.contains("가 생성되었습니다."));
+		verify(reviewRepository, times(1)).save(any(Review.class));
 	}
 
 	@Test
 	@DisplayName("리뷰 생성 - 실패 (사용자 없음)")
 	void createReview_Fail_UserNotFound() {
-		CreateReviewRequest request = new CreateReviewRequest(999L, order.getOrdersId(), 5L, "Great!");
-		when(userRepository.findById(999L)).thenReturn(Optional.empty());
+		Long nonExistentUserId = 999L;
+		CreateReviewRequest request = new CreateReviewRequest(order.getOrdersId(), 5L, "Great!");
+		when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
 		GeneralException exception = assertThrows(GeneralException.class,
-			() -> reviewService.createReview(999L, request));
+			() -> reviewService.createReview(nonExistentUserId, request));
 		assertEquals(ErrorStatus.USER_NOT_FOUND, exception.getErrorStatus());
 	}
 
@@ -98,7 +100,7 @@ class ReviewServiceTest {
 	@DisplayName("리뷰 생성 - 실패 (주문 없음)")
 	void createReview_Fail_OrderNotFound() {
 		UUID nonExistentOrderId = UUID.randomUUID();
-		CreateReviewRequest request = new CreateReviewRequest(user.getUserId(), nonExistentOrderId, 5L, "Great!");
+		CreateReviewRequest request = new CreateReviewRequest(nonExistentOrderId, 5L, "Great!");
 		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 		when(ordersRepository.findById(nonExistentOrderId)).thenReturn(Optional.empty());
 
@@ -110,36 +112,38 @@ class ReviewServiceTest {
 	@Test
 	@DisplayName("리뷰 생성 - 실패 (주문한 사용자가 아님)")
 	void createReview_Fail_Forbidden() {
-		CreateReviewRequest request = new CreateReviewRequest(otherUser.getUserId(), order.getOrdersId(), 2L, "Great!");
+		CreateReviewRequest request = new CreateReviewRequest(order.getOrdersId(), 5L, "Great!");
 		when(userRepository.findById(otherUser.getUserId())).thenReturn(Optional.of(otherUser));
-		when(ordersRepository.findById(order.getOrdersId())).thenReturn(Optional.of(order));
-
+		when(ordersRepository.findById(request.ordersId())).thenReturn(Optional.of(order));
+		
 		GeneralException exception = assertThrows(GeneralException.class,
 			() -> reviewService.createReview(otherUser.getUserId(), request));
+
 		assertEquals(ErrorStatus._FORBIDDEN, exception.getErrorStatus());
 	}
 
 	@Test
-	@DisplayName("리뷰 생성 - 실패 (이미 리뷰 존재)")
+	@DisplayName("리뷰 생성 - 실패 (해당 주문에 이미 리뷰가 존재)")
 	void createReview_Fail_ReviewAlreadyExists() {
-		CreateReviewRequest request = new CreateReviewRequest(user.getUserId(), order.getOrdersId(), 5L, "Great!");
+		CreateReviewRequest request = new CreateReviewRequest(order.getOrdersId(), 5L, "Great!");
+
 		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 		when(ordersRepository.findById(order.getOrdersId())).thenReturn(Optional.of(order));
 		when(reviewRepository.existsByOrders(order)).thenReturn(true);
 
 		GeneralException exception = assertThrows(GeneralException.class,
 			() -> reviewService.createReview(user.getUserId(), request));
+
 		assertEquals(ErrorStatus.REVIEW_ALREADY_EXISTS, exception.getErrorStatus());
 	}
 
 	@Test
 	@DisplayName("사용자 리뷰 조회 - 성공")
 	void getReviews_Success() {
-		GetReviewRequest request = new GetReviewRequest(user.getUserId());
 		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 		when(reviewRepository.findByUser(user)).thenReturn(Collections.singletonList(review));
 
-		List<GetReviewResponse> responses = reviewService.getReviews(user.getUserId(), request);
+		List<GetReviewResponse> responses = reviewService.getReviews(user.getUserId());
 
 		assertNotNull(responses);
 		assertEquals(1, responses.size());
@@ -149,28 +153,28 @@ class ReviewServiceTest {
 		assertEquals(store.getStoreName(), response.storeName());
 		assertEquals(review.getRating(), response.rating());
 		assertEquals(review.getContent(), response.content());
+		verify(reviewRepository, times(1)).findByUser(user);
 	}
 
 	@Test
 	@DisplayName("사용자 리뷰 조회 - 실패 (사용자 없음)")
 	void getReviews_Fail_UserNotFound() {
-		GetReviewRequest request = new GetReviewRequest(999L);
-		when(userRepository.findById(999L)).thenReturn(Optional.empty());
+		Long nonExistentUserId = 999L;
+		when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
 		GeneralException exception = assertThrows(GeneralException.class,
-			() -> reviewService.getReviews(999L, request));
+			() -> reviewService.getReviews(nonExistentUserId));
 		assertEquals(ErrorStatus.USER_NOT_FOUND, exception.getErrorStatus());
 	}
 
 	@Test
 	@DisplayName("사용자 리뷰 조회 - 실패 (리뷰 없음)")
 	void getReviews_Fail_NoReviewsFound() {
-		GetReviewRequest request = new GetReviewRequest(user.getUserId());
 		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
 		when(reviewRepository.findByUser(user)).thenReturn(Collections.emptyList());
 
 		GeneralException exception = assertThrows(GeneralException.class,
-			() -> reviewService.getReviews(user.getUserId(), request));
+			() -> reviewService.getReviews(user.getUserId()));
 		assertEquals(ErrorStatus.NO_REVIEWS_FOUND_FOR_USER, exception.getErrorStatus());
 	}
 }
