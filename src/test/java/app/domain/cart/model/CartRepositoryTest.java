@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.entity.Cart;
 import app.domain.user.model.entity.User;
-import app.domain.store.model.entity.Store;
 
 @ExtendWith(MockitoExtension.class)
 class CartRepositoryTest {
@@ -25,9 +24,6 @@ class CartRepositoryTest {
 
 	@Mock
 	private User mockUser;
-
-	@Mock
-	private Store mockStore;
 
 	private Cart testCart;
 	private UUID cartId;
@@ -41,7 +37,6 @@ class CartRepositoryTest {
 		testCart = Cart.builder()
 			.cartId(cartId)
 			.user(mockUser)
-			.store(mockStore)
 			.build();
 	}
 
@@ -155,26 +150,4 @@ class CartRepositoryTest {
 		verify(mockUser).getUserId();
 	}
 
-	@Test
-	@DisplayName("지연 로딩 테스트 - Store 접근 시 쿼리 실행")
-	void lazyLoading_Store_Test() {
-		// Given
-		UUID storeId = UUID.randomUUID();
-		when(cartRepository.findById(cartId)).thenReturn(Optional.of(testCart));
-		when(mockStore.getStoreId()).thenReturn(storeId);
-
-		// When
-		Optional<Cart> foundCart = cartRepository.findById(cartId);
-
-		// Cart 조회 시점에는 Store 쿼리가 실행되지 않음
-		verify(cartRepository).findById(cartId);
-		verify(mockStore, never()).getStoreId();
-
-		// Store 필드에 접근할 때 쿼리 실행
-		UUID foundStoreId = foundCart.get().getStore().getStoreId();
-
-		// Then
-		assertThat(foundStoreId).isEqualTo(storeId);
-		verify(mockStore).getStoreId();
-	}
 }

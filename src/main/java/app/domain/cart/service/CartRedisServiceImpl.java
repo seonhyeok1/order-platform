@@ -1,6 +1,7 @@
 package app.domain.cart.service;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -56,16 +57,16 @@ public class CartRedisServiceImpl implements CartRedisService {
 	public List<RedisCartItem> getCartFromRedis(Long userId) {
 		try {
 			String key = "cart:" + userId;
-			
-			if (!redisTemplate.hasKey(key)) {
-				return List.of();
-			}
-			
+
+			// if (!redisTemplate.hasKey(key)) {
+			// 	return new ArrayList<>();
+			// }
+
 			String keyType = redisTemplate.type(key).code();
 			if ("string".equals(keyType)) {
-				return List.of();
+				return new ArrayList<>();
 			}
-			
+
 			return redisTemplate.opsForHash().values(key).stream()
 				.map(value -> {
 					try {
@@ -101,17 +102,17 @@ public class CartRedisServiceImpl implements CartRedisService {
 	public String removeCartItem(Long userId, UUID menuId) {
 		try {
 			String key = "cart:" + userId;
-			
+
 			if (!redisTemplate.hasKey(key)) {
 				return "사용자 " + userId + "의 장바구니에서 메뉴 " + menuId + "가 성공적으로 삭제되었습니다.";
 			}
-			
+
 			String keyType = redisTemplate.type(key).code();
 			if ("string".equals(keyType)) {
 				redisTemplate.expire(key, CART_TTL);
 				return "사용자 " + userId + "의 장바구니에서 메뉴 " + menuId + "가 성공적으로 삭제되었습니다.";
 			}
-			
+
 			Long hashSize = redisTemplate.opsForHash().size(key);
 			redisTemplate.opsForHash().delete(key, menuId.toString());
 

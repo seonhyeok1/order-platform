@@ -34,7 +34,7 @@ public class CartController {
 	@PostMapping("/item")
 	public ApiResponse<String> addItemToCart(@AuthenticationPrincipal
 	org.springframework.security.core.userdetails.User principal, @RequestBody AddCartItemRequest request) {
-		if (request.quantity() <= 0) {
+		if (request.getQuantity() <= 0) {
 			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
 		}
 		Long userId = Long.parseLong(principal.getUsername());
