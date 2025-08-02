@@ -29,6 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.domain.review.model.dto.request.CreateReviewRequest;
 import app.domain.review.model.dto.response.GetReviewResponse;
+import app.domain.review.status.ReviewErrorStatus;
+import app.domain.review.status.ReviewSuccessStatus;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
@@ -63,7 +65,7 @@ class ReviewControllerTest {
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void createReview_Success() throws Exception {
 		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), 5L, "맛있어요");
-		String resultMessage = UUID.randomUUID() + " 가 생성되었습니다.";
+		String resultMessage = "리뷰 : " + UUID.randomUUID() + " 가 생성되었습니다.";
 
 		when(reviewService.createReview(eq(1L), any(CreateReviewRequest.class)))
 			.thenReturn(resultMessage);
@@ -74,8 +76,8 @@ class ReviewControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
+			.andExpect(jsonPath("$.code").value(ReviewSuccessStatus.REVIEW_CREATED.getCode()))
+			.andExpect(jsonPath("$.message").value(ReviewSuccessStatus.REVIEW_CREATED.getMessage()))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 	}
 
@@ -96,17 +98,17 @@ class ReviewControllerTest {
 		when(reviewService.getReviews(1L))
 			.thenReturn(responseList);
 
-		mockMvc.perform(get("/customer/review"))
+		mockMvc.perform(get("/customer/review")).andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
+			.andExpect(jsonPath("$.code").value(ReviewSuccessStatus.GET_REVIEWS_SUCCESS.getCode()))
+			.andExpect(jsonPath("$.message").value(ReviewSuccessStatus.GET_REVIEWS_SUCCESS.getMessage()))
 			.andExpect(jsonPath("$.result").isArray())
 			.andExpect(jsonPath("$.result.length()").value(1))
-			.andExpect(jsonPath("$.result[0].customerName").value("testuser"))
-			.andExpect(jsonPath("$.result[0].storeName").value("teststore"))
-			.andExpect(jsonPath("$.result[0].rating").value(5))
-			.andExpect(jsonPath("$.result[0].content").value("Great!"));
+			.andExpect(jsonPath("$.result[0].customerName").value(reviewResponse.customerName()))
+			.andExpect(jsonPath("$.result[0].storeName").value(reviewResponse.storeName()))
+			.andExpect(jsonPath("$.result[0].rating").value(reviewResponse.rating()))
+			.andExpect(jsonPath("$.result[0].content").value(reviewResponse.content()));
 	}
 
 	@Test
@@ -115,15 +117,17 @@ class ReviewControllerTest {
 	void createReview_Fail_ServiceException() throws Exception {
 		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), 5L, "맛있어요");
 		when(reviewService.createReview(eq(1L), any(CreateReviewRequest.class)))
-			.thenThrow(new GeneralException(ErrorStatus.REVIEW_ALREADY_EXISTS));
+			.thenThrow(new GeneralException(ReviewErrorStatus.REVIEW_ALREADY_EXISTS));
 
 		mockMvc.perform(post("/customer/review")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andDo(print())
 			.andExpect(status().isConflict())
-			.andExpect(jsonPath("$.resultCode").value("REVIEW001"))
-			.andExpect(jsonPath("$.message").value(ErrorStatus.REVIEW_ALREADY_EXISTS.getMessage()));
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value(ReviewErrorStatus.REVIEW_ALREADY_EXISTS.getCode()))
+			.andExpect(jsonPath("$.message").value(ReviewErrorStatus.REVIEW_ALREADY_EXISTS.getMessage()));
 	}
 
 	@Test
@@ -135,7 +139,8 @@ class ReviewControllerTest {
 
 		mockMvc.perform(get("/customer/review"))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("USER001"))
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value(ErrorStatus.USER_NOT_FOUND.getCode()))
 			.andExpect(jsonPath("$.message").value(ErrorStatus.USER_NOT_FOUND.getMessage()));
 	}
 
@@ -144,12 +149,13 @@ class ReviewControllerTest {
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getReviews_Fail_NoReviewsFound() throws Exception {
 		when(reviewService.getReviews(1L))
-			.thenThrow(new GeneralException(ErrorStatus.NO_REVIEWS_FOUND_FOR_USER));
+			.thenThrow(new GeneralException(ReviewErrorStatus.NO_REVIEWS_FOUND_FOR_USER));
 
 		mockMvc.perform(get("/customer/review"))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("REVIEW001"))
-			.andExpect(jsonPath("$.message").value(ErrorStatus.NO_REVIEWS_FOUND_FOR_USER.getMessage()));
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value(ReviewErrorStatus.NO_REVIEWS_FOUND_FOR_USER.getCode()))
+			.andExpect(jsonPath("$.message").value(ReviewErrorStatus.NO_REVIEWS_FOUND_FOR_USER.getMessage()));
 	}
 
 	@Test
@@ -159,9 +165,11 @@ class ReviewControllerTest {
 		CreateReviewRequest request = new CreateReviewRequest(null, null, "");
 
 		mockMvc.perform(post("/customer/review")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"));
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value("COMMON400"));
 	}
 }
