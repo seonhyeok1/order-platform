@@ -2,16 +2,14 @@ package app.domain.payment.model.entity;
 
 import java.util.UUID;
 
-import app.global.converter.JsonConverter;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,11 +29,10 @@ public class PaymentEtc extends BaseEntity {
 	@GeneratedValue
 	private UUID paymentEtcId;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "payment_id", nullable = false)
 	private Payment payment;
 
-	@Column(nullable = false, columnDefinition = "json")
-	@Convert(converter = JsonConverter.class)
-	private Object paymentResponse;
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String paymentResponse;
 }
