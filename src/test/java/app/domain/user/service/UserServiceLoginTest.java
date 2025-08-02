@@ -94,7 +94,6 @@ class UserServiceLoginTest {
 			ArgumentCaptor<Long> timeoutCaptor = ArgumentCaptor.forClass(Long.class);
 			ArgumentCaptor<TimeUnit> timeUnitCaptor = ArgumentCaptor.forClass(TimeUnit.class);
 
-			// Redis에 Refresh Token이 저장되는지 검증하면서, 전달된 인자들을 캡처
 			then(valueOperations).should().set(
 				keyCaptor.capture(),
 				valueCaptor.capture(),
@@ -119,7 +118,7 @@ class UserServiceLoginTest {
 			// when & then
 			assertThatThrownBy(() -> userService.login(request))
 				.isInstanceOf(GeneralException.class)
-				.extracting("errorStatus")
+				.extracting("code")
 				.isEqualTo(ErrorStatus.USER_NOT_FOUND);
 
 			then(redisTemplate).should(never()).opsForValue();
@@ -144,8 +143,8 @@ class UserServiceLoginTest {
 			// when & then
 			assertThatThrownBy(() -> userService.login(request))
 				.isInstanceOf(GeneralException.class)
-				.extracting("errorStatus")
-				.isEqualTo(ErrorStatus.INVALID_PASSWORD);
+				.extracting("code")
+				.isEqualTo(app.domain.user.status.ErrorStatus.INVALID_PASSWORD);
 
 			then(redisTemplate).should(never()).opsForValue();
 			then(jwtTokenProvider).should(never()).createAccessToken(any(User.class));
