@@ -28,6 +28,8 @@ import app.domain.store.model.entity.Store;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreAcceptStatus;
+import app.domain.store.status.StoreException;
+import app.domain.store.status.StoreErrorCode;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.global.config.MockSecurityConfig;
@@ -144,10 +146,10 @@ class StoreServiceTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
 
-			IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+			StoreException exception = assertThrows(StoreException.class, () -> {
 				storeService.createStore(authenticatedUserId, request);
 			});
-			assertEquals("해당 region이 존재하지 않습니다.", exception.getMessage());
+			assertEquals(StoreErrorCode.REGION_NOT_FOUND, exception.getCode());
 
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(storeRepository, never()).save(any(Store.class));
@@ -265,13 +267,13 @@ class StoreServiceTest {
 				Store mockStore = mock(Store.class);
 
 				when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
-				doThrow(new IllegalArgumentException("가게 찾을 수 없음")).when(mockStore).markAsDeleted();
+				doThrow(new StoreException(StoreErrorCode.STORE_NOT_FOUND)).when(mockStore).markAsDeleted();
 
-				IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+				StoreException exception = assertThrows(StoreException.class, () -> {
 					storeService.deleteStore(storeId);
 				});
 
-				assertEquals("가게 찾을 수 없음", exception.getMessage());
+				assertEquals(StoreErrorCode.STORE_NOT_FOUND, exception.getCode());
 			}
 		}
 	}

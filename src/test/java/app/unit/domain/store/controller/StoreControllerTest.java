@@ -28,6 +28,8 @@ import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreErrorCode;
+import app.domain.store.status.StoreException;
 
 @ExtendWith(MockitoExtension.class)
 public class StoreControllerTest {
@@ -81,7 +83,6 @@ public class StoreControllerTest {
 				.storeApprovalStatus("PENDING")
 				.build();
 
-			when(regionRepository.existsById(request.getRegionId())).thenReturn(true);
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 			when(storeRepository.existsByStoreNameAndRegion(anyString(), any())).thenReturn(false);
 			when(storeService.createStore(eq(fakeUserId), eq(request))).thenReturn(expectedResponse);
@@ -91,7 +92,6 @@ public class StoreControllerTest {
 			assertEquals(HttpStatus.OK, result.getStatusCode());
 			assertEquals(expectedResponse, result.getBody());
 
-			verify(regionRepository, times(1)).existsById(regionId);
 			verify(regionRepository, times(1)).findById(regionId);
 			verify(storeRepository, times(1)).existsByStoreNameAndRegion(request.getStoreName(), mockRegion);
 			verify(storeService, times(1)).createStore(anyLong(), eq(request));
@@ -112,16 +112,39 @@ public class StoreControllerTest {
 				.minOrderAmount(10000L)
 				.build();
 
-			IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
+			StoreException ex = assertThrows(StoreException.class, () -> {
 				storeController.createStore(request);
 			});
-			assertEquals("regionId는 null일 수 없습니다.", ex.getMessage());
+			assertEquals(StoreErrorCode.REGION_ID_NULL, ex.getCode());
 		}
 
 		@Test
-		@DisplayName("Fail : 주소 없음 ")
+		@DisplayName("Fail : 존재하지 않는 지역")
+		void CreateStoreRegionNotFound() {
+			UUID regionId = UUID.randomUUID();
+			StoreApproveRequest request = StoreApproveRequest.builder()
+				.regionId(regionId)
+				.categoryId(categoryId)
+				.address("주소")
+				.storeName("가게 명")
+				.desc("설명")
+				.phoneNumber("01012345678")
+				.minOrderAmount(10000L)
+				.build();
+
+			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
+
+			StoreException ex = assertThrows(StoreException.class, () -> {
+				storeController.createStore(request);
+			});
+			assertEquals(StoreErrorCode.REGION_NOT_FOUND, ex.getCode());
+		}
+
+		@Test
+		@DisplayName("Fail : 주소 없음")
 		void CreateStoreAddressNotFound() {
 			UUID regionId = UUID.randomUUID();
+			Region mockRegion = mock(Region.class);
 			StoreApproveRequest request = StoreApproveRequest.builder()
 				.regionId(regionId)
 				.categoryId(categoryId)
@@ -132,13 +155,17 @@ public class StoreControllerTest {
 				.minOrderAmount(10000L)
 				.build();
 
-			assertThrows(IllegalArgumentException.class, () -> storeController.createStore(request));
+			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			assertEquals(StoreErrorCode.ADDRESS_NULL, ex.getCode());
 		}
 
 		@Test
-		@DisplayName("Fail : 가게 명 없음 ")
+		@DisplayName("Fail : 가게 명 없음")
 		void CreateStoreStoreNameNotFound() {
 			UUID regionId = UUID.randomUUID();
+			Region mockRegion = mock(Region.class);
 			StoreApproveRequest request = StoreApproveRequest.builder()
 				.regionId(regionId)
 				.categoryId(categoryId)
@@ -149,13 +176,17 @@ public class StoreControllerTest {
 				.minOrderAmount(10000L)
 				.build();
 
-			assertThrows(IllegalArgumentException.class, () -> storeController.createStore(request));
+			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			assertEquals(StoreErrorCode.STORE_NAME_NULL, ex.getCode());
 		}
 
 		@Test
-		@DisplayName("Fail : 최소 주문 금액 오류 ")
+		@DisplayName("Fail : 최소 주문 금액 오류")
 		void CreateStoreMinOrderAmountError() {
 			UUID regionId = UUID.randomUUID();
+			Region mockRegion = mock(Region.class);
 			StoreApproveRequest request = StoreApproveRequest.builder()
 				.regionId(regionId)
 				.categoryId(categoryId)
@@ -166,7 +197,53 @@ public class StoreControllerTest {
 				.minOrderAmount(-1000L)
 				.build();
 
-			assertThrows(IllegalArgumentException.class, () -> storeController.createStore(request));
+			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			assertEquals(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID, ex.getCode());
+		}
+
+		@Test
+		@DisplayName("Fail : 동일 지역에 동일한 가게 이름 존재")
+		void CreateStoreDuplicateStoreNameInRegion() {
+			UUID regionId = UUID.randomUUID();
+			Region mockRegion = mock(Region.class);
+			StoreApproveRequest request = StoreApproveRequest.builder()
+				.regionId(regionId)
+				.categoryId(categoryId)
+				.address("주소")
+				.storeName("가게 명")
+				.desc("설명")
+				.phoneNumber("01012345678")
+				.minOrderAmount(1000L)
+				.build();
+
+			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+			when(storeRepository.existsByStoreNameAndRegion(request.getStoreName(), mockRegion)).thenReturn(true);
+
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			assertEquals(StoreErrorCode.DUPLICATE_STORE_NAME_IN_REGION, ex.getCode());
+		}
+
+		@Test
+		@DisplayName("Fail : 카테고리 ID 없음")
+		void CreateStoreCategoryIdNull() {
+			UUID regionId = UUID.randomUUID();
+			Region mockRegion = mock(Region.class);
+			StoreApproveRequest request = StoreApproveRequest.builder()
+				.regionId(regionId)
+				.categoryId(null)
+				.address("주소")
+				.storeName("가게 명")
+				.desc("설명")
+				.phoneNumber("01012345678")
+				.minOrderAmount(1000L)
+				.build();
+
+			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
+
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			assertEquals(StoreErrorCode.CATEGORY_ID_NULL, ex.getCode());
 		}
 	}
 
@@ -233,7 +310,8 @@ public class StoreControllerTest {
 				.desc("설명")
 				.build();
 
-			assertThrows(IllegalArgumentException.class, () -> storeController.updateStore(request));
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.updateStore(request));
+			assertEquals(StoreErrorCode.STORE_ID_NULL, ex.getCode());
 		}
 
 		@Test
@@ -249,7 +327,25 @@ public class StoreControllerTest {
 				.desc("설명")
 				.build();
 
-			assertThrows(IllegalArgumentException.class, () -> storeController.updateStore(request));
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.updateStore(request));
+			assertEquals(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID, ex.getCode());
+		}
+
+		@Test
+		@DisplayName("Fail : 카테고리 ID 없음")
+		void StoreInfoUpdateCategoryIdNull() {
+			StoreInfoUpdateRequest request = StoreInfoUpdateRequest.builder()
+				.storeId(UUID.randomUUID())
+				.categoryId(null)
+				.name("가게 명")
+				.address("주소")
+				.phoneNumber("01012345678")
+				.minOrderAmount(1000L)
+				.desc("설명")
+				.build();
+
+			StoreException ex = assertThrows(StoreException.class, () -> storeController.updateStore(request));
+			assertEquals(StoreErrorCode.CATEGORY_ID_NULL, ex.getCode());
 		}
 	}
 
