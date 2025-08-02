@@ -250,7 +250,6 @@ public class PaymentService {
 				order.addHistory("cancel", LocalDateTime.now());
 
 				payment.updatePaymentStatus(PaymentStatus.CANCELLED);
-				paymentRepository.save(payment);
 			}
 
 			PaymentEtc paymentEtc = PaymentEtc.builder()
