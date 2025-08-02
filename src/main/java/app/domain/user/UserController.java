@@ -10,6 +10,7 @@ import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.request.LoginRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
 import app.domain.user.model.dto.response.LoginResponse;
+import app.domain.user.status.SuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,27 +29,27 @@ public class UserController {
 	@PostMapping("/signup")
 	public ApiResponse<CreateUserResponse> createUser(@Valid @RequestBody CreateUserRequest createUserRequest) {
 		CreateUserResponse response = userService.createUser(createUserRequest);
-		return ApiResponse.onSuccess(response);
+		return ApiResponse.onSuccess(SuccessStatus.USER_CREATED, response);
 	}
 
 	@PostMapping("/login")
 	@Operation(summary = "로그인 API", description = "아이디와 비밀번호로 로그인하여 토큰을 발급받습니다.")
 	public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 		LoginResponse response = userService.login(request);
-		return ApiResponse.onSuccess(response);
+		return ApiResponse.onSuccess(SuccessStatus.LOGIN_SUCCESS, response);
 	}
 
 	@PostMapping("/logout")
 	@Operation(summary = "로그아웃 API", description = "서버에 저장된 Refresh Token을 삭제하고 현재 Access Token을 비활성화 처리합니다.")
-	public ApiResponse<String> logout() {
+	public ApiResponse<Void> logout() {
 		userService.logout();
-		return ApiResponse.onSuccess("로그아웃 되었습니다.");
+		return ApiResponse.onSuccess(SuccessStatus.LOGOUT_SUCCESS, null);
 	}
 
 	@DeleteMapping("/withdraw")
 	@Operation(summary = "회원 탈퇴 API", description = "현재 로그인된 사용자의 계정을 비활성화하고 개인정보를 익명화 처리합니다.")
-	public ApiResponse<String> withdraw() {
+	public ApiResponse<Void> withdraw() {
 		userService.withdrawMembership();
-		return ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다.");
+		return ApiResponse.onSuccess(SuccessStatus.WITHDRAW_SUCCESS, null);
 	}
 }
