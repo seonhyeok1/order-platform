@@ -1,6 +1,5 @@
 package app.domain.order;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -14,10 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import app.domain.order.model.dto.request.CreateOrderRequest;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.global.apiPayload.ApiResponse;
-import app.global.apiPayload.code.status.ErrorStatus;
-import app.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "order", description = "주문 관련 API")
@@ -32,12 +30,9 @@ public class OrderController {
 	@PostMapping
 	public ApiResponse<UUID> createOrder(
 		@AuthenticationPrincipal org.springframework.security.core.userdetails.User principal,
-		@RequestBody CreateOrderRequest request) {
-		if (request.totalPrice() <= 0) {
-			throw new GeneralException(ErrorStatus.INVALID_TOTAL_PRICE);
-		}
+		@Valid @RequestBody CreateOrderRequest request) {
 		Long userId = Long.parseLong(principal.getUsername());
-		UUID orderId = orderService.createOrder(userId, request, LocalDateTime.now());
+		UUID orderId = orderService.createOrder(userId, request);
 		return ApiResponse.onSuccess(orderId);
 	}
 

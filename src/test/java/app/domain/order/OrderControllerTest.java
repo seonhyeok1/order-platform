@@ -59,8 +59,8 @@ class OrderControllerTest {
 			"서울시 강남구"
 		);
 
-		when(orderService.createOrder(eq(userId), any(CreateOrderRequest.class), any()))
-			.thenReturn(orderId + " 가 생성되었습니다");
+		when(orderService.createOrder(eq(userId), any(CreateOrderRequest.class)))
+			.thenReturn(orderId);
 
 		mockMvc.perform(post("/customer/order")
 				.param("userId", userId.toString())
@@ -69,9 +69,9 @@ class OrderControllerTest {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
-			.andExpect(jsonPath("$.result").value(orderId + " 가 생성되었습니다"));
+			.andExpect(jsonPath("$.result").value(orderId));
 
-		verify(orderService).createOrder(eq(userId), any(CreateOrderRequest.class), any());
+		verify(orderService).createOrder(eq(userId), any(CreateOrderRequest.class));
 	}
 
 	@Test
@@ -96,7 +96,7 @@ class OrderControllerTest {
 			.andExpect(jsonPath("$.resultCode").value("ORDER005"))
 			.andExpect(jsonPath("$.message").value("총 금액은 양의 정수입니다."));
 
-		verify(orderService, never()).createOrder(any(), any(), any());
+		verify(orderService, never()).createOrder(any(), any());
 	}
 
 	@Test
@@ -113,7 +113,7 @@ class OrderControllerTest {
 			"서울시 강남구"
 		);
 
-		when(orderService.createOrder(eq(userId), any(CreateOrderRequest.class), any()))
+		when(orderService.createOrder(eq(userId), any(CreateOrderRequest.class)))
 			.thenThrow(new GeneralException(ErrorStatus.ORDER_CREATE_FAILED));
 
 		mockMvc.perform(post("/customer/order")
@@ -212,7 +212,7 @@ class OrderControllerTest {
 				.content(invalidJson))
 			.andExpect(status().isBadRequest());
 
-		verify(orderService, never()).createOrder(any(), any(), any());
+		verify(orderService, never()).createOrder(any(), any());
 	}
 
 	@Test
@@ -233,7 +233,7 @@ class OrderControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest());
 
-		verify(orderService, never()).createOrder(any(), any(), any());
+		verify(orderService, never()).createOrder(any(), any());
 	}
 
 	@Test
