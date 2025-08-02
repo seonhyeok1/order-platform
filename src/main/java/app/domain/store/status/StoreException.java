@@ -8,13 +8,13 @@ import lombok.Getter;
 @AllArgsConstructor
 public class StoreException extends RuntimeException {
 
-	private final StoreErrorCode code;
+    private final StoreErrorCode code;
 
-	public ErrorReasonDTO getErrorReason() {
-		return this.code.getReason();
-	}
+    public ErrorReasonDTO getErrorReason() {
+        return this.code.getReason();
+    }
 
-	public ErrorReasonDTO getErrorReasonHttpStatus() {
-		return this.code.getReasonHttpStatus();
-	}
+    public ErrorReasonDTO getErrorReasonHttpStatus() {
+        return this.code.getReasonHttpStatus();
+    }
 }

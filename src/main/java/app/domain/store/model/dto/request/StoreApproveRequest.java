@@ -1,7 +1,6 @@
 package app.domain.store.model.dto.request;
 
 import java.util.UUID;
-
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

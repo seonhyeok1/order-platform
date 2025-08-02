@@ -19,7 +19,6 @@ import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.store.status.StoreErrorCode;
-import app.global.apiPayload.exception.GeneralException;
 import app.domain.store.status.StoreException;
 import lombok.RequiredArgsConstructor;
 
@@ -36,13 +35,13 @@ public class StoreService {
 	public StoreApproveResponse createStore(Long userId, StoreApproveRequest request) {
 
 		Region region = regionRepository.findById(request.getRegionId())
-			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
+			.orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
 
 		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new IllegalArgumentException("해당 user 존재하지 않음"));
+			.orElseThrow(() -> new StoreException(StoreErrorCode.USER_NOT_FOUND));
 
 		Category category = categoryRepository.findById(request.getCategoryId())
-			.orElseThrow(() -> new IllegalArgumentException("Category NotFound"));
+			.orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
 		Store store = Store.builder()
 			.storeName(request.getStoreName())
@@ -67,11 +66,11 @@ public class StoreService {
 	@Transactional
 	public StoreInfoUpdateResponse updateStoreInfo(StoreInfoUpdateRequest request) {
 		Store store = storeRepository.findById(request.getStoreId())
-			.orElseThrow(() -> new IllegalArgumentException("가게 찾을 수 없음"));
+			.orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
 
 		if (request.getCategoryId() != null) {
 			Category category = categoryRepository.findById(request.getCategoryId())
-				.orElseThrow(() -> new IllegalArgumentException("Category not found"));
+				.orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
 			store.setCategory(category);
 		}
 		if (request.getName() != null) {

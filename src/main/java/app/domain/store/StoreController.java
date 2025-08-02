@@ -2,7 +2,6 @@ package app.domain.store;
 
 import java.util.UUID;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,6 +20,8 @@ import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreErrorCode;
+import app.domain.store.status.StoreException;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -43,46 +44,43 @@ public class StoreController {
 		return ResponseEntity.ok(response);
 	}
 
-	// 유효성 검증 메서드 (Controller 안에 추가)
 	private void validateCreateStoreRequest(StoreApproveRequest request) {
 		if (request.getRegionId() == null) {
-			throw new IllegalArgumentException("regionId는 null일 수 없습니다.");
-		}
-		if (!regionRepository.existsById(request.getRegionId())) {
-			throw new IllegalArgumentException("해당 region이 존재하지 않습니다.");
-		}
-		if (request.getCategoryId() == null) {
-			throw new IllegalArgumentException("카테고리는 null일 수 없습니다.");
-		}
-		if (request.getAddress() == null) {
-			throw new IllegalArgumentException("주소는 null일 수 없습니다.");
-		}
-		if (request.getStoreName() == null) {
-			throw new IllegalArgumentException("가게 이름은 null일 수 없습니다.");
-		}
-		if (request.getMinOrderAmount() == null) {
-			throw new IllegalArgumentException("최소 주문 금액은 null일 수 없습니다.");
-		}
-		if (request.getMinOrderAmount() < 0) {
-			throw new IllegalArgumentException("최소 주문 금액 오류");
+			throw new StoreException(StoreErrorCode.REGION_ID_NULL);
 		}
 		Region region = regionRepository.findById(request.getRegionId())
-			.orElseThrow(() -> new IllegalArgumentException("해당 region이 존재하지 않습니다."));
+			.orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
+
+		if (request.getCategoryId() == null) {
+			throw new StoreException(StoreErrorCode.CATEGORY_ID_NULL);
+		}
+		if (request.getAddress() == null) {
+			throw new StoreException(StoreErrorCode.ADDRESS_NULL);
+		}
+		if (request.getStoreName() == null) {
+			throw new StoreException(StoreErrorCode.STORE_NAME_NULL);
+		}
+		if (request.getMinOrderAmount() == null) {
+			throw new StoreException(StoreErrorCode.MIN_ORDER_AMOUNT_NULL);
+		}
+		if (request.getMinOrderAmount() < 0) {
+			throw new StoreException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
+		}
 		if (storeRepository.existsByStoreNameAndRegion(request.getStoreName(), region)) {
-			throw new IllegalArgumentException("지역, 가게명 중복");
+			throw new StoreException(StoreErrorCode.DUPLICATE_STORE_NAME_IN_REGION);
 		}
 	}
 
 	@PutMapping("/store")
 	public ResponseEntity<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
 		if (request.getStoreId() == null)
-			throw new IllegalArgumentException("storeId error");
+			throw new StoreException(StoreErrorCode.STORE_ID_NULL);
 
 		if (request.getMinOrderAmount() != null && request.getMinOrderAmount() < 0)
-			throw new IllegalArgumentException("minOrderAmount error");
+			throw new StoreException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
 
 		if (request.getCategoryId() == null)
-			throw new IllegalArgumentException("categoryId error");
+			throw new StoreException(StoreErrorCode.CATEGORY_ID_NULL);
 
 		StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 		return ResponseEntity.ok(response);
@@ -94,6 +92,3 @@ public class StoreController {
 		return ResponseEntity.ok("가게 삭제가 완료되었습니다.");
 	}
 }
-
-
-
