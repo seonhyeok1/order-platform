@@ -19,10 +19,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import app.domain.user.UserService;
 import app.domain.user.model.UserRepository;
-import app.domain.user.model.dto.CreateUserReq;
+import app.domain.user.model.dto.request.CreateUserRequest;
+import app.domain.user.model.dto.response.CreateUserResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.domain.user.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -36,8 +37,8 @@ class UserServiceCreateUserTest {
 	@InjectMocks
 	private UserService userService;
 
-	private CreateUserReq createValidUserReq(UserRole role) {
-		CreateUserReq req = new CreateUserReq();
+	private CreateUserRequest createValidUserReq(UserRole role) {
+		CreateUserRequest req = new CreateUserRequest();
 		req.setUsername("testuser");
 		req.setPassword("password123!");
 		req.setEmail("test@example.com");
@@ -48,7 +49,7 @@ class UserServiceCreateUserTest {
 		return req;
 	}
 
-	private void givenNoDuplicatesFound(CreateUserReq req) {
+	private void givenNoDuplicatesFound(CreateUserRequest req) {
 		given(userRepository.findFirstByUniqueFields(
 			req.getUsername(),
 			req.getEmail(),
@@ -65,12 +66,12 @@ class UserServiceCreateUserTest {
 		@DisplayName("고객 계정 생성 성공")
 		void createUser_ValidInput_Success() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 			User user = User.builder()
 				.userId(1L)
 				.username(req.getUsername())
 				.password("encodedPassword")
-				.userRole(UserRole.CUSTOMER)
+				.userRole(req.getUserRole())
 				.build();
 
 			givenNoDuplicatesFound(req);
@@ -78,7 +79,7 @@ class UserServiceCreateUserTest {
 			given(userRepository.save(any(User.class))).willReturn(user);
 
 			// when
-			String resultUserId = userService.createUser(req);
+			CreateUserResponse res = userService.createUser(req);
 
 			// then
 			ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -90,19 +91,19 @@ class UserServiceCreateUserTest {
 			assertThat(capturedUser.getEmail()).isEqualTo(req.getEmail());
 			assertThat(capturedUser.getNickname()).isEqualTo(req.getNickname());
 			assertThat(capturedUser.getUserRole()).isEqualTo(UserRole.CUSTOMER);
-			assertThat(resultUserId).isEqualTo("1");
+			assertThat(res.getUserId()).isEqualTo(1L);
 		}
 
 		@Test
 		@DisplayName("점주 계정 생성 성공")
 		void createOwner_Success() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.OWNER);
+			CreateUserRequest req = createValidUserReq(UserRole.OWNER);
 			User user = User.builder()
 				.userId(2L)
 				.username(req.getUsername())
 				.password("encodedPassword")
-				.userRole(UserRole.OWNER)
+				.userRole(req.getUserRole())
 				.build();
 
 			givenNoDuplicatesFound(req);
@@ -110,7 +111,7 @@ class UserServiceCreateUserTest {
 			given(userRepository.save(any(User.class))).willReturn(user);
 
 			// when
-			String resultUserId = userService.createUser(req);
+			CreateUserResponse res = userService.createUser(req);
 
 			// then
 			ArgumentCaptor<User> userArgumentCaptor = ArgumentCaptor.forClass(User.class);
@@ -118,7 +119,7 @@ class UserServiceCreateUserTest {
 			User capturedUser = userArgumentCaptor.getValue();
 
 			assertThat(capturedUser.getUserRole()).isEqualTo(UserRole.OWNER);
-			assertThat(resultUserId).isEqualTo("2");
+			assertThat(res.getUserId()).isEqualTo(2L);
 		}
 	}
 
@@ -130,7 +131,7 @@ class UserServiceCreateUserTest {
 		@DisplayName("중복된 아이디로 가입 시 예외 발생")
 		void duplicateUsername_ThrowsException() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 
 			User existingUser = User.builder().username(req.getUsername()).build();
 			given(userRepository.findFirstByUniqueFields(
@@ -150,9 +151,13 @@ class UserServiceCreateUserTest {
 		@DisplayName("중복된 이메일로 가입 시 예외 발생")
 		void duplicateEmail_ThrowsException() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 
-			User existingUser = User.builder().email(req.getEmail()).build();
+			User existingUser = User.builder()
+				.username("anotherUser")
+				.email(req.getEmail())
+				.build();
+
 			given(userRepository.findFirstByUniqueFields(
 				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
 			)).willReturn(Optional.of(existingUser));
@@ -170,9 +175,14 @@ class UserServiceCreateUserTest {
 		@DisplayName("중복된 닉네임으로 가입 시 예외 발생")
 		void duplicateNickname_ThrowsException() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 
-			User existingUser = User.builder().nickname(req.getNickname()).build();
+			User existingUser = User.builder()
+				.username("anotherUser")
+				.email("another@example.com")
+				.nickname(req.getNickname())
+				.build();
+
 			given(userRepository.findFirstByUniqueFields(
 				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
 			)).willReturn(Optional.of(existingUser));
@@ -190,9 +200,15 @@ class UserServiceCreateUserTest {
 		@DisplayName("중복된 휴대폰 번호로 가입 시 예외 발생")
 		void duplicatePhoneNumber_ThrowsException() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 
-			User existingUser = User.builder().phoneNumber(req.getPhoneNumber()).build();
+			User existingUser = User.builder()
+				.username("anotherUser")
+				.email("another@example.com")
+				.nickname("anotherNickname")
+				.phoneNumber(req.getPhoneNumber())
+				.build();
+
 			given(userRepository.findFirstByUniqueFields(
 				req.getUsername(), req.getEmail(), req.getNickname(), req.getPhoneNumber()
 			)).willReturn(Optional.of(existingUser));
@@ -215,7 +231,7 @@ class UserServiceCreateUserTest {
 		@DisplayName("데이터베이스 저장 실패 시 예외 발생")
 		void databaseError_OnSave_ThrowsException() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 
 			givenNoDuplicatesFound(req);
 			given(userRepository.save(any(User.class))).willThrow(new DataAccessException("DB connection failed") {
@@ -225,14 +241,14 @@ class UserServiceCreateUserTest {
 			assertThatThrownBy(() -> userService.createUser(req))
 				.isInstanceOf(GeneralException.class)
 				.extracting("errorReasonHttpStatus.code")
-				.isEqualTo(ErrorStatus._INTERNAL_SERVER_ERROR.getCode());
+				.isEqualTo(app.global.apiPayload.code.status.ErrorStatus._INTERNAL_SERVER_ERROR.getCode());
 		}
 
 		@Test
 		@DisplayName("비밀번호 인코딩 실패 시 예외 발생")
 		void passwordEncoding_Fail_ThrowsException() {
 			// given
-			CreateUserReq req = createValidUserReq(UserRole.CUSTOMER);
+			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 
 			givenNoDuplicatesFound(req);
 			given(passwordEncoder.encode(req.getPassword())).willThrow(new RuntimeException("Encoding failed"));
