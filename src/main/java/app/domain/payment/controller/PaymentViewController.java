@@ -1,7 +1,5 @@
 package app.domain.payment.controller;
 
-import java.util.UUID;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,25 +17,16 @@ public class PaymentViewController {
 	@Value("${TOSS_CLIENT_KEY}")
 	private String tossClientKey;
 
-	@GetMapping()
-	public String checkout(Model model) {
-		UUID test = UUID.randomUUID();
-		System.out.println(test);
-		model.addAttribute("orderId", test);
-		model.addAttribute("totalPrice", 10000);
+	@GetMapping("/checkout")
+	public String checkout(@RequestParam String orderId,
+		@RequestParam Long totalPrice,
+		Model model) {
+		model.addAttribute("orderId", orderId);
+		model.addAttribute("totalPrice", totalPrice);
 		model.addAttribute("tossClientKey", tossClientKey);
 
 		return "checkout";
 	}
-
-	// @GetMapping("/checkout")
-	// public String checkout(@Valid @RequestBody CheckoutRequest request, Model model) {
-	// 	model.addAttribute("orderId", request.orderId());
-	// 	model.addAttribute("totalPrice", request.totalPrice());
-	// 	model.addAttribute("tossClientKey", tossClientKey);
-	//
-	// 	return "checkout";
-	// }
 
 	@GetMapping("/success")
 	public String success(@RequestParam String paymentKey,
