@@ -3,28 +3,36 @@ package app.domain.order.model.dto.request;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public record CreateOrderRequest(
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class CreateOrderRequest {
 
 	@NotNull
-	PaymentMethod paymentMethod,
+	private PaymentMethod paymentMethod;
 
 	@NotNull
-	OrderChannel orderChannel,
+	private OrderChannel orderChannel;
 
 	@NotNull
-	ReceiptMethod receiptMethod,
+	private ReceiptMethod receiptMethod;
 
-	String requestMessage,
+	private String requestMessage;
 
 	@NotNull
-	@Min(value = 1, message = "총 금액은 양의 정수여야 합니다.")
-	Long totalPrice,
+	@Positive(message = "총 금액은 양의 정수여야 합니다.")
+	private Long totalPrice;
 
 	@NotBlank
-	String deliveryAddress) {
-
+	private String deliveryAddress;
 }

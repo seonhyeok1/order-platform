@@ -2,23 +2,27 @@ package app.domain.cart.model.dto;
 
 import java.util.UUID;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public record AddCartItemRequest(
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class AddCartItemRequest {
 
 	@NotNull
-	@Schema(description = "메뉴ID", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-	UUID menuId,
+	private UUID menuId;
 
 	@NotNull
-	@Schema(description = "매장ID", example = "3fa85f64-5727-4562-b3gc-2c963f66afa6")
-	UUID storeId,
+	private UUID storeId;
 
 	@NotNull
 	@Min(value = 1, message = "수량은 1 이상이어야 합니다.")
-	@Schema(description = "메뉴 개수", example = "1")
-	Integer quantity
-) {
+	private Integer quantity;
 }
