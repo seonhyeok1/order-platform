@@ -16,7 +16,5 @@ import app.domain.user.model.entity.User;
 public interface OrdersRepository extends JpaRepository<Orders, UUID> {
 	Page<Orders> findAllByUserAndDeliveryAddressIsNotNull(User user, Pageable pageable);
 	
-	@Modifying
-	@Query("UPDATE Orders o SET o.isRefundable = :isRefundable WHERE o.ordersId = :orderId")
-	int updateRefundableStatus(UUID orderId, boolean isRefundable);
+
 }

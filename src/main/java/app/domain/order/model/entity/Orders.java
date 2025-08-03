@@ -89,4 +89,8 @@ public class Orders extends BaseEntity {
 			this.orderHistory = this.orderHistory.toString() + "\n" + newEntry;
 		}
 	}
+
+	public void disableRefund() {
+		this.isRefundable = false;
+	}
 }
