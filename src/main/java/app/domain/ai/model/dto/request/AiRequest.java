@@ -14,6 +14,7 @@ public class AiRequest {
 	@NotNull(message = "요청 타입은 필수입니다.")
 	private ReqType reqType;
 
+	@NotBlank(message = "프롬프트 텍스트는 필수입니다.")
 	private String promptText;
 
 	public AiRequest() {
