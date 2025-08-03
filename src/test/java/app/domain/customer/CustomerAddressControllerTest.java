@@ -33,7 +33,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.domain.customer.status.CustomerErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @WebMvcTest(CustomerAddressController.class)
@@ -64,7 +64,7 @@ class CustomerAddressControllerTest {
 	@Test
 	@DisplayName("주소 목록 조회 - 성공")
 	@WithMockUser(username = "1", roles = "CUSTOMER")
-    void getCustomerAddresses_Success() throws Exception {
+	void getCustomerAddresses_Success() throws Exception {
 		List<GetCustomerAddressListResponse> addressResponse = List.of(
 				new GetCustomerAddressListResponse(
 						"우리집",
@@ -73,30 +73,30 @@ class CustomerAddressControllerTest {
 						true
 				),
 				new GetCustomerAddressListResponse(
-					"회사",
-					"서울시 서초구",
-					"202호",
-					false
+						"회사",
+						"서울시 서초구",
+						"202호",
+						false
 				)
 		);
 
 		when(customerAddressService.getCustomerAddresses(1L)).thenReturn(addressResponse);
 
 		mockMvc.perform(get("/customer/address/list"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.resultCode").value("COMMON200"))
-                .andExpect(jsonPath("$.message").value("success"))
-                .andExpect(jsonPath("$.result").isArray())
-                .andExpect(jsonPath("$.result.length()").value(2))
-                .andExpect(jsonPath("$.result[0].alias").value("우리집"))
-                .andExpect(jsonPath("$.result[0].address").value("서울시 강남구"))
-                .andExpect(jsonPath("$.result[0].addressDetail").value("101호"))
-                .andExpect(jsonPath("$.result[0].isDefault").value(true))
-                .andExpect(jsonPath("$.result[1].alias").value("회사"))
-                .andExpect(jsonPath("$.result[1].address").value("서울시 서초구"))
-                .andExpect(jsonPath("$.result[1].addressDetail").value("202호"))
-                .andExpect(jsonPath("$.result[1].isDefault").value(false));
+				.andExpect(status().isOk())
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+				.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+				.andExpect(jsonPath("$.message").value("success"))
+				.andExpect(jsonPath("$.result").isArray())
+				.andExpect(jsonPath("$.result.length()").value(2))
+				.andExpect(jsonPath("$.result[0].alias").value("우리집"))
+				.andExpect(jsonPath("$.result[0].address").value("서울시 강남구"))
+				.andExpect(jsonPath("$.result[0].addressDetail").value("101호"))
+				.andExpect(jsonPath("$.result[0].isDefault").value(true))
+				.andExpect(jsonPath("$.result[1].alias").value("회사"))
+				.andExpect(jsonPath("$.result[1].address").value("서울시 서초구"))
+				.andExpect(jsonPath("$.result[1].addressDetail").value("202호"))
+				.andExpect(jsonPath("$.result[1].isDefault").value(false));
 
 	}
 
@@ -106,12 +106,12 @@ class CustomerAddressControllerTest {
 	@WithMockUser(username = "999", roles = "CUSTOMER")
 	void getCustomerAddresses_Fail_UserNotFound() throws Exception {
 		when(customerAddressService.getCustomerAddresses(999L))
-				.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND));
+				.thenThrow(new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND));
 
 		mockMvc.perform(get("/customer/address/list"))
 				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.resultCode").value(ErrorStatus.USER_NOT_FOUND.getCode()))
-				.andExpect(jsonPath("$.message").value(ErrorStatus.USER_NOT_FOUND.getMessage()));
+				.andExpect(jsonPath("$.resultCode").value(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND.getCode()))
+				.andExpect(jsonPath("$.message").value(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND.getMessage()));
 	}
 
 	@Test
@@ -119,12 +119,12 @@ class CustomerAddressControllerTest {
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getCustomerAddresses_Fail_InternalServiceException() throws Exception {
 		when(customerAddressService.getCustomerAddresses(1L))
-				.thenThrow(new GeneralException(ErrorStatus.ADDRESS_READ_FAILED));
+				.thenThrow(new GeneralException(CustomerErrorStatus.ADDRESS_READ_FAILED));
 
 		mockMvc.perform(get("/customer/address/list"))
 				.andExpect(status().isInternalServerError())
-				.andExpect(jsonPath("$.resultCode").value(ErrorStatus.ADDRESS_READ_FAILED.getCode()))
-				.andExpect(jsonPath("$.message").value(ErrorStatus.ADDRESS_READ_FAILED.getMessage()));
+				.andExpect(jsonPath("$.resultCode").value(CustomerErrorStatus.ADDRESS_READ_FAILED.getCode()))
+				.andExpect(jsonPath("$.message").value(CustomerErrorStatus.ADDRESS_READ_FAILED.getMessage()));
 	}
 
 
@@ -158,31 +158,26 @@ class CustomerAddressControllerTest {
 				.andExpect(jsonPath("$.result.address_id").value(newAddressId.toString()));
 	}
 
-//
+
 //	@Test
-//	@DisplayName("주소 등록 - 실패 (입력 검증 실패)")
+//	@DisplayName("주소 등록 - 실패 (alias 입력 검증 실패)")
 //	@WithMockUser(username = "1", roles = "CUSTOMER")
 //	void addCustomerAddresses_Fail_InvalidInput() throws Exception {
 //		AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-//				"새로운 집",
+//				null,
 //				"서울시 종로구",
 //				"303호",
 //				false
 //		);
-//		UUID newAddressId = UUID.randomUUID();
-//		AddCustomerAddressResponse mockResponse = new AddCustomerAddressResponse(newAddressId);
-//
-//		when(customerAddressService.addCustomerAddress(eq(1L), any(AddCustomerAddressRequest.class)))
-//				.thenReturn(mockResponse);
 //
 //		mockMvc.perform(post("/customer/address/add")
 //				.with(csrf())
 //				.contentType(MediaType.APPLICATION_JSON)
 //				.content(objectMapper.writeValueAsString(request)))
 //				.andExpect(status().isBadRequest())
-//				.andExpect(jsonPath("$.resultCode").value("COMMON400"))
-//				.andExpect(jsonPath("$.message").value(ErrorStatus.ADDRESS_ALREADY_EXISTS.getMessage()));
+//				.andExpect(jsonPath("$.resultCode").value("COMMON400"));
 //	}
+
 
 
 	@Test
@@ -197,15 +192,15 @@ class CustomerAddressControllerTest {
 		);
 
 		when(customerAddressService.addCustomerAddress(eq(1L), any(AddCustomerAddressRequest.class)))
-				.thenThrow(new GeneralException(ErrorStatus.ADDRESS_ALREADY_EXISTS));
+				.thenThrow(new GeneralException(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS));
 
 		mockMvc.perform(post("/customer/address/add")
-				.with(csrf())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.with(csrf())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isConflict())
-				.andExpect(jsonPath("$.resultCode").value(ErrorStatus.ADDRESS_ALREADY_EXISTS.getCode()))
-				.andExpect(jsonPath("$.message").value(ErrorStatus.ADDRESS_ALREADY_EXISTS.getMessage()));
+				.andExpect(jsonPath("$.resultCode").value(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS.getCode()))
+				.andExpect(jsonPath("$.message").value(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS.getMessage()));
 	}
 
 
@@ -221,15 +216,15 @@ class CustomerAddressControllerTest {
 		);
 
 		when(customerAddressService.addCustomerAddress(eq(999L), any(AddCustomerAddressRequest.class)))
-				.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND));
+				.thenThrow(new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND));
 
 		mockMvc.perform(post("/customer/address/add")
-				.with(csrf())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
- 				.andExpect(status().isNotFound())
-				.andExpect(jsonPath("$.resultCode").value(ErrorStatus.USER_NOT_FOUND.getCode()))
-				.andExpect(jsonPath("$.message").value(ErrorStatus.USER_NOT_FOUND.getMessage()));
+						.with(csrf())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.resultCode").value(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND.getCode()))
+				.andExpect(jsonPath("$.message").value(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND.getMessage()));
 	}
 
 
@@ -245,15 +240,15 @@ class CustomerAddressControllerTest {
 		);
 
 		when(customerAddressService.addCustomerAddress(eq(1L), any(AddCustomerAddressRequest.class)))
-				.thenThrow(new GeneralException(ErrorStatus.ADDRESS_ADD_FAILED));
+				.thenThrow(new GeneralException(CustomerErrorStatus.ADDRESS_ADD_FAILED));
 
 		mockMvc.perform(post("/customer/address/add")
-				.with(csrf())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
+						.with(csrf())
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isInternalServerError())
-				.andExpect(jsonPath("$.resultCode").value(ErrorStatus.ADDRESS_ADD_FAILED.getCode()))
-				.andExpect(jsonPath("$.message").value(ErrorStatus.ADDRESS_ADD_FAILED.getMessage()));
+				.andExpect(jsonPath("$.resultCode").value(CustomerErrorStatus.ADDRESS_ADD_FAILED.getCode()))
+				.andExpect(jsonPath("$.message").value(CustomerErrorStatus.ADDRESS_ADD_FAILED.getMessage()));
 	}
 
 }

@@ -12,7 +12,7 @@ import app.domain.customer.dto.response.AddCustomerAddressResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.UserAddress;
 import app.domain.user.model.entity.enums.UserRole;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.domain.customer.status.CustomerErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -49,34 +49,34 @@ class CustomerAddressServiceTest {
 	@BeforeEach
 	void setUp() {
 		testUser = User.builder()
-			.userId(1L)
-			.username("tester")
-			.email("testuser@example.com")
-			.password("password123")
-			.nickname("test_nickname")
-			.realName("tester_name")
-			.phoneNumber("01012345678")
-			.userRole(UserRole.CUSTOMER)
-			.build();
+				.userId(1L)
+				.username("tester")
+				.email("testuser@example.com")
+				.password("password123")
+				.nickname("test_nickname")
+				.realName("tester_name")
+				.phoneNumber("01012345678")
+				.userRole(UserRole.CUSTOMER)
+				.build();
 	}
 
 	private List<UserAddress> createMockAddressList(User user) {
 		UserAddress address1 = UserAddress.builder()
-			.addressId(UUID.fromString("11111111-1111-1111-1111-111111111111"))
-			.user(user)
-			.alias("우리집")
-			.address("서울시 강남구")
-			.addressDetail("101호")
-			.isDefault(true)
-			.build();
+				.addressId(UUID.fromString("11111111-1111-1111-1111-111111111111"))
+				.user(user)
+				.alias("우리집")
+				.address("서울시 강남구")
+				.addressDetail("101호")
+				.isDefault(true)
+				.build();
 		UserAddress address2 = UserAddress.builder()
-			.addressId(UUID.fromString("22222222-2222-2222-2222-222222222222"))
-			.user(user)
-			.alias("회사")
-			.address("서울시 서초구")
-			.addressDetail("202호")
-			.isDefault(false)
-			.build();
+				.addressId(UUID.fromString("22222222-2222-2222-2222-222222222222"))
+				.user(user)
+				.alias("회사")
+				.address("서울시 서초구")
+				.addressDetail("202호")
+				.isDefault(false)
+				.build();
 		return List.of(address1, address2);
 	}
 
@@ -89,29 +89,29 @@ class CustomerAddressServiceTest {
 		@DisplayName("1. isDefault = true & 기존 존재 없음")
 		void addUserAddress_isDefault_true_NormalCase() {
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				
-				"우리집",
-				"서울시 강남구 테헤란로 212",
-				"1501호",
-				true
+
+					"우리집",
+					"서울시 강남구 테헤란로 212",
+					"1501호",
+					true
 			);
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 
 			when(userAddressRepository.save(any(UserAddress.class)))
-				.thenAnswer(invocation -> {
-					UserAddress useraddress = invocation.getArgument(0);
-					if (useraddress.getAddressId() == null) {
-						return UserAddress.builder()
-							.addressId(UUID.randomUUID())
-							.user(useraddress.getUser())
-							.alias(useraddress.getAlias())
-							.address(useraddress.getAddress())
-							.addressDetail(useraddress.getAddressDetail())
-							.isDefault(useraddress.isDefault())
-							.build();
-					}
-					return useraddress;
-				});
+					.thenAnswer(invocation -> {
+						UserAddress useraddress = invocation.getArgument(0);
+						if (useraddress.getAddressId() == null) {
+							return UserAddress.builder()
+									.addressId(UUID.randomUUID())
+									.user(useraddress.getUser())
+									.alias(useraddress.getAlias())
+									.address(useraddress.getAddress())
+									.addressDetail(useraddress.getAddressDetail())
+									.isDefault(useraddress.isDefault())
+									.build();
+						}
+						return useraddress;
+					});
 
 			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
@@ -134,29 +134,29 @@ class CustomerAddressServiceTest {
 		@DisplayName("2. isDefault = false & 기존 존재 없음")
 		void addUserAddress_isDefault_false_NormalCase() {
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				
-				"우리집",
-				"서울시 강남구 테헤란로 212",
-				"1501호",
-				false
+
+					"우리집",
+					"서울시 강남구 테헤란로 212",
+					"1501호",
+					false
 			);
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 
 			when(userAddressRepository.save(any(UserAddress.class)))
-				.thenAnswer(invocation -> {
-					UserAddress useraddress = invocation.getArgument(0);
-					if (useraddress.getAddressId() == null) {
-						return UserAddress.builder()
-							.addressId(UUID.randomUUID())
-							.user(useraddress.getUser())
-							.alias(useraddress.getAlias())
-							.address(useraddress.getAddress())
-							.addressDetail(useraddress.getAddressDetail())
-							.isDefault(useraddress.isDefault())
-							.build();
-					}
-					return useraddress;
-				});
+					.thenAnswer(invocation -> {
+						UserAddress useraddress = invocation.getArgument(0);
+						if (useraddress.getAddressId() == null) {
+							return UserAddress.builder()
+									.addressId(UUID.randomUUID())
+									.user(useraddress.getUser())
+									.alias(useraddress.getAlias())
+									.address(useraddress.getAddress())
+									.addressDetail(useraddress.getAddressDetail())
+									.isDefault(useraddress.isDefault())
+									.build();
+						}
+						return useraddress;
+					});
 
 			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
@@ -179,53 +179,52 @@ class CustomerAddressServiceTest {
 		@DisplayName("3. isDefault=true & 기존 기본 존재 → 기존 기본 해제 후 신규 기본 설정")
 		void addUserAddress_SetNewDefault_DemotesPreviousDefault() {
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				"새로운 우리집",
-				"서울시 서초구",
-				"202호",
-				true
+					"새로운 우리집",
+					"서울시 서초구",
+					"202호",
+					true
 			);
 
 			UserAddress previousDefaultAddress = UserAddress.builder()
-				.addressId(UUID.randomUUID())
-				.user(testUser)
-				.alias("옛날 집")
-				.address("서울시 강남구")
-				.addressDetail("101동 101호")
-				.isDefault(true)
-				.build();
+					.addressId(UUID.randomUUID())
+					.user(testUser)
+					.alias("옛날 집")
+					.address("서울시 강남구")
+					.addressDetail("101동 101호")
+					.isDefault(true)
+					.build();
 
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findByUser_UserIdAndIsDefaultTrue(testUser.getUserId()))
-				.thenReturn(Optional.of(previousDefaultAddress));
+					.thenReturn(Optional.of(previousDefaultAddress));
 
 			when(userAddressRepository.save(any(UserAddress.class))).thenAnswer(invocation -> {
 				UserAddress savedAddress = invocation.getArgument(0);
 				if (savedAddress.getAddressId() == null) {
 					return UserAddress.builder()
-						.addressId(UUID.randomUUID())
-						.user(savedAddress.getUser())
-						.alias(savedAddress.getAlias())
-						.address(savedAddress.getAddress())
-						.addressDetail(savedAddress.getAddressDetail())
-						.isDefault(savedAddress.isDefault())
-						.build();
+							.addressId(UUID.randomUUID())
+							.user(savedAddress.getUser())
+							.alias(savedAddress.getAlias())
+							.address(savedAddress.getAddress())
+							.addressDetail(savedAddress.getAddressDetail())
+							.isDefault(savedAddress.isDefault())
+							.build();
 				}
 				return savedAddress;
 			});
-
 
 			customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
 			ArgumentCaptor<UserAddress> addressCaptor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userAddressRepository, times(2)).save(addressCaptor.capture());
-			List<UserAddress> savedAddresses = addressCaptor.getAllValues();
 
+			List<UserAddress> savedAddresses = addressCaptor.getAllValues();
 			UserAddress demotedAddress = savedAddresses.get(0);
 			assertThat(demotedAddress.getAddressId()).isEqualTo(previousDefaultAddress.getAddressId());
 			assertThat(demotedAddress.isDefault()).isFalse();
 
 			UserAddress newDefaultAddress = savedAddresses.get(1);
-			assertThat(newDefaultAddress.getUser().getUserId()).isEqualTo(testUser.getUserId()); // This is the corrected line
+			assertThat(newDefaultAddress.getUser().getUserId()).isEqualTo(testUser.getUserId());
 			assertThat(newDefaultAddress.getAlias()).isEqualTo("새로운 우리집");
 			assertThat(newDefaultAddress.getAddress()).isEqualTo("서울시 서초구");
 			assertThat(newDefaultAddress.getAddressDetail()).isEqualTo("202호");
@@ -236,27 +235,27 @@ class CustomerAddressServiceTest {
 		@DisplayName("4. isDefault=false & 기존 기본 존재 → 기존 기본 유지, 신규 false 저장")
 		void addUserAddress_AddNonDefault_KeepsPreviousDefault() {
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				"회사",
-				"서울시 서초구",
-				"202호",
-				false
+					"회사",
+					"서울시 서초구",
+					"202호",
+					false
 			);
 
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId()))
-				.thenReturn(List.of(UserAddress.builder().build()));
+					.thenReturn(List.of(UserAddress.builder().build()));
 
 			when(userAddressRepository.save(any(UserAddress.class))).thenAnswer(invocation -> {
 				UserAddress savedAddress = invocation.getArgument(0);
 				return UserAddress.builder()
-					.addressId(UUID.randomUUID())
-					.user(savedAddress.getUser())
-					.alias(savedAddress.getAlias())
-					.address(savedAddress.getAddress())
-					.addressDetail(savedAddress.getAddressDetail())
-					.isDefault(savedAddress.isDefault())
-					.build();
+						.addressId(UUID.randomUUID())
+						.user(savedAddress.getUser())
+						.alias(savedAddress.getAlias())
+						.address(savedAddress.getAddress())
+						.addressDetail(savedAddress.getAddressDetail())
+						.isDefault(savedAddress.isDefault())
+						.build();
 			});
 
 			customerAddressService.addCustomerAddress(testUser.getUserId(), request);
@@ -265,7 +264,7 @@ class CustomerAddressServiceTest {
 			verify(userAddressRepository, times(1)).save(addressCaptor.capture());
 
 			UserAddress savedAddress = addressCaptor.getValue();
-			assertThat(savedAddress.getUser().getUserId()).isEqualTo(testUser.getUserId()); // This is the corrected line
+			assertThat(savedAddress.getUser().getUserId()).isEqualTo(testUser.getUserId());
 			assertThat(savedAddress.getAlias()).isEqualTo("회사");
 			assertThat(savedAddress.getAddress()).isEqualTo("서울시 서초구");
 			assertThat(savedAddress.getAddressDetail()).isEqualTo("202호");
@@ -284,18 +283,18 @@ class CustomerAddressServiceTest {
 		void addUserAddress_Fail_UserNotFound() {
 			long nonExistentUserId = 9999L;
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				"우리집",
-				"서울시 강남구 테헤란로 212",
-				"1501호",
-				false
+					"우리집",
+					"서울시 강남구 테헤란로 212",
+					"1501호",
+					false
 			);
 			when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
 			GeneralException ex = assertThrows(
-				GeneralException.class,
-				() -> customerAddressService.addCustomerAddress(nonExistentUserId, request)
+					GeneralException.class,
+					() -> customerAddressService.addCustomerAddress(nonExistentUserId, request)
 			);
-			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
+			assertThat(ex.getErrorStatus()).isEqualTo(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND);
 
 			verify(userRepository, times(1)).findById(nonExistentUserId);
 			verify(userAddressRepository, never()).save(any(UserAddress.class));
@@ -324,7 +323,7 @@ class CustomerAddressServiceTest {
 					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
 			);
 
-			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_ALREADY_EXISTS);
+			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS);
 
 			verify(userAddressRepository, never()).countByUser(any());
 			verify(userAddressRepository, never()).save(any(UserAddress.class));
@@ -339,23 +338,23 @@ class CustomerAddressServiceTest {
 		@DisplayName("1. DB 저장 실패 시 _INTERNAL_SERVER_ERROR 예외 발생")
 		void addUserAddress_Fail_DbSaveError() {
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				"우리집",
-				"서울시",
-				"101동",
-				true
+					"우리집",
+					"서울시",
+					"101동",
+					true
 			);
 
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 
 			when(userAddressRepository.save(any(UserAddress.class)))
-				.thenThrow(new DataAccessResourceFailureException("Simulated DB error"));
+					.thenThrow(new DataAccessResourceFailureException("Simulated DB error"));
 
 			GeneralException ex = assertThrows(
-				GeneralException.class,
-				() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
+					GeneralException.class,
+					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
 			);
 
-			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_ADD_FAILED);
+			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_ADD_FAILED);
 
 			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(any(UserAddress.class));
@@ -366,32 +365,36 @@ class CustomerAddressServiceTest {
 		void addUserAddress_Fail_UuidNotAssigned() {
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.save(any(UserAddress.class)))
-				.thenAnswer(inv -> {
-					UserAddress ua = inv.getArgument(0);
-					return UserAddress.builder()
-						.addressId(null)
-						.user(ua.getUser()).alias(ua.getAlias())
-						.address(ua.getAddress()).addressDetail(ua.getAddressDetail())
-						.isDefault(ua.isDefault())
-						.build();
-				});
+					.thenAnswer(inv -> {
+						UserAddress ua = inv.getArgument(0);
+						return UserAddress.builder()
+								.addressId(null)
+								.user(ua.getUser()).alias(ua.getAlias())
+								.address(ua.getAddress()).addressDetail(ua.getAddressDetail())
+								.isDefault(ua.isDefault())
+								.build();
+					});
 
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-				
-				"우리집",
-				"서울시",
-				"101동",
-				true
+
+					"우리집",
+					"서울시",
+					"101동",
+					true
 			);
 
 			GeneralException ex = assertThrows(
-				GeneralException.class,
-				() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
+					GeneralException.class,
+					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
 			);
-			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_ADD_FAILED);
+			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_ADD_FAILED);
 			verify(userAddressRepository, times(1)).save(any(UserAddress.class));
 		}
 	}
+
+
+
+//	  --- getCustomerAddresses 테스트 시작 ---
 
 	@Nested
 	@DisplayName("주소 목록 조회 성공 케이스")
@@ -463,7 +466,7 @@ class CustomerAddressServiceTest {
 		@DisplayName("3. 주소가 없는 사용자의 경우 빈 리스트를 반환함")
 		void getCustomerAddresses_Success_WhenNoAddressesExist_ReturnsEmptyList() {
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
-			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(List.of()); // 빈 리스트 반환
+			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(List.of());
 
 			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
 
@@ -486,9 +489,9 @@ class CustomerAddressServiceTest {
 			when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
 			GeneralException ex = assertThrows(GeneralException.class,
-				() -> customerAddressService.getCustomerAddresses(nonExistentUserId));
+					() -> customerAddressService.getCustomerAddresses(nonExistentUserId));
 
-			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
+			assertThat(ex.getErrorStatus()).isEqualTo(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND);
 			verify(userAddressRepository, never()).findAllByUserUserId(anyLong());
 		}
 	}
@@ -502,12 +505,12 @@ class CustomerAddressServiceTest {
 		void getCustomerAddresses_Exception_DbError() {
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId()))
-				.thenThrow(new DataAccessResourceFailureException("Simulated DB Connection Failure"));
+					.thenThrow(new DataAccessResourceFailureException("Simulated DB Connection Failure"));
 
 			GeneralException ex = assertThrows(GeneralException.class,
-				() -> customerAddressService.getCustomerAddresses(testUser.getUserId()));
+					() -> customerAddressService.getCustomerAddresses(testUser.getUserId()));
 
-			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_READ_FAILED);
+			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_READ_FAILED);
 		}
 	}
 }
