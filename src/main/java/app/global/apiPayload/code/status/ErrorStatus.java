@@ -108,6 +108,9 @@ public enum ErrorStatus implements BaseErrorCode {
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER004", "메뉴를 찾을 수 없습니다."),
 	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
 	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
+	INVALID_ORDER_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "ORDER007", "유효하지 않은 주문 상태 전이입니다."),
+	ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER008", "해당 주문에 대한 접근 권한이 없습니다."),
+	ORDER_CANCEL_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "ORDER009", "주문 취소 가능 시간이 초과되었습니다."),
 
 	// Review 관련
 	REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "REVIEW001", "이미 해당 주문에 대한 리뷰가 존재합니다."),
@@ -126,7 +129,6 @@ public enum ErrorStatus implements BaseErrorCode {
 	ADDRESS_ALREADY_EXISTS(HttpStatus.CONFLICT, "ADDRESS_001", "이미 존재하는 주소입니다."),
 	ADDRESS_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_002", "주소 등록에 실패했습니다."),
 	ADDRESS_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_003", "주소 목록 조회에 실패했습니다.");
-
 
 	private final HttpStatus httpStatus;
 	private final String code;
