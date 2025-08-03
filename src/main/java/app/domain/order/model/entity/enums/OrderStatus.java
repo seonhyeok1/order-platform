@@ -7,5 +7,6 @@ public enum OrderStatus {
 	IN_DELIVERY,
 	COMPLETED,
 	REJECTED,
-	REFUNDED;
+	REFUNDED,
+	FAIL;
 }
