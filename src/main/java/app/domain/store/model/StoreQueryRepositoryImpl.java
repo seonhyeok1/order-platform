@@ -11,7 +11,6 @@ import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import static com.querydsl.core.types.dsl.Expressions.*;
-import static org.hibernate.internal.util.StringHelper.*;
 
 import app.domain.customer.dto.response.GetStoreListResponse;
 import app.domain.review.model.entity.QReview;
