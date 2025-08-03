@@ -88,7 +88,6 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. isDefault = true & 기존 존재 없음")
 		void addUserAddress_isDefault_true_NormalCase() {
-			// Given
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 				
 				"우리집",
@@ -114,14 +113,11 @@ class CustomerAddressServiceTest {
 					return useraddress;
 				});
 
-			// When
 			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
-			// Then
 			assertNotNull(response);
-			assertNotNull(response.address_id());
+			assertNotNull(response.getAddress_id());
 
-			// DB에 저장된 데이터 검증
 			ArgumentCaptor<UserAddress> captor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(captor.capture());
@@ -137,7 +133,6 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("2. isDefault = false & 기존 존재 없음")
 		void addUserAddress_isDefault_false_NormalCase() {
-			// Given
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 				
 				"우리집",
@@ -163,14 +158,11 @@ class CustomerAddressServiceTest {
 					return useraddress;
 				});
 
-			// When
 			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
-			// Then
 			assertNotNull(response);
-			assertNotNull(response.address_id());
+			assertNotNull(response.getAddress_id());
 
-			// DB에 저장된 데이터 검증
 			ArgumentCaptor<UserAddress> captor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(captor.capture());
@@ -186,7 +178,6 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("3. isDefault=true & 기존 기본 존재 → 기존 기본 해제 후 신규 기본 설정")
 		void addUserAddress_SetNewDefault_DemotesPreviousDefault() {
-			// Given: 새로운 주소를 기본으로 설정하려고 하고, 기존 기본 주소가 이미 존재함
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 				"새로운 우리집",
 				"서울시 서초구",
@@ -203,12 +194,10 @@ class CustomerAddressServiceTest {
 				.isDefault(true)
 				.build();
 
-			// 기존 기본 주소 조회 Stub
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findByUser_UserIdAndIsDefaultTrue(testUser.getUserId()))
 				.thenReturn(Optional.of(previousDefaultAddress));
 
-			// save 메서드는 전달된 객체를 그대로 반환하도록 설정 (ID 생성 흉내)
 			when(userAddressRepository.save(any(UserAddress.class))).thenAnswer(invocation -> {
 				UserAddress savedAddress = invocation.getArgument(0);
 				if (savedAddress.getAddressId() == null) {
@@ -221,25 +210,20 @@ class CustomerAddressServiceTest {
 						.isDefault(savedAddress.isDefault())
 						.build();
 				}
-				return savedAddress; // 기존 주소 업데이트 시에는 그대로 반환
+				return savedAddress;
 			});
 
 
-			// When
 			customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
-
-			// Then: save가 2번 호출되었는지, 그리고 각 호출의 내용이 올바른지 검증
 			ArgumentCaptor<UserAddress> addressCaptor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userAddressRepository, times(2)).save(addressCaptor.capture());
 			List<UserAddress> savedAddresses = addressCaptor.getAllValues();
 
-			// 첫 번째 save 호출: 기존 기본 주소의 isDefault가 false로 변경되었는지 확인
 			UserAddress demotedAddress = savedAddresses.get(0);
 			assertThat(demotedAddress.getAddressId()).isEqualTo(previousDefaultAddress.getAddressId());
 			assertThat(demotedAddress.isDefault()).isFalse();
 
-			// 두 번째 save 호출: 새로 추가된 주소의 정보가 올바르고 isDefault가 true 로 설정되었는지 확인
 			UserAddress newDefaultAddress = savedAddresses.get(1);
 			assertThat(newDefaultAddress.getUser().getUserId()).isEqualTo(testUser.getUserId()); // This is the corrected line
 			assertThat(newDefaultAddress.getAlias()).isEqualTo("새로운 우리집");
@@ -251,7 +235,6 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("4. isDefault=false & 기존 기본 존재 → 기존 기본 유지, 신규 false 저장")
 		void addUserAddress_AddNonDefault_KeepsPreviousDefault() {
-			// Given: 새로운 주소를 기본으로 설정하려고 하고, 기존 기본 주소가 이미 존재함
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 				"회사",
 				"서울시 서초구",
@@ -264,7 +247,6 @@ class CustomerAddressServiceTest {
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId()))
 				.thenReturn(List.of(UserAddress.builder().build()));
 
-			// save 메서드는 전달된 객체를 그대로 반환하도록 설정 (ID 생성 흉내)
 			when(userAddressRepository.save(any(UserAddress.class))).thenAnswer(invocation -> {
 				UserAddress savedAddress = invocation.getArgument(0);
 				return UserAddress.builder()
@@ -277,10 +259,8 @@ class CustomerAddressServiceTest {
 					.build();
 			});
 
-			// When
 			customerAddressService.addCustomerAddress(testUser.getUserId(), request);
 
-			// Then: save가 정확히 1번만 호출되었는지 검증
 			ArgumentCaptor<UserAddress> addressCaptor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userAddressRepository, times(1)).save(addressCaptor.capture());
 
@@ -302,7 +282,6 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. 존재하지 않는 사용자 ID로 요청 시")
 		void addUserAddress_Fail_UserNotFound() {
-			// Given
 			long nonExistentUserId = 9999L;
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 				"우리집",
@@ -312,7 +291,6 @@ class CustomerAddressServiceTest {
 			);
 			when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
-			// When & Then
 			GeneralException ex = assertThrows(
 				GeneralException.class,
 				() -> customerAddressService.addCustomerAddress(nonExistentUserId, request)
@@ -323,40 +301,34 @@ class CustomerAddressServiceTest {
 			verify(userAddressRepository, never()).save(any(UserAddress.class));
 		}
 
-		//			@Test
-		//			@DisplayName("10. 동일한 주소(주소+상세주소)를 중복 등록 시 예외 발생")
-		//			void addUserAddress_Fail_WhenAddressIsDuplicate() {
-		//				// Given: 중복 등록을 시도하는 주소 정보
-		//				AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-		//						
-		//						"우리집",
-		//						"서울시 강남구 테헤란로 212",
-		//						"1501호",
-		//						false
-		//				);
-		//
-		//				// 사용자는 존재함
-		//				when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
-		//
-		//				// 핵심: 레포지토리에게 "해당 주소는 이미 존재한다(true)"고 응답하도록 설정
-		//				when(userAddressRepository.existsByUserAndAddressAndAddressDetail(
-		//						testUser,
-		//						request.address(),
-		//						request.addressDetail()
-		//				)).thenReturn(true);
-		//
-		//				// When & Then: ADDRESS_ALREADY_EXISTS 예외가 발생하는지 확인
-		//				GeneralException ex = assertThrows(GeneralException.class,
-		//						() -> customerAddressService.addCustomerAddress(request)
-		//				);
-		//
-		//				assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_ALREADY_EXISTS);
-		//
-		//				// 중복이므로, 주소 개수 확인이나 save 로직은 절대 호출되지 않았어야 함
-		//				verify(userAddressRepository, never()).countByUser(any());
-		//				verify(userAddressRepository, never()).save(any(UserAddress.class));
-		//			}
-		//		}
+		@Test
+		@DisplayName("2. 동일한 주소(주소+상세주소)를 중복 등록 시 예외 발생")
+		void addUserAddress_Fail_WhenAddressIsDuplicate() {
+			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
+
+					"우리집",
+					"서울시 강남구 테헤란로 212",
+					"1501호",
+					false
+			);
+
+			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
+
+			when(userAddressRepository.existsByUserAndAddressAndAddressDetail(
+					testUser,
+					request.getAddress(),
+					request.getAddressDetail()
+			)).thenReturn(true);
+
+			GeneralException ex = assertThrows(GeneralException.class,
+					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
+			);
+
+			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_ALREADY_EXISTS);
+
+			verify(userAddressRepository, never()).countByUser(any());
+			verify(userAddressRepository, never()).save(any(UserAddress.class));
+		}
 	}
 
 	@Nested
@@ -366,7 +338,6 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. DB 저장 실패 시 _INTERNAL_SERVER_ERROR 예외 발생")
 		void addUserAddress_Fail_DbSaveError() {
-			// Given
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 				"우리집",
 				"서울시",
@@ -379,7 +350,6 @@ class CustomerAddressServiceTest {
 			when(userAddressRepository.save(any(UserAddress.class)))
 				.thenThrow(new DataAccessResourceFailureException("Simulated DB error"));
 
-			// When & Then
 			GeneralException ex = assertThrows(
 				GeneralException.class,
 				() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
@@ -387,7 +357,6 @@ class CustomerAddressServiceTest {
 
 			assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.ADDRESS_ADD_FAILED);
 
-			// Verify interactions
 			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(any(UserAddress.class));
 		}
@@ -395,12 +364,10 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("2. UUID 생성 실패 시 _INTERNAL_SERVER_ERROR 예외 발생")
 		void addUserAddress_Fail_UuidNotAssigned() {
-			// Given
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.save(any(UserAddress.class)))
 				.thenAnswer(inv -> {
 					UserAddress ua = inv.getArgument(0);
-					// addressId 를 의도적으로 null 로 반환
 					return UserAddress.builder()
 						.addressId(null)
 						.user(ua.getUser()).alias(ua.getAlias())
@@ -417,7 +384,6 @@ class CustomerAddressServiceTest {
 				true
 			);
 
-			// When & Then
 			GeneralException ex = assertThrows(
 				GeneralException.class,
 				() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
@@ -427,10 +393,6 @@ class CustomerAddressServiceTest {
 		}
 	}
 
-
-
-	// --- getCustomerAddresses 테스트 시작 ---
-
 	@Nested
 	@DisplayName("주소 목록 조회 성공 케이스")
 	class getAddressSuccessCases {
@@ -438,24 +400,21 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. 사용자의 주소 목록 1건 정상적으로 조회")
 		void getCustomerAddresses_Success_ReturnsSingleDto() {
-			// Given: 사용자가 1개의 주소를 가지고 있는 상황
 			UserAddress singleAddress = UserAddress.builder()
-				.addressId(UUID.fromString("11111111-1111-1111-1111-111111111111"))
-				.user(testUser)
-				.alias("우리집")
-				.address("서울시 강남구")
-				.addressDetail("101호")
-				.isDefault(true)
-				.build();
+					.addressId(UUID.fromString("11111111-1111-1111-1111-111111111111"))
+					.user(testUser)
+					.alias("우리집")
+					.address("서울시 강남구")
+					.addressDetail("101호")
+					.isDefault(true)
+					.build();
 			List<UserAddress> mockAddressList = List.of(singleAddress);
 
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(mockAddressList);
 
-			// When
 			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
 
-			// Then
 			assertThat(result).isNotNull();
 			assertThat(result.size()).isEqualTo(1);
 
@@ -479,10 +438,8 @@ class CustomerAddressServiceTest {
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(mockAddressList);
 
-			// When
 			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
 
-			// Then
 			assertThat(result).isNotNull();
 			assertThat(result.size()).isEqualTo(2);
 
@@ -505,14 +462,11 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("3. 주소가 없는 사용자의 경우 빈 리스트를 반환함")
 		void getCustomerAddresses_Success_WhenNoAddressesExist_ReturnsEmptyList() {
-			// Given
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(List.of()); // 빈 리스트 반환
 
-			// When
 			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
 
-			// Then
 			assertThat(result).isNotNull();
 			assertThat(result).isEmpty();
 
@@ -528,11 +482,9 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. 존재하지 않는 사용자로 조회 시 USER_NOT_FOUND 예외 발생")
 		void getCustomerAddresses_Fail_UserNotFound() {
-			// Given
 			long nonExistentUserId = 9999L;
 			when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
 
-			// When & Then
 			GeneralException ex = assertThrows(GeneralException.class,
 				() -> customerAddressService.getCustomerAddresses(nonExistentUserId));
 
@@ -548,12 +500,10 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. DB 조회 중 오류 발생 시 _INTERNAL_SERVER_ERROR 예외 발생")
 		void getCustomerAddresses_Exception_DbError() {
-			// Given
 			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId()))
 				.thenThrow(new DataAccessResourceFailureException("Simulated DB Connection Failure"));
 
-			// When & Then
 			GeneralException ex = assertThrows(GeneralException.class,
 				() -> customerAddressService.getCustomerAddresses(testUser.getUserId()));
 
