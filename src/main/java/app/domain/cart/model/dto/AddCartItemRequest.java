@@ -16,13 +16,13 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AddCartItemRequest {
 
-	@NotNull
+	@NotNull(message = "메뉴 ID는 필수입니다.")
 	private UUID menuId;
 
-	@NotNull
+	@NotNull(message = "매장 ID는 필수입니다.")
 	private UUID storeId;
 
-	@NotNull
+	@NotNull(message = "수량은 필수입니다.")
 	@Min(value = 1, message = "수량은 1 이상이어야 합니다.")
 	private Integer quantity;
 }

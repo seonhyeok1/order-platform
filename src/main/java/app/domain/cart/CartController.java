@@ -17,10 +17,9 @@ import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
 import app.global.apiPayload.ApiResponse;
-import app.global.apiPayload.code.status.ErrorStatus;
-import app.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "cart", description = "장바구니 관련 API")
@@ -33,10 +32,7 @@ public class CartController {
 	@Operation(summary = "장바구니 아이템 추가 API", description = "장바구니에 메뉴 아이템을 추가합니다. 다른 매장의 메뉴 추가 시 기존 장바구니는 초기화됩니다.")
 	@PostMapping("/item")
 	public ApiResponse<String> addItemToCart(@AuthenticationPrincipal
-	org.springframework.security.core.userdetails.User principal, @RequestBody AddCartItemRequest request) {
-		if (request.getQuantity() <= 0) {
-			throw new GeneralException(ErrorStatus.INVALID_QUANTITY);
-		}
+	org.springframework.security.core.userdetails.User principal, @Valid @RequestBody AddCartItemRequest request) {
 		Long userId = Long.parseLong(principal.getUsername());
 		String result = cartService.addCartItem(userId, request);
 		return ApiResponse.onSuccess(result);
@@ -45,8 +41,8 @@ public class CartController {
 	@Operation(summary = "장바구니 아이템 수량 수정 API", description = "장바구니에 있는 특정 메뉴의 수량을 수정합니다.")
 	@PatchMapping("/item/{menuId}/{quantity}")
 	public ApiResponse<String> updateItemInCart(@AuthenticationPrincipal
-		org.springframework.security.core.userdetails.User principal, @PathVariable UUID menuId,
-		@PathVariable int quantity) {
+		org.springframework.security.core.userdetails.User principal, @Valid @PathVariable UUID menuId,
+		@Valid @PathVariable int quantity) {
 		Long userId = Long.parseLong(principal.getUsername());
 		String result = cartService.updateCartItem(userId, menuId, quantity);
 		return ApiResponse.onSuccess(result);
@@ -55,7 +51,7 @@ public class CartController {
 	@Operation(summary = "장바구니 아이템 삭제 API", description = "장바구니에서 특정 메뉴를 삭제합니다.")
 	@DeleteMapping("/item/{menuId}")
 	public ApiResponse<String> removeItemFromCart(@AuthenticationPrincipal
-	org.springframework.security.core.userdetails.User principal, @PathVariable UUID menuId) {
+	org.springframework.security.core.userdetails.User principal, @Valid @PathVariable UUID menuId) {
 		Long userId = Long.parseLong(principal.getUsername());
 		String result = cartService.removeCartItem(userId, menuId);
 

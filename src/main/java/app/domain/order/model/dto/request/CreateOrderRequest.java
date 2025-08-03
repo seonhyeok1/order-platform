@@ -18,21 +18,21 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreateOrderRequest {
 
-	@NotNull
+	@NotNull(message = "결제 방법은 필수입니다.")
 	private PaymentMethod paymentMethod;
 
-	@NotNull
+	@NotNull(message = "주문 채널은 필수입니다.")
 	private OrderChannel orderChannel;
 
-	@NotNull
+	@NotNull(message = "수령 방법은 필수입니다.")
 	private ReceiptMethod receiptMethod;
 
 	private String requestMessage;
 
-	@NotNull
+	@NotNull(message = "총 금액은 필수입니다.")
 	@Positive(message = "총 금액은 양의 정수여야 합니다.")
 	private Long totalPrice;
 
-	@NotBlank
+	@NotBlank(message = "배송 주소는 필수입니다.")
 	private String deliveryAddress;
 }
