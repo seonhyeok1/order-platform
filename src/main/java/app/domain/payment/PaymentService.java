@@ -179,6 +179,10 @@ public class PaymentService {
 		try {
 			Orders order = getOrderById(request.getOrderId());
 
+			if (!order.isRefundable()) {
+				throw new GeneralException(ErrorStatus.PAYMENT_NOT_REFUNDABLE);
+			}
+
 			Payment payment = paymentRepository.findByOrdersId(request.getOrderId())
 				.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 

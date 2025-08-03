@@ -214,8 +214,19 @@ class PaymentServiceTest {
 	@Test
 	@DisplayName("결제 취소 - 비즈니스 로직 검증")
 	void cancelPayment_BusinessLogic_Validation() {
-		// Given
-		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
+		// Given - isRefundable = true로 설정
+		Orders refundableOrder = Orders.builder()
+			.ordersId(orderId)
+			.user(User.builder().userId(userId).build())
+			.store(Store.builder().storeId(UUID.randomUUID()).build())
+			.totalPrice(10000L)
+			.paymentMethod(PaymentMethod.CREDIT_CARD)
+			.orderStatus(OrderStatus.PENDING)
+			.orderHistory("pending:" + "2024-01-01 10:00:00")
+			.isRefundable(true)
+			.build();
+
+		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(refundableOrder));
 		when(paymentRepository.findByOrdersId(orderId)).thenReturn(Optional.of(payment));
 		when(paymentEtcRepository.save(any(PaymentEtc.class))).thenReturn(mock(PaymentEtc.class));
 
@@ -259,8 +270,19 @@ class PaymentServiceTest {
 	@Test
 	@DisplayName("결제 취소 실패 - 결제 정보를 찾을 수 없음")
 	void cancelPayment_PaymentNotFound() {
-		// Given
-		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
+		// Given - isRefundable = true로 설정
+		Orders refundableOrder = Orders.builder()
+			.ordersId(orderId)
+			.user(User.builder().userId(userId).build())
+			.store(Store.builder().storeId(UUID.randomUUID()).build())
+			.totalPrice(10000L)
+			.paymentMethod(PaymentMethod.CREDIT_CARD)
+			.orderStatus(OrderStatus.PENDING)
+			.orderHistory("pending:" + "2024-01-01 10:00:00")
+			.isRefundable(true)
+			.build();
+
+		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(refundableOrder));
 		when(paymentRepository.findByOrdersId(orderId)).thenReturn(Optional.empty());
 
 		// When & Then
@@ -274,5 +296,34 @@ class PaymentServiceTest {
 		verify(ordersRepository).findById(orderId);
 		verify(paymentRepository).findByOrdersId(orderId);
 		verify(paymentRepository, never()).save(any());
+	}
+
+	@Test
+	@DisplayName("결제 취소 실패 - 환불 불가능")
+	void cancelPayment_NotRefundable() {
+		// Given
+		Orders nonRefundableOrder = Orders.builder()
+			.ordersId(orderId)
+			.user(User.builder().userId(userId).build())
+			.store(Store.builder().storeId(UUID.randomUUID()).build())
+			.totalPrice(10000L)
+			.paymentMethod(PaymentMethod.CREDIT_CARD)
+			.orderStatus(OrderStatus.PENDING)
+			.orderHistory("pending:" + "2024-01-01 10:00:00")
+			.isRefundable(false)
+			.build();
+
+		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(nonRefundableOrder));
+
+		// When & Then
+		assertThatThrownBy(() -> paymentService.cancelPayment(cancelRequest))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException)ex;
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("환불이 불가능한 주문입니다.");
+			});
+
+		verify(ordersRepository).findById(orderId);
+		verify(paymentRepository, never()).findByOrdersId(any());
 	}
 }

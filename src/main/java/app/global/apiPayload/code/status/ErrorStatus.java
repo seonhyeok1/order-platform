@@ -112,8 +112,9 @@ public enum ErrorStatus implements BaseErrorCode {
 
 	// Payment 관련
 	PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT001", "결제 승인 정보가 결제 요청할 때의 정보와 다릅니다."),
-	TOSS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT002", "토스페이먼츠 API 오류가 발생했습니다."),
-	PAYMENT_CONFIRM_FAILED(HttpStatus.BAD_REQUEST, "PAYMENT003", "결제 승인이 실패했습니다."),
+	PAYMENT_CONFIRM_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT002", "결제 승인에 실패했습니다."),
+	TOSS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT003", "토스페이먼츠 API 오류가 발생했습니다."),
+	PAYMENT_NOT_REFUNDABLE(HttpStatus.BAD_REQUEST, "PAYMENT004", "환불이 불가능한 주문입니다."),
 
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
