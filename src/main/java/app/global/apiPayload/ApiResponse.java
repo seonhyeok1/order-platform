@@ -4,16 +4,22 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import app.global.apiPayload.code.status.SuccessStatus;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @JsonPropertyOrder({"resultCode", "message", "result"})
-public record ApiResponse<T>(
+@Getter
+@NoArgsConstructor
+@AllArgsConstructor
+public class ApiResponse<T> {
 
-	String resultCode,
-	String message,
+	private String resultCode;
+	private String message;
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	T result
-) {
+	private T result;
+
 	// 성공 응답
 	public static <T> ApiResponse<T> onSuccess(T result) {
 		return new ApiResponse<>(SuccessStatus._OK.getCode(), "success", result);
