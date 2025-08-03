@@ -36,7 +36,7 @@ public class ReviewService {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
-		Orders order = ordersRepository.findById(request.ordersId())
+		Orders order = ordersRepository.findById(request.getOrdersId())
 			.orElseThrow(() -> new GeneralException(ReviewErrorStatus.ORDER_NOT_FOUND));
 
 		if (!order.getUser().equals(user)) {
@@ -51,8 +51,8 @@ public class ReviewService {
 			.user(user)
 			.store(order.getStore())
 			.orders(order)
-			.rating(request.rating())
-			.content(request.content())
+			.rating(request.getRating())
+			.content(request.getContent())
 			.build();
 
 		Review savedReview = reviewRepository.save(review);

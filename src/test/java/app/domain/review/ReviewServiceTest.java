@@ -115,7 +115,7 @@ class ReviewServiceTest {
 	void createReview_Fail_Forbidden() {
 		CreateReviewRequest request = new CreateReviewRequest(order.getOrdersId(), 5L, "Great!");
 		when(userRepository.findById(otherUser.getUserId())).thenReturn(Optional.of(otherUser));
-		when(ordersRepository.findById(request.ordersId())).thenReturn(Optional.of(order));
+		when(ordersRepository.findById(request.getOrdersId())).thenReturn(Optional.of(order));
 
 		GeneralException exception = assertThrows(GeneralException.class,
 			() -> reviewService.createReview(otherUser.getUserId(), request));
@@ -149,11 +149,11 @@ class ReviewServiceTest {
 		assertNotNull(responses);
 		assertEquals(1, responses.size());
 		GetReviewResponse response = responses.get(0);
-		assertEquals(review.getReviewId(), response.reviewId());
-		assertEquals(user.getUsername(), response.customerName());
-		assertEquals(store.getStoreName(), response.storeName());
-		assertEquals(review.getRating(), response.rating());
-		assertEquals(review.getContent(), response.content());
+		assertEquals(review.getReviewId(), response.getReviewId());
+		assertEquals(user.getUsername(), response.getCustomerName());
+		assertEquals(store.getStoreName(), response.getStoreName());
+		assertEquals(review.getRating(), response.getRating());
+		assertEquals(review.getContent(), response.getContent());
 		verify(reviewRepository, times(1)).findByUser(user);
 	}
 

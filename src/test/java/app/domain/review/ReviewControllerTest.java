@@ -105,10 +105,10 @@ class ReviewControllerTest {
 			.andExpect(jsonPath("$.message").value(ReviewSuccessStatus.GET_REVIEWS_SUCCESS.getMessage()))
 			.andExpect(jsonPath("$.result").isArray())
 			.andExpect(jsonPath("$.result.length()").value(1))
-			.andExpect(jsonPath("$.result[0].customerName").value(reviewResponse.customerName()))
-			.andExpect(jsonPath("$.result[0].storeName").value(reviewResponse.storeName()))
-			.andExpect(jsonPath("$.result[0].rating").value(reviewResponse.rating()))
-			.andExpect(jsonPath("$.result[0].content").value(reviewResponse.content()));
+			.andExpect(jsonPath("$.result[0].customerName").value(reviewResponse.getCustomerName()))
+			.andExpect(jsonPath("$.result[0].storeName").value(reviewResponse.getStoreName()))
+			.andExpect(jsonPath("$.result[0].rating").value(reviewResponse.getRating()))
+			.andExpect(jsonPath("$.result[0].content").value(reviewResponse.getContent()));
 	}
 
 	@Test

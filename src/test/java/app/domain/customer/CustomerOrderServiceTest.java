@@ -84,8 +84,8 @@ class CustomerOrderServiceTest {
 		List<CustomerOrderResponse> result = customerOrderService.getCustomerOrders(testUser.getUserId());
 
 		assertThat(result).hasSize(1);
-		assertThat(result.get(0).storeName()).isEqualTo("Test Store");
-		assertThat(result.get(0).totalPrice()).isEqualTo(15000L);
+		assertThat(result.get(0).getStoreName()).isEqualTo("Test Store");
+		assertThat(result.get(0).getTotalPrice()).isEqualTo(15000L);
 
 		verify(userRepository, times(1)).findById(testUser.getUserId());
 		verify(ordersRepository, times(1)).findByUser(testUser);
