@@ -274,7 +274,9 @@ class ManagerControllerTest {
 			4.3,
 			2L,
 			"adfjf@naver",
-			"김길동"
+			"akdfj1234",
+			"김길동",
+			"010123434"
 		);
 		when(managerService.getStoreDetail(storeId)).thenReturn(response);
 
