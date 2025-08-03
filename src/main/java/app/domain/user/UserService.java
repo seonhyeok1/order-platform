@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import app.domain.cart.model.CartRepository;
+import app.domain.cart.model.entity.Cart;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.CreateUserReq;
 import app.domain.user.model.dto.request.LoginRequest;
@@ -28,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final CartRepository cartRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
@@ -57,6 +60,7 @@ public class UserService {
 		// 4. 유저 등록 및 예외 처리
 		try {
 			User savedUser = userRepository.save(user);
+			cartRepository.save(Cart.builder().user(savedUser).build());
 			return savedUser.getUserId().toString();
 		} catch (DataAccessException e) {
 			// 사전 검사를 통과했음에도 DB 에러가 발생한 경우 (e.g., Race Condition, DB 연결 끊김 등)
