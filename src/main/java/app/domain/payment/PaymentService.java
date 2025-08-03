@@ -98,7 +98,7 @@ public class PaymentService {
 				String idempotencyKey = generateIdempotencyKey(userId, request.getOrderId());
 
 				JSONObject obj = new JSONObject();
-				obj.put("orderId", request.getAmount());
+				obj.put("orderId", request.getOrderId());
 				obj.put("amount", request.getAmount());
 				obj.put("paymentKey", request.getPaymentKey());
 
@@ -164,7 +164,7 @@ public class PaymentService {
 	@Transactional
 	public String failSave(PaymentFailRequest request) {
 		try {
-			Orders order = getOrderById(request.getOrderId());
+			Orders order = getOrderById(UUID.fromString(request.getOrderId()));
 			order.updateOrderStatus(OrderStatus.FAILED);
 			return "결제 실패 처리가 완료되었습니다.";
 		} catch (GeneralException e) {
