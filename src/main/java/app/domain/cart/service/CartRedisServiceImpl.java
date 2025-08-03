@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class CartRedisServiceImpl implements CartRedisService {
 	private final RedisTemplate<String, String> redisTemplate;
-	private final ObjectMapper objectMapper;
+	private final ObjectMapper redisObjectMapper;
 	private static final Duration CART_TTL = Duration.ofMinutes(30);
 
 	@Override
@@ -34,7 +34,7 @@ public class CartRedisServiceImpl implements CartRedisService {
 			redisTemplate.delete(key);
 
 			for (RedisCartItem item : cartItems) {
-				String itemJson = objectMapper.writeValueAsString(item);
+				String itemJson = redisObjectMapper.writeValueAsString(item);
 				redisTemplate.opsForHash().put(key, item.getMenuId().toString(), itemJson);
 			}
 
@@ -70,7 +70,7 @@ public class CartRedisServiceImpl implements CartRedisService {
 			return redisTemplate.opsForHash().values(key).stream()
 				.map(value -> {
 					try {
-						return objectMapper.readValue((String)value, RedisCartItem.class);
+						return redisObjectMapper.readValue((String)value, RedisCartItem.class);
 					} catch (JsonProcessingException e) {
 						log.error("장바구니 아이템 파싱 실패 - userId: {}", userId, e);
 						throw new GeneralException(ErrorStatus.CART_ITEM_PARSE_FAILED);
