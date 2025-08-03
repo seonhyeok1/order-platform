@@ -220,14 +220,18 @@ class CartServiceTest {
 	void syncRedisToDb() {
 		RedisCartItem redisItem = RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(3).build();
 		Cart cart = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(userId).build()).build();
+		Menu menu = Menu.builder().menuId(menuId).store(Store.builder().storeId(storeId).build()).build();
 
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(List.of(redisItem));
 		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
 
 		cartService.syncRedisToDb(userId);
 
 		verify(cartItemRepository).deleteByCart_CartId(cart.getCartId());
+		verify(menuRepository).existsById(menuId);
 		verify(cartItemRepository).saveAll(argThat((List<CartItem> items) ->
 			items.size() == 1 &&
 				items.get(0).getQuantity() == 3
@@ -242,16 +246,20 @@ class CartServiceTest {
 		when(cartRedisService.extractUserIdFromKey("cart:1")).thenReturn(1L);
 		when(cartRedisService.extractUserIdFromKey("cart:2")).thenReturn(2L);
 
+		UUID menuId1 = UUID.randomUUID();
+		UUID menuId2 = UUID.randomUUID();
 		RedisCartItem redisItem1 = RedisCartItem.builder()
-			.menuId(UUID.randomUUID())
+			.menuId(menuId1)
 			.storeId(storeId)
 			.quantity(1)
 			.build();
 		RedisCartItem redisItem2 = RedisCartItem.builder()
-			.menuId(UUID.randomUUID())
+			.menuId(menuId2)
 			.storeId(storeId)
 			.quantity(2)
 			.build();
+		when(cartRedisService.existsCartInRedis(1L)).thenReturn(true);
+		when(cartRedisService.existsCartInRedis(2L)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(1L)).thenReturn(List.of(redisItem1));
 		when(cartRedisService.getCartFromRedis(2L)).thenReturn(List.of(redisItem2));
 
@@ -259,6 +267,13 @@ class CartServiceTest {
 		Cart cart2 = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(2L).build()).build();
 		when(cartRepository.findByUser_UserId(1L)).thenReturn(Optional.of(cart1));
 		when(cartRepository.findByUser_UserId(2L)).thenReturn(Optional.of(cart2));
+
+		when(menuRepository.existsById(menuId1)).thenReturn(true);
+		when(menuRepository.existsById(menuId2)).thenReturn(true);
+		when(menuRepository.findById(menuId1)).thenReturn(Optional.of(
+			Menu.builder().menuId(menuId1).store(Store.builder().storeId(storeId).build()).build()));
+		when(menuRepository.findById(menuId2)).thenReturn(Optional.of(
+			Menu.builder().menuId(menuId2).store(Store.builder().storeId(storeId).build()).build()));
 
 		cartService.syncAllCartsToDb();
 

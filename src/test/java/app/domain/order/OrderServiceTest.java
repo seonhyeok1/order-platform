@@ -30,6 +30,7 @@ import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
+import app.domain.order.service.OrderDelayService;
 import app.domain.order.service.OrderService;
 import app.domain.store.model.entity.Store;
 import app.domain.store.model.entity.StoreRepository;
@@ -57,6 +58,9 @@ class OrderServiceTest {
 
 	@Mock
 	private MenuRepository menuRepository;
+
+	@Mock
+	private OrderDelayService orderDelayService;
 
 	@InjectMocks
 	private OrderService orderService;
@@ -116,6 +120,7 @@ class OrderServiceTest {
 		verify(menuRepository).findById(menuId);
 		verify(ordersRepository).save(any(Orders.class));
 		verify(orderItemRepository).save(any(OrderItem.class));
+		verify(orderDelayService).scheduleRefundDisable(any(UUID.class));
 	}
 
 	@Test

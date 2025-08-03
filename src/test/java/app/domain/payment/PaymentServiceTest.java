@@ -84,7 +84,7 @@ class PaymentServiceTest {
 			"10000"
 		);
 
-		failRequest = new PaymentFailRequest(orderId, "INVALID_CARD", "유효하지 않은 카드입니다.");
+		failRequest = new PaymentFailRequest(String.valueOf(orderId), "INVALID_CARD", "유효하지 않은 카드입니다.");
 
 		cancelRequest = new CancelPaymentRequest(orderId, "구매자가 취소를 원함");
 
@@ -183,8 +183,6 @@ class PaymentServiceTest {
 	void failSave_Success() {
 		// Given
 		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
-		when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
-		when(paymentEtcRepository.save(any(PaymentEtc.class))).thenReturn(mock(PaymentEtc.class));
 
 		// When
 		String result = paymentService.failSave(failRequest);
@@ -192,8 +190,7 @@ class PaymentServiceTest {
 		// Then
 		assertThat(result).isEqualTo("결제 실패 처리가 완료되었습니다.");
 		verify(ordersRepository).findById(orderId);
-		verify(paymentRepository).save(any(Payment.class));
-		verify(paymentEtcRepository).save(any(PaymentEtc.class));
+		// updateOrderStatus는 엔티티 내부 메서드이므로 별도 검증 불필요
 	}
 
 	@Test
