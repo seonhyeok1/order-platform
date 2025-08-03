@@ -1,4 +1,4 @@
-package app.domain.order;
+package app.domain.order.service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -41,6 +41,7 @@ public class OrderService {
 	private final UserRepository userRepository;
 	private final StoreRepository storeRepository;
 	private final MenuRepository menuRepository;
+	private final OrderDelayService orderDelayService;
 
 	@Transactional
 	public UUID createOrder(Long userId, CreateOrderRequest request) {
@@ -105,6 +106,8 @@ public class OrderService {
 					.build();
 				orderItemRepository.save(orderItem);
 			}
+
+			orderDelayService.scheduleRefundDisable(savedOrder.getOrdersId());
 
 			return savedOrder.getOrdersId();
 		} catch (IllegalArgumentException e) {
