@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.order.model.dto.request.CreateOrderRequest;
 import app.domain.order.model.dto.response.OrderDetailResponse;
+import app.domain.order.service.OrderService;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
