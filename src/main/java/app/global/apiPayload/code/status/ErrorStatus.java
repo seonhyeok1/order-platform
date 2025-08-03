@@ -31,7 +31,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE003", "존재하지 않는 가맹점입니다."),
 	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE004", "해당 가맹점을 찾을 수 없습니다."),
 	INVALID_STORE_STATUS(HttpStatus.NOT_FOUND,"STORE005","상태명이 올바르지 않습니다."),
-	INVALID_STATUS_CHANGE(HttpStatus.BAD_REQUEST,"SROER006","이미 변경이 완료 되었습니다."),
+	INVALID_STATUS_CHANGE(HttpStatus.BAD_REQUEST,"STORE006","이미 변경이 완료 되었습니다."),
 	// 인증 관련
 	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
 
