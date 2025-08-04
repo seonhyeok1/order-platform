@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.status.StoreErrorCode;
-import app.domain.store.status.StoreException;
 import lombok.RequiredArgsConstructor;
 
 @Service

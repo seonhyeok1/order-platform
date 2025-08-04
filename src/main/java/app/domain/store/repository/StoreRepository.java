@@ -6,10 +6,10 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import app.domain.store.model.enums.StoreAcceptStatus;
 
 import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
+import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.entity.User;
 
 @Repository

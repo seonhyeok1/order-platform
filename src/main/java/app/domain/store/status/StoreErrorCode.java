@@ -2,14 +2,15 @@ package app.domain.store.status;
 
 import org.springframework.http.HttpStatus;
 
+import app.global.apiPayload.code.BaseCode;
 import app.global.apiPayload.code.BaseErrorCode;
-import app.global.apiPayload.code.ErrorReasonDTO;
+import app.global.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum StoreErrorCode implements BaseErrorCode {
+public enum StoreErrorCode implements BaseCode {
 
 	STORE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE001", "존재하지 않는 매장 카테고리입니다."),
 	REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE002", "존재하지 않는 지역입니다."),
@@ -33,16 +34,17 @@ public enum StoreErrorCode implements BaseErrorCode {
 	private final String message;
 
 	@Override
-	public ErrorReasonDTO getReason() {
-		return ErrorReasonDTO.builder()
+	public ReasonDTO getReason() {
+		return ReasonDTO.builder()
 			.message(message)
 			.code(code)
 			.build();
 	}
 
 	@Override
-	public ErrorReasonDTO getReasonHttpStatus() {
-		return ErrorReasonDTO.builder()
+	public ReasonDTO getReasonHttpStatus() {
+		return ReasonDTO.builder()
+			.isSuccess(false)
 			.message(message)
 			.code(code)
 			.httpStatus(httpStatus)

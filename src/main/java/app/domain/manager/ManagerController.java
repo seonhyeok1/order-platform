@@ -19,7 +19,7 @@ import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
 import app.domain.order.model.dto.response.OrderDetailResponse;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.status.StoreAcceptStatus;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;

@@ -2,7 +2,7 @@ package app.domain.store.model;
 
 import org.springframework.data.domain.Pageable;
 import app.domain.customer.dto.response.GetStoreListResponse;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.status.StoreAcceptStatus;
 import app.global.apiPayload.PagedResponse;
 
 public interface StoreQueryRepository {

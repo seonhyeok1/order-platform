@@ -19,7 +19,6 @@ import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.store.status.StoreErrorCode;
-import app.domain.store.status.StoreException;
 import lombok.RequiredArgsConstructor;
 
 @Service

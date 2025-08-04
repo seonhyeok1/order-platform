@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
+import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.menu.model.MenuRepository;
@@ -21,7 +22,7 @@ import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
+
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import jakarta.transaction.Transactional;

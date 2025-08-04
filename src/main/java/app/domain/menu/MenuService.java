@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.dto.response.GetMenuListResponse;
 import app.domain.menu.model.entity.Menu;
-import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.repository.StoreRepository;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
