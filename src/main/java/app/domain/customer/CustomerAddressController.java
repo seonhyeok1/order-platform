@@ -30,18 +30,18 @@ public class CustomerAddressController {
 	private final CustomerAddressService customerAddressService;
 
 	@GetMapping("/list")
-	@Operation(summary = "사용자 주소지 목록 조회", description = "")
+	@Operation(summary = "/api/customer/address/list", description = "사용자 주소지 목록 조회")
 	public ApiResponse<List<GetCustomerAddressListResponse>> GetCustomerAddresses (
-			@AuthenticationPrincipal UserDetails principal) {
+		@AuthenticationPrincipal UserDetails principal) {
 		Long userId = getUserIdFromPrincipal(principal);
 		return ApiResponse.onSuccess(CustomerSuccessStatus.ADDRESS_LIST_FOUND, customerAddressService.getCustomerAddresses(userId));
 	}
 
 	@PostMapping("/add")
-	@Operation(summary = "사용자 주소지 등록", description = "")
+	@Operation(summary = "/api/customer/address/add", description = "사용자 주소지 등록")
 	public ApiResponse<AddCustomerAddressResponse> AddCustomerAddress(
-			@AuthenticationPrincipal UserDetails principal,
-			@RequestBody @Valid AddCustomerAddressRequest request){
+		@AuthenticationPrincipal UserDetails principal,
+		@RequestBody @Valid AddCustomerAddressRequest request){
 		Long userId = getUserIdFromPrincipal(principal);
 
 		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(userId, request);
@@ -52,22 +52,10 @@ public class CustomerAddressController {
 		if (principal == null || !StringUtils.hasText(principal.getUsername())) {
 			throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND);
 		}
-
-		Long userId;
-
 		try {
 			return Long.parseLong(principal.getUsername());
 		} catch (NumberFormatException e) {
 			throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus._BAD_REQUEST);
 		}
-		if (!StringUtils.hasText(request.address())) {
-			throw new IllegalArgumentException("Address is required.");
-		}
-		if (!StringUtils.hasText(request.addressDetail())) {
-			throw new IllegalArgumentException("상세 주소는 필수입니다.");
-		}
-
-		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(userId, request);
-		return ApiResponse.onSuccess(response);
 	}
 }
