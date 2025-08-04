@@ -19,7 +19,6 @@ import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
 import app.domain.store.status.StoreSuccessStatus;
-import app.global.SecurityUtil;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.exception.GeneralException;
 import jakarta.validation.Valid;
@@ -33,7 +32,6 @@ public class StoreController {
 	private final StoreService storeService;
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
-	private final SecurityUtil securityUtil;
 
 	@PostMapping
 	public ApiResponse<StoreApproveResponse> createStore(@Valid @RequestBody StoreApproveRequest request) {
