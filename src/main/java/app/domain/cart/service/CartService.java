@@ -17,7 +17,7 @@ import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
-import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.repository.StoreRepository;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;

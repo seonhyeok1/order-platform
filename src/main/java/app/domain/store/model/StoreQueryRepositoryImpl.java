@@ -1,32 +1,28 @@
 package app.domain.store.model;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import static com.querydsl.core.types.dsl.Expressions.*;
 
 import app.domain.customer.dto.response.GetStoreListResponse;
 import app.domain.review.model.entity.QReview;
 import app.domain.store.model.entity.QStore;
-import app.domain.store.model.entity.Store;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.status.StoreAcceptStatus;
 import app.global.apiPayload.PagedResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Repository
 public class StoreQueryRepositoryImpl implements StoreQueryRepository {
 
 	private final JPAQueryFactory queryFactory;
+
 	@Override
 	public PagedResponse<GetStoreListResponse> searchStoresWithAvgRating(
 		String keyword,
