@@ -95,6 +95,7 @@ class ReviewServiceTest {
 		GeneralException exception = assertThrows(GeneralException.class,
 			() -> reviewService.createReview(nonExistentUserId, request));
 		assertEquals(ErrorStatus.USER_NOT_FOUND, exception.getCode());
+
 	}
 
 	@Test
@@ -121,6 +122,7 @@ class ReviewServiceTest {
 			() -> reviewService.createReview(otherUser.getUserId(), request));
 
 		assertEquals(ErrorStatus._FORBIDDEN, exception.getCode());
+
 	}
 
 	@Test
@@ -136,6 +138,7 @@ class ReviewServiceTest {
 			() -> reviewService.createReview(user.getUserId(), request));
 
 		assertEquals(ReviewErrorStatus.REVIEW_ALREADY_EXISTS, exception.getCode());
+
 	}
 
 	@Test
@@ -166,6 +169,7 @@ class ReviewServiceTest {
 		GeneralException exception = assertThrows(GeneralException.class,
 			() -> reviewService.getReviews(nonExistentUserId));
 		assertEquals(ErrorStatus.USER_NOT_FOUND, exception.getCode());
+
 	}
 
 	@Test
@@ -177,5 +181,6 @@ class ReviewServiceTest {
 		GeneralException exception = assertThrows(GeneralException.class,
 			() -> reviewService.getReviews(user.getUserId()));
 		assertEquals(ReviewErrorStatus.NO_REVIEWS_FOUND_FOR_USER, exception.getCode());
+
 	}
 }

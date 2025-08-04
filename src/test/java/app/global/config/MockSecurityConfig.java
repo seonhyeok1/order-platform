@@ -25,7 +25,9 @@ public class MockSecurityConfig {
 				.requestMatchers("/customer/order/**").hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/owner/**").hasRole(UserRole.OWNER.name())
 				.requestMatchers("/user/signup", "/user/login").permitAll()
+				.requestMatchers("/manager/**").hasRole(UserRole.MANAGER.name())
 				.anyRequest().denyAll()
+
 			);
 		return http.build();
 	}

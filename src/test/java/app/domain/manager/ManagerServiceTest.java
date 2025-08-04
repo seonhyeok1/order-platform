@@ -1,7 +1,7 @@
 package app.domain.manager;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -23,14 +23,21 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import app.domain.manager.dto.response.GetCustomListResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
+import app.domain.manager.dto.response.GetCustomerListResponse;
+import app.domain.manager.dto.response.GetStoreDetailResponse;
+import app.domain.customer.dto.response.GetStoreListResponse;
+import app.domain.menu.model.entity.Category;
 import app.domain.order.model.OrderItemRepository;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.Orders;
+import app.domain.review.model.ReviewRepository;
+import app.domain.store.model.StoreQueryRepository;
+import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
+import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.model.enums.StoreAcceptStatus;
 import app.domain.user.UserSearchRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.user.model.UserRepository;
@@ -61,6 +68,16 @@ class ManagerServiceTest {
 	@Mock
 	private OrderItemRepository orderItemRepository;
 
+	@Mock
+	private StoreRepository storeRepository;
+
+	@Mock
+	private ReviewRepository reviewRepository;
+
+	@Mock
+	private StoreQueryRepository storeQueryRepository;
+
+
 	@InjectMocks
 	private ManagerService managerService;
 
@@ -84,11 +101,11 @@ class ManagerServiceTest {
 
 		when(userRepository.findAllByUserRole(UserRole.CUSTOMER, pageable)).thenReturn(page);
 
-		PagedResponse<GetCustomListResponse> result = managerService.getAllCustomer(pageable);
+		PagedResponse<GetCustomerListResponse> result = managerService.getAllCustomer(pageable);
 
-		assertThat(result.content()).hasSize(2);
-		assertThat(result.content())
-			.extracting(GetCustomListResponse::email)
+		assertThat(result.getContent()).hasSize(2);
+		assertThat(result.getContent())
+			.extracting(GetCustomerListResponse::getEmail)
 			.containsExactly("user1@example.com", "user2@example.com");
 	}
 
@@ -110,8 +127,8 @@ class ManagerServiceTest {
 
 		when(userRepository.findAllByUserRole(eq(UserRole.CUSTOMER), eq(pageable))).thenReturn(page);
 
-		PagedResponse<GetCustomListResponse> result = managerService.getAllCustomer(pageable);
-		assertThat(result.content()).hasSize(10);
+		PagedResponse<GetCustomerListResponse> result = managerService.getAllCustomer(pageable);
+		assertThat(result.getContent()).hasSize(10);
 	}
 
 	@Test
@@ -137,10 +154,10 @@ class ManagerServiceTest {
 			eq(PageRequest.of(0, 10, Sort.by("createdAt").descending()))))
 			.thenReturn(page);
 
-		PagedResponse<GetCustomListResponse> result = managerService.getAllCustomer(
+		PagedResponse<GetCustomerListResponse> result = managerService.getAllCustomer(
 			PageRequest.of(0, 10, Sort.by("createdAt").descending()));
 
-		assertThat(result.content().get(0).email()).isEqualTo("test1@example.com");
+		assertThat(result.getContent().get(0).getEmail()).isEqualTo("test1@example.com");
 	}
 
 	@Test
@@ -176,8 +193,8 @@ class ManagerServiceTest {
 
 		GetCustomerDetailResponse result = managerService.getCustomerDetailById(user.getUserId());
 
-		assertThat(result.name()).isEqualTo("홍길동");
-		assertThat(result.address()).hasSize(2);
+		assertThat(result.getName()).isEqualTo("홍길동");
+		assertThat(result.getAddress()).hasSize(2);
 	}
 
 	@Test
@@ -210,8 +227,8 @@ class ManagerServiceTest {
 
 		PagedResponse<OrderDetailResponse> result = managerService.getCustomerOrderListById(userId, pageable);
 
-		assertThat(result.totalElements()).isEqualTo(1);
-		assertThat(result.content()).hasSize(1);
+		assertThat(result.getTotalElements()).isEqualTo(1);
+		assertThat(result.getContent()).hasSize(1);
 	}
 
 	@DisplayName("사용자 상세 조회 시 주소 목록이 없을 경우 빈 리스트 반환")
@@ -230,9 +247,9 @@ class ManagerServiceTest {
 
 		GetCustomerDetailResponse result = managerService.getCustomerDetailById(userId);
 
-		assertThat(result.address()).isEmpty();
-		assertThat(result.name()).isEqualTo("홍길동");
-		assertThat(result.email()).isEqualTo("hong@test.com");
+		assertThat(result.getAddress()).isEmpty();
+		assertThat(result.getName()).isEqualTo("홍길동");
+		assertThat(result.getEmail()).isEqualTo("hong@test.com");
 
 		verify(userRepository, times(1)).findById(userId);
 		verify(userAddressRepository, times(1)).findAllByUserUserId(userId);
@@ -257,8 +274,8 @@ class ManagerServiceTest {
 
 		PagedResponse<OrderDetailResponse> result = managerService.getCustomerOrderListById(userId, pageable);
 
-		assertThat(result.content()).isEmpty();
-		assertThat(result.totalElements()).isEqualTo(0);
+		assertThat(result.getContent()).isEmpty();
+		assertThat(result.getTotalElements()).isEqualTo(0);
 	}
 
 	@Test
@@ -283,10 +300,10 @@ class ManagerServiceTest {
 		Page<User> page = new PageImpl<>(List.of(user1));
 		when(userRepositoryCustom.searchUser(eq(keyword), any(Pageable.class))).thenReturn(page);
 
-		PagedResponse<GetCustomListResponse> result = managerService.searchCustomer(keyword, pageable);
+		PagedResponse<GetCustomerListResponse> result = managerService.searchCustomer(keyword, pageable);
 
-		assertThat(result.content()).hasSize(1);
-		assertThat(result.content().get(0).name()).isEqualTo("testUser1");
+		assertThat(result.getContent()).hasSize(1);
+		assertThat(result.getContent().get(0).getName()).isEqualTo("testUser1");
 	}
 
 	@Test
@@ -299,10 +316,10 @@ class ManagerServiceTest {
 		Page<User> emptyPage = new PageImpl<>(Collections.emptyList());
 		when(userRepositoryCustom.searchUser(eq(keyword), any(Pageable.class))).thenReturn(emptyPage);
 
-		PagedResponse<GetCustomListResponse> result = managerService.searchCustomer(keyword, pageable);
+		PagedResponse<GetCustomerListResponse> result = managerService.searchCustomer(keyword, pageable);
 
-		assertThat(result.content()).isEmpty();
-		assertThat(result.totalElements()).isZero();
+		assertThat(result.getContent()).isEmpty();
+		assertThat(result.getTotalElements()).isZero();
 	}
 
 	@Test
@@ -340,4 +357,210 @@ class ManagerServiceTest {
 		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
 	}
 
+	//--------
+	@Test
+	@DisplayName("가게 상세 조회 성공")
+	void getStoreDetail_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Long ownerId = 1L;
+
+		User owner = User.builder()
+			.userId(ownerId)
+			.email("owner@example.com")
+			.username("홍길동")
+			.build();
+
+		Region region = Region.builder()
+			.regionName("마포구")
+			.build();
+
+		Category category = Category.builder()
+			.categoryName("한식")
+			.build();
+
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.description("국내산 족발 사용")
+			.address("서울시 마포구")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(15000L)
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.region(region)
+			.category(category)
+			.user(owner)
+			.build();
+
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+		when(reviewRepository.getAverageRatingByStore(storeId)).thenReturn(4.7);
+
+		// when
+		GetStoreDetailResponse response = managerService.getStoreDetail(storeId);
+
+		// then
+		assertThat(response.getStoreId()).isEqualTo(storeId);
+		assertThat(response.getStoreName()).isEqualTo("맛있는 족발집");
+		assertThat(response.getDescription()).isEqualTo("국내산 족발 사용");
+		assertThat(response.getAddress()).isEqualTo("서울시 마포구");
+		assertThat(response.getPhoneNumber()).isEqualTo("010-1234-5678");
+		assertThat(response.getMinOrderAmount()).isEqualTo(15000L);
+		assertThat(response.getRegionName()).isEqualTo("마포구");
+		assertThat(response.getCategoryName()).isEqualTo("한식");
+		assertThat(response.getAverageRating()).isEqualTo(4.7);
+		assertThat(response.getOwnerId()).isEqualTo(ownerId);
+		assertThat(response.getOwnerEmail()).isEqualTo("owner@example.com");
+		assertThat(response.getOwnerName()).isEqualTo("홍길동");
+	}
+
+	@Test
+	@DisplayName("가게 승인 처리 성공")
+	void approveStore_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Region region = Region.builder().regionName("마포구").build();
+		Category category = Category.builder().categoryName("한식").build();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.description("국내산 족발 사용")
+			.address("서울시 마포구")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(15000L)
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.region(region)
+			.category(category)
+			.build();
+		store.updateAcceptStatus(StoreAcceptStatus.PENDING);
+
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+
+		// when
+		String result = managerService.approveStore(storeId, StoreAcceptStatus.APPROVE);
+
+		// then
+		assertThat(result).contains("변경 되었습니다");
+		assertThat(store.getStoreAcceptStatus()).isEqualTo(StoreAcceptStatus.APPROVE);
+	}
+
+	@Test
+	@DisplayName("가게 리스트 조회 성공")
+	void getAllStore_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Pageable pageable = PageRequest.of(0, 10);
+
+		GetStoreListResponse dto = GetStoreListResponse.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.address("서울시 마포구")
+			.minOrderAmount(15000L)
+			.averageRating(4.0)
+			.build();
+
+		Page<GetStoreListResponse> page = new PageImpl<>(List.of(dto), pageable, 1);
+
+		given(storeQueryRepository.getAllStore(StoreAcceptStatus.APPROVE, pageable))
+			.willReturn(PagedResponse.from(page));
+
+		// when
+		PagedResponse<GetStoreListResponse> response = managerService.getAllStore(StoreAcceptStatus.APPROVE, pageable);
+
+		// then
+		assertThat(response.getContent()).hasSize(1);
+		assertThat(response.getContent().get(0).getStoreName()).isEqualTo("맛있는 족발집");
+		assertThat(response.getContent().get(0).getAverageRating()).isEqualTo(4.0);
+	}
+
+	@Test
+	@DisplayName("가게 키워드 검색 성공")
+	void searchStore_success() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Pageable pageable = PageRequest.of(0, 10);
+		GetStoreListResponse responseDto = GetStoreListResponse.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.address("서울시 마포구")
+			.minOrderAmount(15000L)
+			.averageRating(4.5)
+			.build();
+
+		Page<GetStoreListResponse> page = new PageImpl<>(List.of(responseDto), pageable, 1);
+		PagedResponse<GetStoreListResponse> pagedResponse = PagedResponse.from(page);
+
+		when(storeQueryRepository.searchStoresWithAvgRating("족발", StoreAcceptStatus.PENDING, pageable))
+			.thenReturn(pagedResponse);
+
+		// when
+		PagedResponse<GetStoreListResponse> response = managerService.searchStore(StoreAcceptStatus.PENDING, "족발", pageable);
+
+		// then
+		assertThat(response.getContent()).hasSize(1);
+		GetStoreListResponse dto = response.getContent().get(0);
+		assertThat(dto.getStoreId()).isEqualTo(storeId);
+		assertThat(dto.getStoreName()).isEqualTo("맛있는 족발집");
+		assertThat(dto.getAddress()).isEqualTo("서울시 마포구");
+		assertThat(dto.getMinOrderAmount()).isEqualTo(15000L);
+		assertThat(dto.getAverageRating()).isEqualTo(4.5);
+	}
+
+	@Test
+	@DisplayName("가게 상세 조회 실패 - 존재하지 않는 storeId")
+	void getStoreDetail_notFound_shouldThrowException() {
+		// given
+		UUID invalidId = UUID.randomUUID();
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(invalidId)).thenReturn(Optional.empty());
+
+		// when
+		GeneralException ex = catchThrowableOfType(
+			() -> managerService.getStoreDetail(invalidId),
+			GeneralException.class
+		);
+
+		// then
+		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+	}
+
+
+	@Test
+	@DisplayName("가게 승인 실패 - 존재하지 않는 storeId")
+	void approveStore_notFound_shouldThrowException() {
+		// given
+		UUID invalidId = UUID.randomUUID();
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(invalidId)).thenReturn(Optional.empty());
+
+		// when
+		GeneralException ex = catchThrowableOfType(
+			() -> managerService.approveStore(invalidId, StoreAcceptStatus.APPROVE),
+			GeneralException.class
+		);
+
+		// then
+		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+	}
+
+
+	@Test
+	@DisplayName("가게 승인 실패 - 이미 같은 상태")
+	void approveStore_sameStatus_shouldThrowException() {
+		// given
+		UUID storeId = UUID.randomUUID();
+		Store store = Store.builder()
+			.storeId(storeId)
+			.storeName("맛있는 족발집")
+			.storeAcceptStatus(StoreAcceptStatus.APPROVE)
+			.build();
+
+		when(storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)).thenReturn(Optional.of(store));
+
+		// when
+		GeneralException ex = catchThrowableOfType(
+			() -> managerService.approveStore(storeId, StoreAcceptStatus.APPROVE),
+			GeneralException.class
+		);
+
+		// then
+		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.INVALID_STORE_STATUS);
+	}
 }

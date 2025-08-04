@@ -96,7 +96,6 @@ class CustomerOrderServiceTest {
 	void getCustomerOrders_UserNotFound() {
 		Long nonExistentUserId = 999L;
 		when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
-
 		assertThatThrownBy(() -> customerOrderService.getCustomerOrders(nonExistentUserId))
 			.isInstanceOf(GeneralException.class)
 			.extracting("code")
