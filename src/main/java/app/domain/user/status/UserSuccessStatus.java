@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum SuccessStatus implements BaseCode {
+public enum UserSuccessStatus implements BaseCode {
 
 	// User
 	USER_CREATED(HttpStatus.CREATED, "USER201", "사용자 생성이 성공했습니다."),
