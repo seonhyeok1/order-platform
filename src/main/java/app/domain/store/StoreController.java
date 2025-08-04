@@ -1,8 +1,10 @@
 package app.domain.store;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -10,10 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import app.domain.menu.model.dto.response.MenuListResponse;
+import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
+import app.domain.store.model.dto.response.StoreOrderListResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
@@ -81,5 +86,23 @@ public class StoreController {
 		storeService.deleteStore(storeId);
 
 		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_DELETED_SUCCESS, "가게 삭제가 완료되었습니다.");
+	}
+
+	@GetMapping("/{storeId}/menu")
+	public ApiResponse<MenuListResponse> getStoreMenus(@PathVariable UUID storeId) {
+		MenuListResponse response = storeService.getStoreMenuList(storeId);
+		return ApiResponse.onSuccess(StoreSuccessStatus._OK, response);
+	}
+
+	@GetMapping("/{storeId}/review")
+	public ApiResponse<List<GetReviewResponse>> getStoreReviews(@PathVariable UUID storeId) {
+		List<GetReviewResponse> response = storeService.getStoreReviewList(storeId);
+		return ApiResponse.onSuccess(StoreSuccessStatus._OK, response);
+	}
+
+	@GetMapping("/{storeId}/order")
+	public ApiResponse<StoreOrderListResponse> getStoreOrders(@PathVariable UUID storeId) {
+		StoreOrderListResponse response = storeService.getStoreOrderList(storeId);
+		return ApiResponse.onSuccess(StoreSuccessStatus._OK, response);
 	}
 }
