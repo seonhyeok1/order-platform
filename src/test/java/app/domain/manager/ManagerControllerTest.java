@@ -1,13 +1,16 @@
 package app.domain.manager;
 
 import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +22,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
@@ -30,14 +35,11 @@ import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.status.StoreAcceptStatus;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
-import app.global.jwt.JwtAccessDeniedHandler;
-import app.global.jwt.JwtAuthenticationEntryPoint;
-import app.global.jwt.JwtTokenProvider;
 
 @WebMvcTest(ManagerController.class)
 @Import({MockSecurityConfig.class})
@@ -49,18 +51,19 @@ class ManagerControllerTest {
 	@MockitoBean
 	private ManagerService managerService;
 
-	@MockitoBean
-	private JwtTokenProvider jwtTokenProvider;
+	@Autowired
+	private WebApplicationContext webApplicationContext;
 
-	@MockitoBean
-	private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
-	@MockitoBean
-	private JwtAccessDeniedHandler jwtAccessDeniedHandler;
+	@BeforeEach
+	void setUp() {
+		mockMvc= MockMvcBuilders.webAppContextSetup(webApplicationContext)
+			.apply(springSecurity())
+			.build();
+	}
 
 
 	@DisplayName("사용자 전체 조회 테스트")
-	@WithMockUser(roles = "MANAGER")
+	@WithMockUser(username = "1", roles = "MANAGER")
 	@Test
 	void getAllCustomerTest() throws Exception {
 		// given
@@ -76,15 +79,12 @@ class ManagerControllerTest {
 		System.out.println("Mock response content size: " + response.getContent().size());
 
 		// when & then
-		mockMvc.perform(get("/api/manager/customer")
+		mockMvc.perform(get("/manager/customer")
 				.param("page", "0")
 				.param("size", "20")
 				.param("sort", "createdAt,desc")
 				.contentType(MediaType.APPLICATION_JSON))
-			.andDo(result -> {
-				String json = result.getResponse().getContentAsString();
-				System.out.println("응답 JSON: " + json);
-			})
+			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.result.content.length()").value(2))
 			.andExpect(jsonPath("$.result.content[0].email").value("te@naver.com"))
