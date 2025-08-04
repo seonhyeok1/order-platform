@@ -3,36 +3,36 @@ package app.domain.order.model.dto.request;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.PaymentMethod;
 import app.domain.order.model.entity.enums.ReceiptMethod;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public record CreateOrderRequest(
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+public class CreateOrderRequest {
 
-	@NotNull
-	@Schema(description = "결제 방법", example = "CREDIT_CARD", allowableValues = {"CREDIT_CARD", "SIMPLE_PAY",
-		"BANK_TRANSFER", "CASH"})
-	PaymentMethod paymentMethod,
+	@NotNull(message = "결제 방법은 필수입니다.")
+	private PaymentMethod paymentMethod;
 
-	@NotNull
-	@Schema(description = "주문 채널", example = "ONLINE", allowableValues = {"OFFLINE", "ONLINE"})
-	OrderChannel orderChannel,
+	@NotNull(message = "주문 채널은 필수입니다.")
+	private OrderChannel orderChannel;
 
-	@NotNull
-	@Schema(description = "수령 방법", example = "DELIVERY", allowableValues = {"DELIVERY", "TAKE_OUT", "TAKE_IN"})
-	ReceiptMethod receiptMethod,
+	@NotNull(message = "수령 방법은 필수입니다.")
+	private ReceiptMethod receiptMethod;
 
-	@Schema(description = "요청 메시지", example = "문 앞에 놓아주세요")
-	String requestMessage,
+	private String requestMessage;
 
-	@NotNull
-	@Min(value = 1, message = "총 금액은 양의 정수여야 합니다.")
-	@Schema(description = "총 가격", example = "10000")
-	Long totalPrice,
+	@NotNull(message = "총 금액은 필수입니다.")
+	@Positive(message = "총 금액은 양의 정수여야 합니다.")
+	private Long totalPrice;
 
-	@NotBlank
-	@Schema(description = "배달 주소", example = "경기도 고양시 덕양구 ***")
-	String deliveryAddress) {
-
+	@NotBlank(message = "배송 주소는 필수입니다.")
+	private String deliveryAddress;
 }

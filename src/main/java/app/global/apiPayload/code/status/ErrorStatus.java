@@ -101,6 +101,14 @@ public enum ErrorStatus implements BaseCode {
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER004", "메뉴를 찾을 수 없습니다."),
 	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
 	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
+	ORDER_PRICE_MISMATCH(HttpStatus.BAD_REQUEST, "ORDER007", "요청 총액과 장바구니 아이템 총액이 일치하지 않습니다."),
+
+	// Payment 관련
+	PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT001", "결제 승인 정보가 결제 요청할 때의 정보와 다릅니다."),
+	PAYMENT_CONFIRM_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT002", "결제 승인에 실패했습니다."),
+	TOSS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT003", "토스페이먼츠 API 오류가 발생했습니다."),
+	PAYMENT_NOT_REFUNDABLE(HttpStatus.BAD_REQUEST, "PAYMENT004", "환불이 불가능한 주문입니다."),
+	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "결제내역을 찾을 수 없습니다."),
 	INVALID_ORDER_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "ORDER007", "유효하지 않은 주문 상태 전이입니다."),
 	ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER008", "해당 주문에 대한 접근 권한이 없습니다."),
 	ORDER_CANCEL_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "ORDER009", "주문 취소 가능 시간이 초과되었습니다."),

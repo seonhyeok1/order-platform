@@ -1,9 +1,10 @@
-package app.domain.order;
+package app.domain.order.service;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +20,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
-
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.order.model.OrderItemRepository;
@@ -31,12 +31,11 @@ import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
 import app.global.SecurityUtil;
-
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import jakarta.transaction.Transactional;
@@ -54,11 +53,12 @@ public class OrderService {
 	private final UserRepository userRepository;
 	private final StoreRepository storeRepository;
 	private final MenuRepository menuRepository;
+	private final OrderDelayService orderDelayService;
 	private final SecurityUtil securityUtil;
 	private final ObjectMapper objectMapper;
 
 	@Transactional
-	public String createOrder(Long userId, CreateOrderRequest request, LocalDateTime requsetTime) {
+	public UUID createOrder(Long userId, CreateOrderRequest request) {
 		try {
 			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
 			if (cartItems.isEmpty()) {
@@ -77,27 +77,40 @@ public class OrderService {
 			Store store = storeRepository.findById(storeId)
 				.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
 
+			Map<UUID, Menu> menuMap = new HashMap<>();
+			for (RedisCartItem cartItem : cartItems) {
+				Menu menu = menuRepository.findById(cartItem.getMenuId())
+					.orElseThrow(() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
+				menuMap.put(cartItem.getMenuId(), menu);
+			}
+
+			long calculatedTotalPrice = cartItems.stream()
+				.mapToLong(cartItem -> menuMap.get(cartItem.getMenuId()).getPrice() * cartItem.getQuantity())
+				.sum();
+
+			if (request.getTotalPrice() != calculatedTotalPrice) {
+				throw new GeneralException(ErrorStatus.ORDER_PRICE_MISMATCH);
+			}
+
 			Orders order = Orders.builder()
 				.user(user)
 				.store(store)
-				.paymentMethod(request.paymentMethod())
-				.orderChannel(request.orderChannel())
-				.receiptMethod(request.receiptMethod())
-				.requestMessage(request.requestMessage())
-				.totalPrice(request.totalPrice())
+				.paymentMethod(request.getPaymentMethod())
+				.orderChannel(request.getOrderChannel())
+				.receiptMethod(request.getReceiptMethod())
+				.requestMessage(request.getRequestMessage())
+				.totalPrice(request.getTotalPrice())
 				.orderStatus(OrderStatus.PENDING)
-				.deliveryAddress(request.deliveryAddress())
-				.orderHistory(String.format("{\"pending\": \"%s\"}",
-					requsetTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))))
+				.deliveryAddress(request.getDeliveryAddress())
+				.orderHistory(
+					"pending:" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
 				.isRefundable(true)
 				.build();
 
 			Orders savedOrder = ordersRepository.save(order);
 
 			for (RedisCartItem cartItem : cartItems) {
-
-				Menu menu = menuRepository.findById(cartItem.getMenuId())
-					.orElseThrow(() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
+				Menu menu = menuMap.get(cartItem.getMenuId());
 
 				OrderItem orderItem = OrderItem.builder()
 					.orders(savedOrder)
@@ -108,7 +121,9 @@ public class OrderService {
 				orderItemRepository.save(orderItem);
 			}
 
-			return savedOrder.getOrdersId() + " 가 생성되었습니다";
+			orderDelayService.scheduleRefundDisable(savedOrder.getOrdersId());
+
+			return savedOrder.getOrdersId();
 		} catch (IllegalArgumentException e) {
 			log.error("주문 생성 실패 - 유효하지 않은 요청: {}", request, e);
 			throw new GeneralException(ErrorStatus.INVALID_ORDER_REQUEST);

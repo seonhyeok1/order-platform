@@ -24,9 +24,12 @@ import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
-import app.domain.user.model.entity.User;
+import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.store.model.entity.Store;
+import app.domain.store.model.entity.StoreRepository;
+import app.domain.user.model.entity.User;
+import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
 class CartServiceTest {
@@ -39,6 +42,12 @@ class CartServiceTest {
 
 	@Mock
 	private CartItemRepository cartItemRepository;
+
+	@Mock
+	private MenuRepository menuRepository;
+
+	@Mock
+	private StoreRepository storeRepository;
 
 	@InjectMocks
 	private CartService cartService;
@@ -60,6 +69,8 @@ class CartServiceTest {
 	@DisplayName("장바구니에 새로운 아이템을 추가할 수 있다")
 	void addItem() {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(true);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
@@ -78,6 +89,8 @@ class CartServiceTest {
 	void addExistingItem() {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		cartItems.add(RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(1).build());
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(true);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
@@ -95,6 +108,8 @@ class CartServiceTest {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		UUID otherStoreId = UUID.randomUUID();
 		cartItems.add(RedisCartItem.builder().menuId(UUID.randomUUID()).storeId(otherStoreId).quantity(1).build());
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(true);
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
@@ -205,14 +220,18 @@ class CartServiceTest {
 	void syncRedisToDb() {
 		RedisCartItem redisItem = RedisCartItem.builder().menuId(menuId).storeId(storeId).quantity(3).build();
 		Cart cart = Cart.builder().cartId(UUID.randomUUID()).user(User.builder().userId(userId).build()).build();
+		Menu menu = Menu.builder().menuId(menuId).store(Store.builder().storeId(storeId).build()).build();
 
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(List.of(redisItem));
 		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
 
 		cartService.syncRedisToDb(userId);
 
 		verify(cartItemRepository).deleteByCart_CartId(cart.getCartId());
+		verify(menuRepository).existsById(menuId);
 		verify(cartItemRepository).saveAll(argThat((List<CartItem> items) ->
 			items.size() == 1 &&
 				items.get(0).getQuantity() == 3
@@ -227,16 +246,20 @@ class CartServiceTest {
 		when(cartRedisService.extractUserIdFromKey("cart:1")).thenReturn(1L);
 		when(cartRedisService.extractUserIdFromKey("cart:2")).thenReturn(2L);
 
+		UUID menuId1 = UUID.randomUUID();
+		UUID menuId2 = UUID.randomUUID();
 		RedisCartItem redisItem1 = RedisCartItem.builder()
-			.menuId(UUID.randomUUID())
+			.menuId(menuId1)
 			.storeId(storeId)
 			.quantity(1)
 			.build();
 		RedisCartItem redisItem2 = RedisCartItem.builder()
-			.menuId(UUID.randomUUID())
+			.menuId(menuId2)
 			.storeId(storeId)
 			.quantity(2)
 			.build();
+		when(cartRedisService.existsCartInRedis(1L)).thenReturn(true);
+		when(cartRedisService.existsCartInRedis(2L)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(1L)).thenReturn(List.of(redisItem1));
 		when(cartRedisService.getCartFromRedis(2L)).thenReturn(List.of(redisItem2));
 
@@ -245,10 +268,58 @@ class CartServiceTest {
 		when(cartRepository.findByUser_UserId(1L)).thenReturn(Optional.of(cart1));
 		when(cartRepository.findByUser_UserId(2L)).thenReturn(Optional.of(cart2));
 
+		when(menuRepository.existsById(menuId1)).thenReturn(true);
+		when(menuRepository.existsById(menuId2)).thenReturn(true);
+		when(menuRepository.findById(menuId1)).thenReturn(Optional.of(
+			Menu.builder().menuId(menuId1).store(Store.builder().storeId(storeId).build()).build()));
+		when(menuRepository.findById(menuId2)).thenReturn(Optional.of(
+			Menu.builder().menuId(menuId2).store(Store.builder().storeId(storeId).build()).build()));
+
 		cartService.syncAllCartsToDb();
 
 		verify(cartItemRepository).deleteByCart_CartId(cart1.getCartId());
 		verify(cartItemRepository).deleteByCart_CartId(cart2.getCartId());
 		verify(cartItemRepository, times(2)).saveAll(any());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 menuId로 장바구니 추가 시 예외 발생")
+	void addCartItem_MenuNotFound() {
+		// Given
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		when(menuRepository.existsById(menuId)).thenReturn(false);
+
+		// When & Then
+		assertThatThrownBy(() -> cartService.addCartItem(userId, request))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException) ex;
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("메뉴를 찾을 수 없습니다.");
+			});
+
+		verify(menuRepository).existsById(menuId);
+		verify(storeRepository, never()).existsById(any());
+		verify(cartRedisService, never()).getCartFromRedis(any());
+	}
+
+	@Test
+	@DisplayName("존재하지 않는 storeId로 장바구니 추가 시 예외 발생")
+	void addCartItem_StoreNotFound() {
+		// Given
+		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		when(menuRepository.existsById(menuId)).thenReturn(true);
+		when(storeRepository.existsById(storeId)).thenReturn(false);
+
+		// When & Then
+		assertThatThrownBy(() -> cartService.addCartItem(userId, request))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException) ex;
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
+			});
+
+		verify(menuRepository).existsById(menuId);
+		verify(storeRepository).existsById(storeId);
+		verify(cartRedisService, never()).getCartFromRedis(any());
 	}
 }

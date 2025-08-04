@@ -1,5 +1,7 @@
 package app.domain.order.model.entity;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 import app.domain.order.model.entity.enums.OrderChannel;
@@ -16,7 +18,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
@@ -71,9 +72,27 @@ public class Orders extends BaseEntity {
 	private boolean isRefundable;
 
 	@Column(nullable = false, columnDefinition = "TEXT")
-	private String orderHistory; // JSON 문자열
+	private String orderHistory;
 
 	private String requestMessage;
+
+	public void updateOrderStatus(OrderStatus orderStatus) {
+		this.orderStatus = orderStatus;
+	}
+
+	public void addHistory(String state, LocalDateTime dateTime) {
+		String newEntry = state + ":" + dateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+		if (this.orderHistory == null || this.orderHistory.toString().isEmpty()) {
+			this.orderHistory = newEntry;
+		} else {
+			this.orderHistory = this.orderHistory.toString() + "\n" + newEntry;
+		}
+	}
+
+	public void disableRefund() {
+		this.isRefundable = false;
+	}
 
 	public void updateStatusAndHistory(OrderStatus newStatus, String updatedHistory) {
 		this.orderStatus = newStatus;
