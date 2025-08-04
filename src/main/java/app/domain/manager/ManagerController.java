@@ -18,12 +18,12 @@ import app.domain.manager.dto.response.GetCustomerDetailResponse;
 import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
+import app.domain.manager.status.ManagerSuccessStatus;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.store.status.StoreAcceptStatus;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -36,7 +36,6 @@ public class ManagerController {
 	private final ManagerService managerService;
 
 	@GetMapping("/customer")
-	@SecurityRequirement(name = "bearer-key")
 	@Operation(
 		summary = "전체 사용자 목록 조회",
 		description = "가입한 사용자 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
@@ -44,7 +43,7 @@ public class ManagerController {
 		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable,
 		@AuthenticationPrincipal UserDetails principal
 	) {
-		return ApiResponse.onSuccess(managerService.getAllCustomer(pageable));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_GET_CUSTOMER_OK,managerService.getAllCustomer(pageable));
 	}
 
 	@GetMapping("/customer/{userId}")
@@ -55,7 +54,7 @@ public class ManagerController {
 	public ApiResponse<GetCustomerDetailResponse> getUsersDetailById(
 		@PathVariable("userId") Long userId
 	) {
-		return ApiResponse.onSuccess(managerService.getCustomerDetailById(userId));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_GET_CUSTOMER_DETAIL_OK,managerService.getCustomerDetailById(userId));
 	}
 
 	@GetMapping("/customer/{userId}/order")
@@ -67,7 +66,7 @@ public class ManagerController {
 		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable,
 		@PathVariable("userId") Long userId
 	) {
-		return ApiResponse.onSuccess(managerService.getCustomerOrderListById(userId, pageable));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_GET_CUSTOMER_ORDER_OK,managerService.getCustomerOrderListById(userId, pageable));
 	}
 
 	@GetMapping("/customer/search")
@@ -78,7 +77,7 @@ public class ManagerController {
 		Pageable pageable,
 		@RequestParam String keyWord
 	) {
-		return ApiResponse.onSuccess(managerService.searchCustomer(keyWord, pageable));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_SEARCH_CUSTOMER_OK,managerService.searchCustomer(keyWord, pageable));
 	}
 
 	@GetMapping("/store")
@@ -89,7 +88,7 @@ public class ManagerController {
 		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable,
 		@RequestParam(defaultValue = "APPROVE") StoreAcceptStatus status
 	) {
-		return ApiResponse.onSuccess(managerService.getAllStore( status,pageable));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_GET_STORE_LIST_OK,managerService.getAllStore( status,pageable));
 	}
 
 
@@ -100,7 +99,7 @@ public class ManagerController {
 	public ApiResponse<GetStoreDetailResponse> getStoreById(
 		@PathVariable UUID storeId
 	){
-		return ApiResponse.onSuccess(managerService.getStoreDetail(storeId));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_GET_STORE_DETAIL_OK,managerService.getStoreDetail(storeId));
 	}
 
 	@PatchMapping("/store/{storeId}/accept")
@@ -111,7 +110,7 @@ public class ManagerController {
 		@PathVariable UUID storeId,
 		@RequestParam StoreAcceptStatus status
 	) {
-		return ApiResponse.onSuccess(managerService.approveStore(storeId, status));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_UPDATE_STORE_STATUS_OK,managerService.approveStore(storeId, status));
 	}
 
 	@GetMapping("/store/search")
@@ -123,7 +122,7 @@ public class ManagerController {
 		@RequestParam(required = false) String keyword,
 		@RequestParam(required = false) StoreAcceptStatus status
 	) {
-		return ApiResponse.onSuccess(managerService.searchStore(status, keyword, pageable));
+		return ApiResponse.onSuccess(ManagerSuccessStatus.MANAGER_SEARCH_STORE_OK,managerService.searchStore(status, keyword, pageable));
 	}
 
 }
