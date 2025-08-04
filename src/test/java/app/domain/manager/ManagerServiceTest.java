@@ -23,21 +23,22 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
 import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
 import app.domain.menu.model.entity.Category;
-import app.domain.order.model.OrderItemRepository;
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrderItemRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
 import app.domain.store.model.StoreQueryRepository;
 import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.UserSearchRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.user.model.UserRepository;
@@ -76,7 +77,6 @@ class ManagerServiceTest {
 
 	@Mock
 	private StoreQueryRepository storeQueryRepository;
-
 
 	@InjectMocks
 	private ManagerService managerService;
@@ -337,8 +337,8 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
-		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
+		assertThat(ex.getErrorReasonHttpStatus().getHttpStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
 	}
 
 	@Test
@@ -353,8 +353,8 @@ class ManagerServiceTest {
 			GeneralException.class
 		);
 
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
-		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
+		assertThat(ex.getErrorReason()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("존재하지 않는 사용자입니다.");
 	}
 
 	//--------
@@ -493,7 +493,8 @@ class ManagerServiceTest {
 			.thenReturn(pagedResponse);
 
 		// when
-		PagedResponse<GetStoreListResponse> response = managerService.searchStore(StoreAcceptStatus.PENDING, "족발", pageable);
+		PagedResponse<GetStoreListResponse> response = managerService.searchStore(StoreAcceptStatus.PENDING, "족발",
+			pageable);
 
 		// then
 		assertThat(response.getContent()).hasSize(1);
@@ -519,9 +520,8 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
-
 
 	@Test
 	@DisplayName("가게 승인 실패 - 존재하지 않는 storeId")
@@ -537,9 +537,8 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
-
 
 	@Test
 	@DisplayName("가게 승인 실패 - 이미 같은 상태")
@@ -561,6 +560,6 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.INVALID_STORE_STATUS);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.INVALID_STORE_STATUS);
 	}
 }

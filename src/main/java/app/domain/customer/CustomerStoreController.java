@@ -9,6 +9,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import app.domain.customer.dto.response.GetCustomerStoreDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
+import app.domain.customer.status.CustomerSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,8 @@ public class CustomerStoreController {
 		description = "가게 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
 	public ApiResponse<PagedResponse<GetStoreListResponse>> getApprovedStoreList(
 		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable) {
-		return ApiResponse.onSuccess(customerStoreService.getApprovedStore(pageable));
+		return ApiResponse.onSuccess(CustomerSuccessStatus.CUSTOMER_GET_STORE_LIST_OK,
+			customerStoreService.getApprovedStore(pageable));
 	}
 
 
@@ -39,7 +41,8 @@ public class CustomerStoreController {
 		summary = "승인이 허용된 가게 상세 조회",
 		description = "가게 상세 목록을 조회 합니다")
 	public ApiResponse<GetCustomerStoreDetailResponse> getApprovedStoreDetail(@PathVariable UUID storeId) {
-		return ApiResponse.onSuccess(customerStoreService.getApproveStoreDetail(storeId));
+		return ApiResponse.onSuccess(CustomerSuccessStatus.CUSTOMER_GET_STORE_DETAIL_OK,
+			customerStoreService.getApproveStoreDetail(storeId));
 	}
 
 
@@ -50,6 +53,7 @@ public class CustomerStoreController {
 	public ApiResponse<PagedResponse<GetStoreListResponse>> searchApprovedStore(
 		@RequestParam String keyword,
 		@PageableDefault(size = 10) Pageable pageable) {
-		return ApiResponse.onSuccess(customerStoreService.searchApproveStores(keyword, pageable));
+		return ApiResponse.onSuccess(CustomerSuccessStatus.CUSTOMER_SEARCH_STORE_OK,
+			customerStoreService.searchApproveStores(keyword, pageable));
 	}
 }

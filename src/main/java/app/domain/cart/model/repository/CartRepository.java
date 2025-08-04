@@ -1,4 +1,4 @@
-package app.domain.cart.model;
+package app.domain.cart.model.repository;
 
 import java.util.Optional;
 import java.util.UUID;

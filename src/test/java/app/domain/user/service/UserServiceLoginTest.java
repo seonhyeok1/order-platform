@@ -25,6 +25,7 @@ import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.request.LoginRequest;
 import app.domain.user.model.dto.response.LoginResponse;
 import app.domain.user.model.entity.User;
+import app.domain.user.status.UserErrorStatus;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.JwtTokenProvider;
@@ -144,7 +145,7 @@ class UserServiceLoginTest {
 			assertThatThrownBy(() -> userService.login(request))
 				.isInstanceOf(GeneralException.class)
 				.extracting("code")
-				.isEqualTo(app.domain.user.status.ErrorStatus.INVALID_PASSWORD);
+				.isEqualTo(UserErrorStatus.INVALID_PASSWORD);
 
 			then(redisTemplate).should(never()).opsForValue();
 			then(jwtTokenProvider).should(never()).createAccessToken(any(User.class));

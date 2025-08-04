@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.request.CreateReviewRequest;
@@ -17,6 +17,7 @@ import app.domain.review.status.ReviewErrorStatus;
 import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
+import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -30,11 +31,11 @@ public class ReviewService {
 	private final UserRepository userRepository;
 	private final StoreRepository storeRepository;
 	private final OrdersRepository ordersRepository;
+	private final SecurityUtil securityUtil;
 
 	@Transactional
-	public String createReview(Long userId, CreateReviewRequest request) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+	public String createReview(CreateReviewRequest request) {
+		User user = securityUtil.getCurrentUser();
 
 		Orders order = ordersRepository.findById(request.getOrdersId())
 			.orElseThrow(() -> new GeneralException(ReviewErrorStatus.ORDER_NOT_FOUND));
@@ -60,9 +61,8 @@ public class ReviewService {
 		return "리뷰 : " + savedReview.getReviewId() + " 가 생성되었습니다.";
 	}
 
-	public List<GetReviewResponse> getReviews(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+	public List<GetReviewResponse> getReviews() {
+		User user = securityUtil.getCurrentUser();
 
 		List<Review> userReviews = reviewRepository.findByUser(user);
 

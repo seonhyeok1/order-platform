@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.entity.Cart;
+import app.domain.cart.model.repository.CartRepository;
 import app.domain.user.model.entity.User;
 
 @ExtendWith(MockitoExtension.class)

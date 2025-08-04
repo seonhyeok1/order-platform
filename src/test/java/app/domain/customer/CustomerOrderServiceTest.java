@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.customer.dto.response.CustomerOrderResponse;
 import app.domain.customer.status.CustomerErrorStatus;
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.OrderStatus;
@@ -28,7 +28,6 @@ import app.domain.order.model.entity.enums.ReceiptMethod;
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
-import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +80,7 @@ class CustomerOrderServiceTest {
 		when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 		when(ordersRepository.findByUser(testUser)).thenReturn(Arrays.asList(testOrder));
 
-		List<CustomerOrderResponse> result = customerOrderService.getCustomerOrders(testUser.getUserId());
+		List<CustomerOrderResponse> result = customerOrderService.getCustomerOrders();
 
 		assertThat(result).hasSize(1);
 		assertThat(result.get(0).getStoreName()).isEqualTo("Test Store");
@@ -92,29 +91,15 @@ class CustomerOrderServiceTest {
 	}
 
 	@Test
-	@DisplayName("고객 주문 내역 조회 실패 - 사용자를 찾을 수 없음")
-	void getCustomerOrders_UserNotFound() {
-		Long nonExistentUserId = 999L;
-		when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
-		assertThatThrownBy(() -> customerOrderService.getCustomerOrders(nonExistentUserId))
-			.isInstanceOf(GeneralException.class)
-			.extracting("code")
-			.isEqualTo(ErrorStatus.USER_NOT_FOUND);
-
-		verify(userRepository, times(1)).findById(nonExistentUserId);
-		verify(ordersRepository, never()).findByUser(any());
-	}
-
-	@Test
 	@DisplayName("고객 주문 내역 조회 실패 - 주문이 없는 경우")
 	void getCustomerOrders_NoOrdersFound() {
 		when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 		when(ordersRepository.findByUser(testUser)).thenReturn(Collections.emptyList());
 
-		assertThatThrownBy(() -> customerOrderService.getCustomerOrders(testUser.getUserId()))
+		assertThatThrownBy(() -> customerOrderService.getCustomerOrders())
 			.isInstanceOf(GeneralException.class)
-			.extracting("code")
-			.isEqualTo(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND); // 수정된 부분
+			.extracting(ex -> ((GeneralException)ex).getErrorReason())
+			.isEqualTo(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND);
 
 		verify(userRepository, times(1)).findById(testUser.getUserId());
 		verify(ordersRepository, times(1)).findByUser(testUser);

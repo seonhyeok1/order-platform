@@ -68,7 +68,7 @@ class CartControllerTest {
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 		String resultMessage = "사용자 1의 장바구니가 성공적으로 저장되었습니다.";
 
-		when(cartService.addCartItem(eq(userId), any(AddCartItemRequest.class)))
+		when(cartService.addCartItem(any(AddCartItemRequest.class)))
 			.thenReturn(resultMessage);
 
 		mockMvc.perform(post("/customer/cart/item")
@@ -77,7 +77,7 @@ class CartControllerTest {
 				.content(objectMapper.writeValueAsString(request)))
 			.andDo(print())
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
 			.andExpect(jsonPath("$.result").exists())
 			.andExpect(jsonPath("$.result").value(resultMessage));
@@ -97,11 +97,11 @@ class CartControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.quantity").value("수량은 1 이상이어야 합니다."));
-		
-		verify(cartService, never()).addCartItem(any(), any());
+
+		verify(cartService, never()).addCartItem(any());
 
 	}
 
@@ -114,7 +114,7 @@ class CartControllerTest {
 		UUID storeId = UUID.randomUUID();
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 
-		when(cartService.addCartItem(eq(userId), any(AddCartItemRequest.class)))
+		when(cartService.addCartItem(any(AddCartItemRequest.class)))
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED));
 
 		mockMvc.perform(post("/customer/cart/item")
@@ -122,7 +122,7 @@ class CartControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("CART001"))
+			.andExpect(jsonPath("$.code").value("CART001"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
 	}
 
@@ -134,16 +134,16 @@ class CartControllerTest {
 		UUID menuId = UUID.randomUUID();
 		int quantity = 5;
 
-		when(cartService.updateCartItem(eq(userId), any(UUID.class), anyInt()))
+		when(cartService.updateCartItem(any(UUID.class), anyInt()))
 			.thenReturn("사용자 1의 장바구니가 성공적으로 저장되었습니다.");
 
 		mockMvc.perform(patch("/customer/cart/item/{menuId}/{quantity}", menuId, quantity)
 				.with(csrf()))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"));
 
-		verify(cartService).updateCartItem(userId, menuId, quantity);
+		verify(cartService).updateCartItem(menuId, quantity);
 	}
 
 	@Test
@@ -153,16 +153,16 @@ class CartControllerTest {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
 
-		when(cartService.removeCartItem(eq(userId), any(UUID.class)))
+		when(cartService.removeCartItem(any(UUID.class)))
 			.thenReturn("사용자 1의 장바구니에서 메뉴가 성공적으로 삭제되었습니다.");
 
 		mockMvc.perform(delete("/customer/cart/item/{menuId}", menuId)
 				.with(csrf()))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"));
 
-		verify(cartService).removeCartItem(userId, menuId);
+		verify(cartService).removeCartItem(menuId);
 	}
 
 	@Test
@@ -179,11 +179,11 @@ class CartControllerTest {
 			RedisCartItem.builder().menuId(menuId2).storeId(storeId).quantity(1).build()
 		);
 
-		when(cartService.getCartFromCache(eq(userId))).thenReturn(cartItems);
+		when(cartService.getCartFromCache()).thenReturn(cartItems);
 
 		mockMvc.perform(get("/customer/cart"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
 			.andExpect(jsonPath("$.result").isArray())
 			.andExpect(jsonPath("$.result.length()").value(2))
@@ -192,7 +192,7 @@ class CartControllerTest {
 			.andExpect(jsonPath("$.result[1].menuId").value(menuId2.toString()))
 			.andExpect(jsonPath("$.result[1].quantity").value(1));
 
-		verify(cartService).getCartFromCache(userId);
+		verify(cartService).getCartFromCache();
 	}
 
 	@Test
@@ -201,7 +201,7 @@ class CartControllerTest {
 	void getCart_Empty() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.getCartFromCache(eq(userId))).thenReturn(List.of());
+		when(cartService.getCartFromCache()).thenReturn(List.of());
 
 		mockMvc.perform(get("/customer/cart"))
 			.andExpect(status().isOk())
@@ -210,7 +210,7 @@ class CartControllerTest {
 			.andExpect(jsonPath("$.result").isArray())
 			.andExpect(jsonPath("$.result.length()").value(0));
 
-		verify(cartService).getCartFromCache(userId);
+		verify(cartService).getCartFromCache();
 	}
 
 	@Test
@@ -219,12 +219,12 @@ class CartControllerTest {
 	void getCart_ServiceError() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.getCartFromCache(eq(userId)))
+		when(cartService.getCartFromCache())
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_LOAD_FAILED));
 
 		mockMvc.perform(get("/customer/cart"))
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("CART002"))
+			.andExpect(jsonPath("$.code").value("CART002"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 조회에 실패했습니다."));
 	}
 
@@ -234,16 +234,16 @@ class CartControllerTest {
 	void clearCart_Success() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.clearCartItems(eq(userId)))
+		when(cartService.clearCartItems())
 			.thenReturn("사용자 1의 장바구니가 성공적으로 비워졌습니다.");
 
 		mockMvc.perform(delete("/customer/cart/item")
 				.with(csrf()))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"));
 
-		verify(cartService).clearCartItems(userId);
+		verify(cartService).clearCartItems();
 	}
 
 	@Test
@@ -252,13 +252,13 @@ class CartControllerTest {
 	void clearCart_ServiceError() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.clearCartItems(eq(userId)))
+		when(cartService.clearCartItems())
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED));
 
 		mockMvc.perform(delete("/customer/cart/item")
 				.with(csrf()))
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("CART001"))
+			.andExpect(jsonPath("$.code").value("CART001"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
 	}
 
@@ -275,7 +275,7 @@ class CartControllerTest {
 				.content(invalidJson))
 			.andExpect(status().isBadRequest());
 
-		verify(cartService, never()).addCartItem(any(), any());
+		verify(cartService, never()).addCartItem(any());
 	}
 
 	@Test
@@ -289,11 +289,11 @@ class CartControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutMenuId))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.menuId").value("메뉴 ID는 필수입니다."));
 
-		verify(cartService, never()).addCartItem(any(), any());
+		verify(cartService, never()).addCartItem(any());
 	}
 
 	@Test
@@ -307,11 +307,11 @@ class CartControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutStoreId))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.storeId").value("매장 ID는 필수입니다."));
 
-		verify(cartService, never()).addCartItem(any(), any());
+		verify(cartService, never()).addCartItem(any());
 	}
 
 	@Test
@@ -326,10 +326,10 @@ class CartControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutQuantity))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.quantity").value("수량은 필수입니다."));
 
-		verify(cartService, never()).addCartItem(any(), any());
+		verify(cartService, never()).addCartItem(any());
 	}
 }

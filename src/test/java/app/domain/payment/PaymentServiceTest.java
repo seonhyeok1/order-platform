@@ -24,20 +24,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import app.domain.cart.service.CartService;
-import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.model.entity.enums.PaymentMethod;
-import app.domain.payment.model.PaymentEtcRepository;
-import app.domain.payment.model.PaymentRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.payment.model.dto.request.CancelPaymentRequest;
 import app.domain.payment.model.dto.request.PaymentConfirmRequest;
 import app.domain.payment.model.dto.request.PaymentFailRequest;
 import app.domain.payment.model.entity.Payment;
 import app.domain.payment.model.entity.PaymentEtc;
 import app.domain.payment.model.entity.enums.PaymentStatus;
+import app.domain.payment.model.repository.PaymentEtcRepository;
+import app.domain.payment.model.repository.PaymentRepository;
+import app.domain.payment.status.PaymentErrorStatus;
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.entity.User;
+import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -148,7 +150,7 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("주문을 찾을 수 없습니다.");
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(ErrorStatus.ORDER_NOT_FOUND.getCode());
 			});
 
 		verify(ordersRepository).findById(orderId);
@@ -171,7 +173,8 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("결제 승인 정보가 결제 요청할 때의 정보와 다릅니다.");
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(
+					PaymentErrorStatus.PAYMENT_AMOUNT_MISMATCH.getCode());
 			});
 
 		verify(ordersRepository).findById(orderId);
@@ -204,7 +207,7 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("주문을 찾을 수 없습니다.");
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(ErrorStatus.ORDER_NOT_FOUND.getCode());
 			});
 
 		verify(ordersRepository).findById(orderId);
@@ -260,7 +263,7 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("주문을 찾을 수 없습니다.");
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(ErrorStatus.ORDER_NOT_FOUND.getCode());
 			});
 
 		verify(ordersRepository).findById(orderId);
@@ -290,7 +293,7 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("결제내역을 찾을 수 없습니다.");
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(ErrorStatus.PAYMENT_NOT_FOUND.getCode());
 			});
 
 		verify(ordersRepository).findById(orderId);
@@ -320,7 +323,8 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("환불이 불가능한 주문입니다.");
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(
+					PaymentErrorStatus.PAYMENT_NOT_REFUNDABLE.getCode());
 			});
 
 		verify(ordersRepository).findById(orderId);

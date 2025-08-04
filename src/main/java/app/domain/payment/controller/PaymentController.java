@@ -9,6 +9,7 @@ import app.domain.payment.PaymentService;
 import app.domain.payment.model.dto.request.CancelPaymentRequest;
 import app.domain.payment.model.dto.request.PaymentConfirmRequest;
 import app.domain.payment.model.dto.request.PaymentFailRequest;
+import app.domain.payment.status.PaymentSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,20 +28,20 @@ public class PaymentController {
 	@PostMapping("/confirm")
 	public ApiResponse<String> confirm(@Valid @RequestBody PaymentConfirmRequest request) {
 		String result = paymentService.confirmPayment(request);
-		return ApiResponse.onSuccess(result);
+		return ApiResponse.onSuccess(PaymentSuccessStatus.PAYMENT_CONFIRMED, result);
 	}
 
 	@Operation(summary = "결제 실패 처리 API", description = "결제 실패 정보를 DB에 저장합니다.")
 	@PostMapping("/failsave")
 	public ApiResponse<String> processFail(@Valid @RequestBody PaymentFailRequest request) {
 		String result = paymentService.failSave(request);
-		return ApiResponse.onSuccess(result);
+		return ApiResponse.onSuccess(PaymentSuccessStatus.PAYMENT_FAIL_SAVED, result);
 	}
 
 	@Operation(summary = "결제 취소 처리 API", description = "토스페이먼츠를 통해 결제를 취소합니다.")
 	@PostMapping("/cancel")
 	public ApiResponse<String> cancelPayment(@Valid @RequestBody CancelPaymentRequest request) {
 		String result = paymentService.cancelPayment(request);
-		return ApiResponse.onSuccess(result);
+		return ApiResponse.onSuccess(PaymentSuccessStatus.PAYMENT_CANCELLED, result);
 	}
 }
