@@ -67,8 +67,7 @@ class ReviewControllerTest {
 		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), 5L, "맛있어요");
 		String resultMessage = "리뷰 : " + UUID.randomUUID() + " 가 생성되었습니다.";
 
-
-		when(reviewService.createReview(eq(1L), any(CreateReviewRequest.class)))
+		when(reviewService.createReview(any(CreateReviewRequest.class)))
 			.thenReturn(resultMessage);
 
 		mockMvc.perform(post("/customer/review")
@@ -97,7 +96,7 @@ class ReviewControllerTest {
 		);
 		List<GetReviewResponse> responseList = Collections.singletonList(reviewResponse);
 
-		when(reviewService.getReviews(1L))
+		when(reviewService.getReviews())
 			.thenReturn(responseList);
 
 		mockMvc.perform(get("/customer/review")).andDo(print())
@@ -118,7 +117,7 @@ class ReviewControllerTest {
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void createReview_Fail_ServiceException() throws Exception {
 		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), 5L, "맛있어요");
-		when(reviewService.createReview(eq(1L), any(CreateReviewRequest.class)))
+		when(reviewService.createReview(any(CreateReviewRequest.class)))
 			.thenThrow(new GeneralException(ReviewErrorStatus.REVIEW_ALREADY_EXISTS));
 
 		mockMvc.perform(post("/customer/review")
@@ -136,7 +135,7 @@ class ReviewControllerTest {
 	@DisplayName("리뷰 조회 - 실패 (사용자 없음)")
 	@WithMockUser(username = "999", roles = "CUSTOMER")
 	void getReviews_Fail_UserNotFound() throws Exception {
-		when(reviewService.getReviews(999L))
+		when(reviewService.getReviews())
 			.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
 		mockMvc.perform(get("/customer/review"))
@@ -150,7 +149,7 @@ class ReviewControllerTest {
 	@DisplayName("리뷰 조회 - 실패 (리뷰 없음)")
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getReviews_Fail_NoReviewsFound() throws Exception {
-		when(reviewService.getReviews(1L))
+		when(reviewService.getReviews())
 			.thenThrow(new GeneralException(ReviewErrorStatus.NO_REVIEWS_FOUND_FOR_USER));
 
 		mockMvc.perform(get("/customer/review"))
