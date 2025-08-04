@@ -37,7 +37,7 @@ public class OrderDetailResponse {
 	public static class Menu {
 		private String menuName;
 		private int quantity;
-		private int price;
+		private Long price;
 
 		public static Menu from(OrderItem orderItem) {
 			return Menu.builder()

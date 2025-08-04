@@ -14,7 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.menu.model.entity.Menu;
-import app.domain.menu.repository.MenuRepository;
+import app.domain.menu.model.repository.MenuRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;

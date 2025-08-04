@@ -37,7 +37,7 @@ public class OrderItem extends BaseEntity {
 	private String menuName;
 
 	@Column(nullable = false)
-	private int price;
+	private Long price;
 
 	@Column(nullable = false)
 	private int quantity;
