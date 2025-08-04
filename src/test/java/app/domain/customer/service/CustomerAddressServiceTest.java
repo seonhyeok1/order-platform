@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import app.domain.customer.CustomerAddressService;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.user.model.UserAddressRepository;
-import app.domain.user.model.UserRepository;
 import app.domain.customer.dto.request.AddCustomerAddressRequest;
 import app.domain.customer.dto.response.AddCustomerAddressResponse;
 import app.domain.user.model.entity.User;
@@ -38,9 +37,6 @@ class CustomerAddressServiceTest {
 
 	@InjectMocks
 	private CustomerAddressService customerAddressService;
-
-	@Mock
-	private UserRepository userRepository;
 
 	@Mock
 	private UserAddressRepository userAddressRepository;
