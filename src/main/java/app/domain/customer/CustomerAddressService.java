@@ -8,8 +8,10 @@ import app.domain.user.model.UserRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.customer.dto.request.AddCustomerAddressRequest;
 import app.domain.customer.dto.response.AddCustomerAddressResponse;
+import app.global.SecurityUtil;
 import app.global.apiPayload.exception.GeneralException;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +24,15 @@ public class CustomerAddressService {
 
 	private final UserAddressRepository userAddressRepository;
 	private final UserRepository userRepository;
+	private final SecurityUtil securityUtil;
 
 	@Transactional(readOnly = true)
-	public List<GetCustomerAddressListResponse> getCustomerAddresses(Long userId) throws GeneralException {
-		userRepository.findById(userId)
-				.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND));
+	@PreAuthorize("hasAuthority('CUSTOMER')")
+	public List<GetCustomerAddressListResponse> getCustomerAddresses() throws GeneralException {
+		User user = securityUtil.getCurrentUser();
 
 		try {
-			return userAddressRepository.findAllByUserUserId(userId)
+			return userAddressRepository.findAllByUserUserId(user.getUserId())
 					.stream()
 					.map(GetCustomerAddressListResponse::from)
 					.toList();
@@ -39,10 +42,9 @@ public class CustomerAddressService {
 	}
 
 	@Transactional
-	public AddCustomerAddressResponse addCustomerAddress(Long userId, AddCustomerAddressRequest request) {
-
-		User user = userRepository.findById(userId)
-				.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND));
+	@PreAuthorize("hasAuthority('CUSTOMER')")
+	public AddCustomerAddressResponse addCustomerAddress(AddCustomerAddressRequest request) {
+		User user = securityUtil.getCurrentUser();
 
 		if (userAddressRepository.existsByUserAndAddressAndAddressDetail(user, request.getAddress(), request.getAddressDetail())) {
 			throw new GeneralException(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS);
@@ -74,6 +76,10 @@ public class CustomerAddressService {
 
 		try {
 			UserAddress savedAddress = userAddressRepository.save(address);
+			if (savedAddress.getAddressId() == null) {
+				throw new GeneralException(CustomerErrorStatus.ADDRESS_ADD_FAILED);
+			}
+
 			return new AddCustomerAddressResponse(savedAddress.getAddressId());
 		} catch (DataAccessException e) {
 			throw new GeneralException(CustomerErrorStatus.ADDRESS_ADD_FAILED);
