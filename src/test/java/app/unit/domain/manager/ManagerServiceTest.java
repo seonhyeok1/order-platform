@@ -29,7 +29,6 @@ import app.domain.manager.ManagerService;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
 import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
-import app.domain.manager.status.ManagerErrorStatus;
 import app.domain.menu.model.entity.Category;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.Orders;
@@ -41,7 +40,7 @@ import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreAcceptStatus;
-import app.domain.user.UserSearchRepository;
+import app.domain.user.model.UserQueryRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
@@ -60,7 +59,7 @@ class ManagerServiceTest {
 	private UserRepository userRepository;
 
 	@Mock
-	private UserSearchRepository userRepositoryCustom;
+	private UserQueryRepository userQueryRepository;
 
 	@Mock
 	private OrdersRepository ordersRepository;
@@ -300,7 +299,7 @@ class ManagerServiceTest {
 			.build();
 
 		Page<User> page = new PageImpl<>(List.of(user1));
-		when(userRepositoryCustom.searchUser(eq(keyword), any(Pageable.class))).thenReturn(page);
+		when(userQueryRepository.searchUser(eq(keyword), any(Pageable.class))).thenReturn(page);
 
 		PagedResponse<GetCustomerListResponse> result = managerService.searchCustomer(keyword, pageable);
 
@@ -316,7 +315,7 @@ class ManagerServiceTest {
 		Pageable pageable = PageRequest.of(0, 10);
 
 		Page<User> emptyPage = new PageImpl<>(Collections.emptyList());
-		when(userRepositoryCustom.searchUser(eq(keyword), any(Pageable.class))).thenReturn(emptyPage);
+		when(userQueryRepository.searchUser(eq(keyword), any(Pageable.class))).thenReturn(emptyPage);
 
 		PagedResponse<GetCustomerListResponse> result = managerService.searchCustomer(keyword, pageable);
 
@@ -339,8 +338,7 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorReasonHttpStatus().getHttpStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
-		assertThat(ex.getErrorReasonHttpStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("GLOBAL001");
 	}
 
 	@Test
@@ -355,8 +353,7 @@ class ManagerServiceTest {
 			GeneralException.class
 		);
 
-		assertThat(ex.getErrorReason()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
-		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("존재하지 않는 사용자입니다.");
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("GLOBAL001");
 	}
 
 	//--------
@@ -522,7 +519,7 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("STORE004");
 	}
 
 	@Test
@@ -539,7 +536,7 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("STORE004");
 	}
 
 	@Test
@@ -562,6 +559,6 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ManagerErrorStatus.INVALID_STORE_STATUS);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("STORE001");
 	}
 }

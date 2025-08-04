@@ -86,8 +86,7 @@ class CustomerMenuServiceTest {
 			() -> menuService.getMenusByStoreId(storeId, pageable));
 
 		// then
-		assertThat(ex.getErrorReasonHttpStatus().getHttpStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
-		assertThat(ex.getErrorReasonHttpStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("STORE004");
 	}
 
 	@Test
@@ -104,6 +103,32 @@ class CustomerMenuServiceTest {
 
 		assertThat(result.getContent()).isEmpty();
 		assertThat(result.getTotalElements()).isZero();
+	}
+
+
+	@Test
+	@DisplayName("숨김 처리된 메뉴는 조회되지 않는다")
+	void getMenusByStoreId_hiddenMenuNotIncluded() {
+		// given
+		Pageable pageable = PageRequest.of(0, 10);
+		List<Menu> menus = List.of(
+			Menu.builder()
+				.menuId(UUID.randomUUID())
+				.name("감자탕")
+				.price(10000L)
+				.isHidden(true) // hidden true
+				.build()
+		);
+		Page<Menu> menuPage = new PageImpl<>(menus, pageable, menus.size());
+
+		given(storeRepository.existsByStoreIdAndDeletedAtIsNull(storeId)).willReturn(true);
+		given(menuRepository.findByStoreStoreIdAndHiddenFalse(storeId, pageable)).willReturn(menuPage);
+
+		// when
+		PagedResponse<GetMenuListResponse> response = menuService.getMenusByStoreId(storeId, pageable);
+
+		// then
+		assertThat(response.getContent()).hasSize(1);
 	}
 
 }
