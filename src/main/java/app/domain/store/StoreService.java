@@ -1,16 +1,27 @@
 package app.domain.store;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import app.domain.menu.model.dto.response.MenuListResponse;
 import app.domain.menu.model.entity.Category;
+import app.domain.menu.model.entity.Menu;
 import app.domain.menu.model.repository.CategoryRepository;
+import app.domain.menu.model.repository.MenuRepository;
+import app.domain.order.model.entity.Orders;
+import app.domain.order.model.repository.OrdersRepository;
+import app.domain.review.model.ReviewRepository;
+import app.domain.review.model.dto.response.GetReviewResponse;
+import app.domain.review.model.entity.Review;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
+import app.domain.store.model.dto.response.StoreOrderListResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.RegionRepository;
@@ -29,6 +40,9 @@ public class StoreService {
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
 	private final CategoryRepository categoryRepository;
+	private final MenuRepository menuRepository;
+	private final ReviewRepository reviewRepository;
+	private final OrdersRepository ordersRepository;
 	private final SecurityUtil securityUtil;
 
 	@Transactional
@@ -60,7 +74,7 @@ public class StoreService {
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
 
 		if (!store.getUser().getUserId().equals(userId)) {
-			throw new GeneralException(StoreErrorCode.STORE_NOT_FOUND);
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
 		}
 
 		if (request.getCategoryId() != null) {
@@ -97,9 +111,72 @@ public class StoreService {
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
 
 		if (!store.getUser().getUserId().equals(userId)) {
-			throw new GeneralException(StoreErrorCode.STORE_NOT_FOUND);
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
 		}
 
 		store.markAsDeleted();
+	}
+
+	@Transactional(readOnly = true)
+	public MenuListResponse getStoreMenuList(UUID storeId) {
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
+		Store store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+		if (!store.getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
+		}
+
+		List<Menu> menus = menuRepository.findByStoreAndDeletedAtIsNull(store);
+
+		List<MenuListResponse.MenuDetail> menuDetails = menus.stream()
+			.map(menu -> new MenuListResponse.MenuDetail(menu.getMenuId(), menu.getName(), menu.getPrice(),
+				menu.getDescription(), menu.isHidden()))
+			.collect(Collectors.toList());
+
+		return new MenuListResponse(store.getStoreId(), menuDetails);
+	}
+
+	@Transactional(readOnly = true)
+	public List<GetReviewResponse> getStoreReviewList(UUID storeId) {
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
+		Store store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+		if (!store.getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
+		}
+
+		List<Review> reviews = reviewRepository.findByStore(store);
+
+		return reviews.stream()
+			.map(review -> new GetReviewResponse(review.getReviewId(), review.getUser().getUsername(),
+				review.getStore().getStoreName(), review.getRating(), review.getContent(), review.getCreatedAt()))
+			.collect(Collectors.toList());
+	}
+
+	@Transactional(readOnly = true)
+	public StoreOrderListResponse getStoreOrderList(UUID storeId) {
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
+		Store store = storeRepository.findById(storeId)
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+		if (!store.getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
+		}
+
+		List<Orders> orders = ordersRepository.findByStore(store);
+
+		List<StoreOrderListResponse.StoreOrderDetail> orderDetails = orders.stream()
+			.map(StoreOrderListResponse.StoreOrderDetail::from)
+			.collect(Collectors.toList());
+
+		return new StoreOrderListResponse(store.getStoreId(), orderDetails);
 	}
 }
