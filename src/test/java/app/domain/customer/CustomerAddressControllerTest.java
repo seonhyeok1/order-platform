@@ -11,7 +11,6 @@ import app.domain.customer.dto.response.AddCustomerAddressResponse;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 
 import org.springframework.security.test.context.support.WithMockUser;
@@ -66,7 +65,6 @@ class CustomerAddressControllerTest {
 
 	@Test
 	@DisplayName("주소 목록 조회 - 성공")
-	@AutoConfigureMockMvc
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getCustomerAddresses_Success() throws Exception {
 		List<GetCustomerAddressListResponse> addressResponse = List.of(
@@ -146,25 +144,6 @@ class CustomerAddressControllerTest {
 			.andExpect(jsonPath("$.message").value(CustomerSuccessStatus.ADDRESS_ADDED.getMessage()))
 			.andExpect(jsonPath("$.result.address_id").value(newAddressId.toString()));
 	}
-
-//	@Test
-//	@DisplayName("주소 등록 - 실패 (alias 입력 검증 실패)")
-//	@WithMockUser(username = "1", roles = "CUSTOMER")
-//	void addCustomerAddresses_Fail_InvalidInput() throws Exception {
-//		AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-//				null,
-//				"서울시 종로구",
-//				"303호",
-//				false
-//		);
-//
-//		mockMvc.perform(post("/customer/address/add")
-//				.with(csrf())
-//				.contentType(MediaType.APPLICATION_JSON)
-//				.content(objectMapper.writeValueAsString(request)))
-//				.andExpect(status().isBadRequest())
-//				.andExpect(jsonPath("$.resultCode").value("COMMON400"));
-//	}
 
 	@Test
 	@DisplayName("주소 등록 - 실패 (주소 중복)")
