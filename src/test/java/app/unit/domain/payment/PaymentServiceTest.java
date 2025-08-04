@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import java.net.HttpURLConnection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -15,12 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import app.domain.cart.service.CartService;
@@ -40,6 +34,7 @@ import app.domain.payment.model.repository.PaymentRepository;
 import app.domain.payment.status.PaymentErrorStatus;
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.entity.User;
+import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
@@ -59,7 +54,7 @@ class PaymentServiceTest {
 	private CartService cartService;
 
 	@Mock
-	private HttpURLConnection mockConnection;
+	private SecurityUtil securityUtil;
 
 	@Spy
 	@InjectMocks
@@ -72,6 +67,7 @@ class PaymentServiceTest {
 	private CancelPaymentRequest cancelRequest;
 	private Orders order;
 	private Payment payment;
+	private User testuser;
 
 	@BeforeEach
 	void setUp() {
@@ -91,12 +87,12 @@ class PaymentServiceTest {
 
 		cancelRequest = new CancelPaymentRequest(orderId, "구매자가 취소를 원함");
 
-		User user = User.builder().userId(userId).build();
+		testuser = User.builder().userId(userId).build();
 		Store store = Store.builder().storeId(UUID.randomUUID()).build();
 
 		order = Orders.builder()
 			.ordersId(orderId)
-			.user(user)
+			.user(testuser)
 			.store(store)
 			.totalPrice(10000L)
 			.paymentMethod(PaymentMethod.CREDIT_CARD)
@@ -115,29 +111,49 @@ class PaymentServiceTest {
 	}
 
 	@Test
-	@DisplayName("결제 승인 - 비즈니스 로직 검증")
-	void confirmPayment_BusinessLogic_Validation() {
+	@DisplayName("결제 승인 성공")
+	void confirmPayment_Success() {
 		// Given
+		when(securityUtil.getCurrentUser()).thenReturn(testuser);
 		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
 		when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
 		when(paymentEtcRepository.save(any(PaymentEtc.class))).thenReturn(mock(PaymentEtc.class));
+		doReturn("success:{\"status\":\"DONE\"}").when(paymentService).callTossConfirmApi(any(PaymentConfirmRequest.class), any(Long.class));
 
-		try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder = mockStatic(
-			SecurityContextHolder.class)) {
-			SecurityContext mockSecurityContext = mock(SecurityContext.class);
-			Authentication mockAuth = mock(Authentication.class);
-			org.springframework.security.core.userdetails.User mockUser =
-				new org.springframework.security.core.userdetails.User("1", "password", List.of());
+		// When
+		String result = paymentService.confirmPayment(confirmRequest);
 
-			mockedSecurityContextHolder.when(SecurityContextHolder::getContext).thenReturn(mockSecurityContext);
-			when(mockSecurityContext.getAuthentication()).thenReturn(mockAuth);
-			when(mockAuth.getPrincipal()).thenReturn(mockUser);
+		// Then
+		assertThat(result).contains("결제 승인이 완료되었습니다");
+		verify(securityUtil).getCurrentUser();
+		verify(ordersRepository).findById(orderId);
+		verify(paymentRepository).save(any(Payment.class));
+		verify(paymentEtcRepository).save(any(PaymentEtc.class));
+		verify(cartService).clearCartItems();
+	}
 
-			assertThatThrownBy(() -> paymentService.confirmPayment(confirmRequest))
-				.isInstanceOf(GeneralException.class);
+	@Test
+	@DisplayName("결제 승인 실패 - API 호출 실패")
+	void confirmPayment_ApiCallFailed() {
+		// Given
+		when(securityUtil.getCurrentUser()).thenReturn(testuser);
+		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
+		when(paymentRepository.save(any(Payment.class))).thenReturn(payment);
+		when(paymentEtcRepository.save(any(PaymentEtc.class))).thenReturn(mock(PaymentEtc.class));
+		doReturn("fail:{\"code\":\"INVALID_REQUEST\",\"message\":\"Invalid request\"}").when(paymentService).callTossConfirmApi(any(PaymentConfirmRequest.class), any(Long.class));
 
-			verify(ordersRepository).findById(orderId);
-		}
+		// When & Then
+		assertThatThrownBy(() -> paymentService.confirmPayment(confirmRequest))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException)ex;
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(
+					PaymentErrorStatus.PAYMENT_CONFIRM_FAILED.getCode());
+			});
+
+		verify(paymentRepository).save(any(Payment.class));
+		verify(paymentEtcRepository).save(any(PaymentEtc.class));
+		verify(cartService, never()).clearCartItems();
 	}
 
 	@Test
@@ -194,7 +210,6 @@ class PaymentServiceTest {
 		// Then
 		assertThat(result).isEqualTo("결제 실패 처리가 완료되었습니다.");
 		verify(ordersRepository).findById(orderId);
-		// updateOrderStatus는 엔티티 내부 메서드이므로 별도 검증 불필요
 	}
 
 	@Test
@@ -216,12 +231,12 @@ class PaymentServiceTest {
 	}
 
 	@Test
-	@DisplayName("결제 취소 - 비즈니스 로직 검증")
-	void cancelPayment_BusinessLogic_Validation() {
-		// Given - isRefundable = true로 설정
+	@DisplayName("결제 취소 성공")
+	void cancelPayment_Success() {
+		// Given
 		Orders refundableOrder = Orders.builder()
 			.ordersId(orderId)
-			.user(User.builder().userId(userId).build())
+			.user(testuser)
 			.store(Store.builder().storeId(UUID.randomUUID()).build())
 			.totalPrice(10000L)
 			.paymentMethod(PaymentMethod.CREDIT_CARD)
@@ -230,27 +245,55 @@ class PaymentServiceTest {
 			.isRefundable(true)
 			.build();
 
+		when(securityUtil.getCurrentUser()).thenReturn(testuser);
 		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(refundableOrder));
 		when(paymentRepository.findByOrdersId(orderId)).thenReturn(Optional.of(payment));
 		when(paymentEtcRepository.save(any(PaymentEtc.class))).thenReturn(mock(PaymentEtc.class));
+		doReturn("success:{\"status\":\"CANCELED\"}").when(paymentService)
+			.callTossCancelApi(anyString(), anyString(), any(Long.class), any(UUID.class));
 
-		try (MockedStatic<SecurityContextHolder> mockedSecurityContextHolder = mockStatic(
-			SecurityContextHolder.class)) {
-			SecurityContext mockSecurityContext = mock(SecurityContext.class);
-			Authentication mockAuth = mock(Authentication.class);
-			org.springframework.security.core.userdetails.User mockUser =
-				new org.springframework.security.core.userdetails.User("1", "password", List.of());
+		// When
+		String result = paymentService.cancelPayment(cancelRequest);
 
-			mockedSecurityContextHolder.when(SecurityContextHolder::getContext).thenReturn(mockSecurityContext);
-			when(mockSecurityContext.getAuthentication()).thenReturn(mockAuth);
-			when(mockAuth.getPrincipal()).thenReturn(mockUser);
+		// Then
+		assertThat(result).isEqualTo("결제 취소가 완료되었습니다.");
+		verify(ordersRepository).findById(orderId);
+		verify(paymentRepository).findByOrdersId(orderId);
+		verify(paymentEtcRepository).save(any(PaymentEtc.class));
+	}
 
-			assertThatThrownBy(() -> paymentService.cancelPayment(cancelRequest))
-				.isInstanceOf(GeneralException.class);
+	@Test
+	@DisplayName("결제 취소 실패 - API 호출 실패")
+	void cancelPayment_ApiCallFailed() {
+		// Given
+		Orders refundableOrder = Orders.builder()
+			.ordersId(orderId)
+			.user(testuser)
+			.store(Store.builder().storeId(UUID.randomUUID()).build())
+			.totalPrice(10000L)
+			.paymentMethod(PaymentMethod.CREDIT_CARD)
+			.orderStatus(OrderStatus.PENDING)
+			.orderHistory("pending:" + "2024-01-01 10:00:00")
+			.isRefundable(true)
+			.build();
 
-			verify(ordersRepository).findById(orderId);
-			verify(paymentRepository).findByOrdersId(orderId);
-		}
+		when(securityUtil.getCurrentUser()).thenReturn(testuser);
+		when(ordersRepository.findById(orderId)).thenReturn(Optional.of(refundableOrder));
+		when(paymentRepository.findByOrdersId(orderId)).thenReturn(Optional.of(payment));
+		when(paymentEtcRepository.save(any(PaymentEtc.class))).thenReturn(mock(PaymentEtc.class));
+		doReturn("fail:{\"code\":\"CANCEL_FAILED\",\"message\":\"Cancel failed\"}").when(paymentService)
+			.callTossCancelApi(anyString(), anyString(), any(Long.class), any(UUID.class));
+
+		// When & Then
+		assertThatThrownBy(() -> paymentService.cancelPayment(cancelRequest))
+			.isInstanceOf(GeneralException.class)
+			.satisfies(ex -> {
+				GeneralException generalEx = (GeneralException)ex;
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(
+					ErrorStatus._INTERNAL_SERVER_ERROR.getCode());
+			});
+
+		verify(paymentEtcRepository).save(any(PaymentEtc.class));
 	}
 
 	@Test
@@ -274,7 +317,7 @@ class PaymentServiceTest {
 	@Test
 	@DisplayName("결제 취소 실패 - 결제 정보를 찾을 수 없음")
 	void cancelPayment_PaymentNotFound() {
-		// Given - isRefundable = true로 설정
+		// Given
 		Orders refundableOrder = Orders.builder()
 			.ordersId(orderId)
 			.user(User.builder().userId(userId).build())

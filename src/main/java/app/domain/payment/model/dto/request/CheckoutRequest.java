@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class CheckoutRequest {
 
@@ -26,4 +25,10 @@ public class CheckoutRequest {
 
 	@NotNull(message = "결제 수단은 필수입니다.")
 	private PaymentMethod paymentMethod;
+
+	public CheckoutRequest(UUID orderId, Long totalPrice, PaymentMethod paymentMethod) {
+		this.orderId = orderId;
+		this.totalPrice = totalPrice;
+		this.paymentMethod = paymentMethod;
+	}
 }

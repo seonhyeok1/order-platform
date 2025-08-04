@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_cart_item")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class CartItem extends BaseEntity {
 
@@ -41,4 +40,11 @@ public class CartItem extends BaseEntity {
 
 	@Column(nullable = false)
 	private int quantity;
+
+	public CartItem(UUID cartItemId, Cart cart, Menu menu, int quantity) {
+		this.cartItemId = cartItemId;
+		this.cart = cart;
+		this.menu = menu;
+		this.quantity = quantity;
+	}
 }

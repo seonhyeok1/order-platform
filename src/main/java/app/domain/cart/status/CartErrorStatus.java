@@ -15,7 +15,8 @@ public enum CartErrorStatus implements BaseCode {
 	CART_REDIS_LOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART002", "장바구니 Redis 조회에 실패했습니다."),
 	CART_ITEM_PARSE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART003", "장바구니 아이템 파싱에 실패했습니다."),
 	CART_DB_SYNC_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART005", "장바구니 DB 동기화에 실패했습니다."),
-	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART006", "수량은 1 이상이어야 합니다.");
+	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART006", "수량은 1 이상이어야 합니다."),
+	INVALID_KEY_EXTRACT_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "CART007", "Redis 키 형식이 잘못됐습니다");
 
 	private final HttpStatus httpStatus;
 	private final String code;

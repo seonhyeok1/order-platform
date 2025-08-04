@@ -10,10 +10,14 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class OrderDecisionResponse {
 
 	private UUID orderId;
 	private String status;
+
+	public OrderDecisionResponse(UUID orderId, String status) {
+		this.orderId = orderId;
+		this.status = status;
+	}
 }

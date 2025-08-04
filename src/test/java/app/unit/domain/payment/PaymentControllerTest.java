@@ -30,6 +30,7 @@ import app.domain.payment.model.dto.request.CancelPaymentRequest;
 import app.domain.payment.model.dto.request.PaymentConfirmRequest;
 import app.domain.payment.model.dto.request.PaymentFailRequest;
 import app.domain.payment.status.PaymentErrorStatus;
+import app.domain.payment.status.PaymentSuccessStatus;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
@@ -78,8 +79,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
+			.andExpect(jsonPath("$.code").value(PaymentSuccessStatus.PAYMENT_CONFIRMED.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentSuccessStatus.PAYMENT_CONFIRMED.getMessage()))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 
 		verify(paymentService).confirmPayment(any(PaymentConfirmRequest.class));
@@ -103,8 +104,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.code").value("PAYMENT002"))
-			.andExpect(jsonPath("$.message").value("결제 승인에 실패했습니다."));
+			.andExpect(jsonPath("$.code").value(PaymentErrorStatus.PAYMENT_CONFIRM_FAILED.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentErrorStatus.PAYMENT_CONFIRM_FAILED.getMessage()));
 	}
 
 	@Test
@@ -126,8 +127,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
+			.andExpect(jsonPath("$.code").value(PaymentSuccessStatus.PAYMENT_FAIL_SAVED.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentSuccessStatus.PAYMENT_FAIL_SAVED.getMessage()))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 
 		verify(paymentService).failSave(any(PaymentFailRequest.class));
@@ -151,8 +152,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.code").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
+			.andExpect(jsonPath("$.code").value(PaymentSuccessStatus.PAYMENT_CANCELLED.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentSuccessStatus.PAYMENT_CANCELLED.getMessage()))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 
 		verify(paymentService).cancelPayment(any(CancelPaymentRequest.class));
@@ -169,6 +170,93 @@ class PaymentControllerTest {
 		);
 
 		when(paymentService.failSave(any(PaymentFailRequest.class)))
+			.thenThrow(new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR));
+
+		mockMvc.perform(post("/payment/failsave")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isInternalServerError())
+			.andExpect(jsonPath("$.code").value(ErrorStatus._INTERNAL_SERVER_ERROR.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._INTERNAL_SERVER_ERROR.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 취소 - 서비스 에러")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void cancelPayment_ServiceError() throws Exception {
+		CancelPaymentRequest request = new CancelPaymentRequest(
+			UUID.randomUUID(),
+			"구매자가 취소를 원함"
+		);
+
+		when(paymentService.cancelPayment(any(CancelPaymentRequest.class)))
+			.thenThrow(new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR));
+
+		mockMvc.perform(post("/payment/cancel")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isInternalServerError())
+			.andExpect(jsonPath("$.code").value(ErrorStatus._INTERNAL_SERVER_ERROR.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._INTERNAL_SERVER_ERROR.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 승인 - 주문 조회 실패")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void confirmPayment_OrderNotFound() throws Exception {
+		PaymentConfirmRequest request = new PaymentConfirmRequest(
+			"test_payment_key",
+			UUID.randomUUID().toString(),
+			"10000"
+		);
+
+		when(paymentService.confirmPayment(any(PaymentConfirmRequest.class)))
+			.thenThrow(new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+
+		mockMvc.perform(post("/payment/confirm")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.code").value(ErrorStatus.ORDER_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.ORDER_NOT_FOUND.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 승인 - 결제 금액 불일치")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void confirmPayment_AmountMismatch() throws Exception {
+		PaymentConfirmRequest request = new PaymentConfirmRequest(
+			"test_payment_key",
+			UUID.randomUUID().toString(),
+			"10000"
+		);
+
+		when(paymentService.confirmPayment(any(PaymentConfirmRequest.class)))
+			.thenThrow(new GeneralException(PaymentErrorStatus.PAYMENT_AMOUNT_MISMATCH));
+
+		mockMvc.perform(post("/payment/confirm")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.code").value(PaymentErrorStatus.PAYMENT_AMOUNT_MISMATCH.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentErrorStatus.PAYMENT_AMOUNT_MISMATCH.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 실패 처리 - 주문 조회 실패")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void processFail_OrderNotFound() throws Exception {
+		PaymentFailRequest request = new PaymentFailRequest(
+			UUID.randomUUID().toString(),
+			"INVALID_CARD",
+			"유효하지 않은 카드입니다."
+		);
+
+		when(paymentService.failSave(any(PaymentFailRequest.class)))
 			.thenThrow(new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 
 		mockMvc.perform(post("/payment/failsave")
@@ -176,14 +264,56 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.code").value("ORDER006"))
-			.andExpect(jsonPath("$.message").value("주문을 찾을 수 없습니다."));
+			.andExpect(jsonPath("$.code").value(ErrorStatus.ORDER_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.ORDER_NOT_FOUND.getMessage()));
 	}
 
 	@Test
-	@DisplayName("결제 취소 - 서비스 에러")
+	@DisplayName("결제 취소 - 주문 조회 실패")
 	@WithMockUser(username = "1", roles = {"CUSTOMER"})
-	void cancelPayment_ServiceError() throws Exception {
+	void cancelPayment_OrderNotFound() throws Exception {
+		CancelPaymentRequest request = new CancelPaymentRequest(
+			UUID.randomUUID(),
+			"구매자가 취소를 원함"
+		);
+
+		when(paymentService.cancelPayment(any(CancelPaymentRequest.class)))
+			.thenThrow(new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+
+		mockMvc.perform(post("/payment/cancel")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.code").value(ErrorStatus.ORDER_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.ORDER_NOT_FOUND.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 취소 - 환불 불가능")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void cancelPayment_NotRefundable() throws Exception {
+		CancelPaymentRequest request = new CancelPaymentRequest(
+			UUID.randomUUID(),
+			"구매자가 취소를 원함"
+		);
+
+		when(paymentService.cancelPayment(any(CancelPaymentRequest.class)))
+			.thenThrow(new GeneralException(PaymentErrorStatus.PAYMENT_NOT_REFUNDABLE));
+
+		mockMvc.perform(post("/payment/cancel")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.code").value(PaymentErrorStatus.PAYMENT_NOT_REFUNDABLE.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentErrorStatus.PAYMENT_NOT_REFUNDABLE.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 취소 - 결제 정보 조회 실패")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void cancelPayment_PaymentNotFound() throws Exception {
 		CancelPaymentRequest request = new CancelPaymentRequest(
 			UUID.randomUUID(),
 			"구매자가 취소를 원함"
@@ -197,8 +327,51 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.code").value("PAYMENT005"))
-			.andExpect(jsonPath("$.message").value("결제내역을 찾을 수 없습니다."));
+			.andExpect(jsonPath("$.code").value(ErrorStatus.PAYMENT_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.PAYMENT_NOT_FOUND.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 승인 - 토스 API 에러")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void confirmPayment_TossApiError() throws Exception {
+		PaymentConfirmRequest request = new PaymentConfirmRequest(
+			"test_payment_key",
+			UUID.randomUUID().toString(),
+			"10000"
+		);
+
+		when(paymentService.confirmPayment(any(PaymentConfirmRequest.class)))
+			.thenThrow(new GeneralException(PaymentErrorStatus.TOSS_API_ERROR));
+
+		mockMvc.perform(post("/payment/confirm")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isInternalServerError())
+			.andExpect(jsonPath("$.code").value(PaymentErrorStatus.TOSS_API_ERROR.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentErrorStatus.TOSS_API_ERROR.getMessage()));
+	}
+
+	@Test
+	@DisplayName("결제 취소 - 토스 API 에러")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void cancelPayment_TossApiError() throws Exception {
+		CancelPaymentRequest request = new CancelPaymentRequest(
+			UUID.randomUUID(),
+			"구매자가 취소를 원함"
+		);
+
+		when(paymentService.cancelPayment(any(CancelPaymentRequest.class)))
+			.thenThrow(new GeneralException(PaymentErrorStatus.TOSS_API_ERROR));
+
+		mockMvc.perform(post("/payment/cancel")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isInternalServerError())
+			.andExpect(jsonPath("$.code").value(PaymentErrorStatus.TOSS_API_ERROR.getCode()))
+			.andExpect(jsonPath("$.message").value(PaymentErrorStatus.TOSS_API_ERROR.getMessage()));
 	}
 
 	@Test
@@ -212,8 +385,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutPaymentKey))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("COMMON400"))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._BAD_REQUEST.getMessage()))
 			.andExpect(jsonPath("$.result.paymentKey").value("결제 키는 필수입니다."));
 
 		verify(paymentService, never()).confirmPayment(any());
@@ -230,8 +403,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutOrderId))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("COMMON400"))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._BAD_REQUEST.getMessage()))
 			.andExpect(jsonPath("$.result.orderId").value("주문 ID는 필수입니다."));
 
 		verify(paymentService, never()).confirmPayment(any());
@@ -248,8 +421,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutAmount))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("COMMON400"))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._BAD_REQUEST.getMessage()))
 			.andExpect(jsonPath("$.result.amount").value("결제 금액은 필수입니다."));
 
 		verify(paymentService, never()).confirmPayment(any());
@@ -266,8 +439,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutErrorCode))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("COMMON400"))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._BAD_REQUEST.getMessage()))
 			.andExpect(jsonPath("$.result.errorCode").value("에러 코드는 필수입니다."));
 
 		verify(paymentService, never()).failSave(any());
@@ -284,8 +457,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutMessage))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("COMMON400"))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._BAD_REQUEST.getMessage()))
 			.andExpect(jsonPath("$.result.message").value("실패 사유는 필수입니다."));
 
 		verify(paymentService, never()).failSave(any());
@@ -302,8 +475,8 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutOrderId))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value("COMMON400"))
-			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus._BAD_REQUEST.getMessage()))
 			.andExpect(jsonPath("$.result.orderId").value("주문 ID는 필수입니다."));
 
 		verify(paymentService, never()).cancelPayment(any());
