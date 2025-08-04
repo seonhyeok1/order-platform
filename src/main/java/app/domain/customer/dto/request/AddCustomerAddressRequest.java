@@ -9,14 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AddCustomerAddressRequest {
-	@NotBlank(message="Alias is required")
 	private String alias;
-
-	@NotBlank(message="Address is required")
 	private String address;
-
-	@NotBlank(message="AddressDetail is required")
 	private String addressDetail;
-
 	private boolean isDefault;
 }
