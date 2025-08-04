@@ -149,11 +149,10 @@ public class OrderService {
 	}
 
 	private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = Map.of(
-		OrderStatus.PENDING, EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED),
+		OrderStatus.PENDING, EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED, OrderStatus.REFUNDED),
 		OrderStatus.ACCEPTED, EnumSet.of(OrderStatus.COOKING),
 		OrderStatus.COOKING, EnumSet.of(OrderStatus.IN_DELIVERY),
-		OrderStatus.IN_DELIVERY, EnumSet.of(OrderStatus.COMPLETED),
-		OrderStatus.REJECTED, EnumSet.of(OrderStatus.REFUNDED)
+		OrderStatus.IN_DELIVERY, EnumSet.of(OrderStatus.COMPLETED)
 	);
 
 	@Transactional
@@ -163,52 +162,44 @@ public class OrderService {
 		Orders order = ordersRepository.findById(orderId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 
+		OrderStatus oldStatus = order.getOrderStatus();
+
 		validateOrderStatusUpdate(currentUser, order, newStatus);
 
 		String updatedHistory = appendToHistory(order.getOrderHistory(), newStatus);
-
 		order.updateStatusAndHistory(newStatus, updatedHistory);
 
 		log.info("주문 상태 변경 완료 - orderId: {}, user: {}, {} -> {}",
-			orderId, currentUser.getUserId(), order.getOrderStatus(), newStatus);
+			orderId, currentUser.getUserId(), oldStatus, newStatus);
 
 		return UpdateOrderStatusResponse.from(order);
 	}
 
 	private void validateOrderStatusUpdate(User user, Orders order, OrderStatus newStatus) {
 		UserRole role = user.getUserRole();
-		OrderStatus currentStatus = order.getOrderStatus();
 
-		log.info("Validating order status update. " +
-				"CurrentUser(ID: {}, Role: {}), " +
-				"Order(ID: {}), " +
-				"StoreOwner(ID: {}), " +
-				"CurrentStatus: {}, NewStatus: {}",
-			user.getUserId(), role,
-			order.getOrdersId(),
-			order.getStore().getUser().getUserId(),
-			currentStatus, newStatus);
+		log.info(
+			"Validating order status update. CurrentUser(ID: {}, Role: {}), Order(ID: {}), StoreOwner(ID: {}), CurrentStatus: {}, NewStatus: {}",
+			user.getUserId(), role, order.getOrdersId(), order.getStore().getUser().getUserId(), order.getOrderStatus(),
+			newStatus);
 
-		boolean isAuthorized = switch (role) {
-			case OWNER, MANAGER, MASTER -> {
-				if (!order.getStore().getUser().getUserId().equals(user.getUserId())) {
-					throw new GeneralException(OrderErrorStatus.ORDER_ACCESS_DENIED);
-				}
-				yield validateOwnerTransition(currentStatus, newStatus);
-			}
-			default -> false;
-		};
-		if (!isAuthorized) {
-			throw new GeneralException(OrderErrorStatus.INVALID_ORDER_STATUS_TRANSITION);
+		switch (role) {
+			case OWNER, MANAGER, MASTER -> validateOwnerUpdate(user, order, newStatus);
+			default -> throw new GeneralException(OrderErrorStatus.ORDER_ACCESS_DENIED);
 		}
 	}
 
-	private boolean validateOwnerTransition(OrderStatus current, OrderStatus next) {
-		return switch (current) {
-			case PENDING -> next == OrderStatus.ACCEPTED || next == OrderStatus.REJECTED;
-			case COOKING -> next == OrderStatus.IN_DELIVERY;
-			default -> false;
-		};
+	private void validateOwnerUpdate(User owner, Orders order, OrderStatus newStatus) {
+		if (!order.getStore().getUser().getUserId().equals(owner.getUserId())) {
+			throw new GeneralException(OrderErrorStatus.ORDER_ACCESS_DENIED);
+		}
+
+		Set<OrderStatus> allowedTransitions = VALID_TRANSITIONS.getOrDefault(order.getOrderStatus(),
+			EnumSet.noneOf(OrderStatus.class));
+
+		if (!allowedTransitions.contains(newStatus)) {
+			throw new GeneralException(ErrorStatus.INVALID_ORDER_STATUS_TRANSITION);
+		}
 	}
 
 	private String appendToHistory(String currentHistoryJson, OrderStatus newStatus) {

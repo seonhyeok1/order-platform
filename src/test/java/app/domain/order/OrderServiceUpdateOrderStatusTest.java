@@ -26,6 +26,7 @@ import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.dto.response.UpdateOrderStatusResponse;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
+import app.domain.order.service.OrderService;
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
