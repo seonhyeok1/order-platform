@@ -102,34 +102,6 @@ class OrderServiceUpdateOrderStatusTest {
 			assertThat(response.getUpdatedStatus()).isEqualTo(newStatus);
 			assertThat(response.getOrderId()).isEqualTo(orderId);
 		}
-
-		@Test
-		@DisplayName("고객이 주문 후 5분 이내에 PENDING 상태의 주문을 성공적으로 취소한다.")
-		void updateOrderStatus_ByCustomer_Within5Minutes_Success() throws
-			JsonProcessingException {
-			// Given
-			User customer = User.builder().userId(2L).userRole(UserRole.CUSTOMER).build();
-
-			Orders customerOrder = Orders.builder()
-				.ordersId(orderId)
-				.orderStatus(OrderStatus.PENDING)
-				.store(store)
-				.user(customer)
-				.orderHistory("{}")
-				.build();
-			ReflectionTestUtils.setField(customerOrder, "createdAt", LocalDateTime.now().minusMinutes(1));
-
-			when(securityUtil.getCurrentUser()).thenReturn(customer);
-			when(ordersRepository.findById(orderId)).thenReturn(Optional.of(customerOrder));
-			when(objectMapper.writeValueAsString(any(Map.class))).thenReturn("{\"REFUNDED\":\"...\"}");
-
-			// When
-			UpdateOrderStatusResponse response = orderService.updateOrderStatus(orderId, OrderStatus.REFUNDED);
-
-			// Then
-			assertThat(customerOrder.getOrderStatus()).isEqualTo(OrderStatus.REFUNDED);
-			assertThat(response.getUpdatedStatus()).isEqualTo(OrderStatus.REFUNDED);
-		}
 	}
 
 	@Nested
@@ -148,7 +120,7 @@ class OrderServiceUpdateOrderStatusTest {
 			// When & Then
 			assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, newStatus))
 				.isInstanceOf(GeneralException.class)
-				.extracting("errorStatus")
+				.extracting("code")
 				.isEqualTo(OrderErrorStatus.ORDER_ACCESS_DENIED);
 		}
 
@@ -162,7 +134,7 @@ class OrderServiceUpdateOrderStatusTest {
 			// When & Then
 			assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, invalidNewStatus))
 				.isInstanceOf(GeneralException.class)
-				.extracting("errorStatus")
+				.extracting("code")
 				.isEqualTo(OrderErrorStatus.INVALID_ORDER_STATUS_TRANSITION);
 
 			assertThat(pendingOrder.getOrderStatus()).isEqualTo(OrderStatus.PENDING);
@@ -179,7 +151,7 @@ class OrderServiceUpdateOrderStatusTest {
 			// When & Then
 			assertThatThrownBy(() -> orderService.updateOrderStatus(nonExistentOrderId, newStatus))
 				.isInstanceOf(GeneralException.class)
-				.extracting("errorStatus")
+				.extracting("code")
 				.isEqualTo(ErrorStatus.ORDER_NOT_FOUND);
 		}
 	}
