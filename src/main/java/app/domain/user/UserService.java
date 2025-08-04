@@ -150,10 +150,6 @@ public class UserService {
 		return GetUserInfoResponse.from(currentUser);
 	}
 
-	/**
-	 * 사용자의 고유 필드(아이디, 이메일, 닉네임, 전화번호) 중복 여부 검사 - 회원가입에서만 사용
-	 * @param createUserRequest 회원가입 요청 DTO
-	 */
 	private void validateUserUniqueness(CreateUserRequest createUserRequest) {
 		userRepository.findFirstByUniqueFields(
 			createUserRequest.getUsername(),
