@@ -2,9 +2,14 @@ package app.domain.menu.model.dto.request;
 
 import java.util.UUID;
 
+import jakarta.validation.constraints.NotNull;
+
 public class MenuCreateRequest {
+	@NotNull
 	private UUID storeId;
+	@NotNull
 	private String name;
+	@NotNull
 	private Long price;
 	private String description;
 
@@ -38,7 +43,7 @@ public class MenuCreateRequest {
 		return price;
 	}
 
-	public void setPrice(long price) {
+	public void setPrice(Long price) {
 		this.price = price;
 	}
 

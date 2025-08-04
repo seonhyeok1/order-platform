@@ -2,7 +2,6 @@ package app.domain.store;
 
 import java.util.UUID;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +22,7 @@ import app.domain.store.status.StoreSuccessStatus;
 import app.global.SecurityUtil;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.exception.GeneralException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,7 +36,7 @@ public class StoreController {
 	private final SecurityUtil securityUtil;
 
 	@PostMapping
-	public ApiResponse<StoreApproveResponse> createStore(@RequestBody StoreApproveRequest request) {
+	public ApiResponse<StoreApproveResponse> createStore(@Valid @RequestBody StoreApproveRequest request) {
 		validateCreateStoreRequest(request);
 
 		StoreApproveResponse response = storeService.createStore(request);
@@ -72,24 +72,14 @@ public class StoreController {
 	}
 
 	@PutMapping
-	@PreAuthorize("hasAuthority('OWNER')")
-	public ApiResponse<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
-		if (request.getStoreId() == null)
-			throw new GeneralException(StoreErrorCode.STORE_ID_NULL);
-
-		if (request.getMinOrderAmount() != null && request.getMinOrderAmount() < 0)
-			throw new GeneralException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
-
-		if (request.getCategoryId() == null)
-			throw new GeneralException(StoreErrorCode.CATEGORY_ID_NULL);
+	public ApiResponse<StoreInfoUpdateResponse> updateStore(@Valid @RequestBody StoreInfoUpdateRequest request) {
 
 		StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_UPDATED_SUCCESS, response);
 	}
 
 	@DeleteMapping("/{storeId}")
-	@PreAuthorize("hasAuthority('OWNER')")
-	public ApiResponse<String> deleteStore(@PathVariable UUID storeId) {
+	public ApiResponse<String> deleteStore(@Valid @PathVariable UUID storeId) {
 		storeService.deleteStore(storeId);
 
 		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_DELETED_SUCCESS, "가게 삭제가 완료되었습니다.");
