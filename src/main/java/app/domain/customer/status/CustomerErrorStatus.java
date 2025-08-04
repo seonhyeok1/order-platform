@@ -11,7 +11,10 @@ import lombok.Getter;
 @Getter
 public enum CustomerErrorStatus implements BaseCode {
 
-	CUSTOMER_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "CUSTOMER404", "유저에 대한 오더가 존재하지 않습니다.");
+	CUSTOMER_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "CUSTOMER404", "유저에 대한 오더가 존재하지 않습니다."),
+	ADDRESS_ALREADY_EXISTS(HttpStatus.CONFLICT, "ADDRESS_001", "이미 존재하는 주소입니다."),
+	ADDRESS_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_002", "주소 등록에 실패했습니다."),
+	ADDRESS_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_004", "주소 목록 조회에 실패했습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

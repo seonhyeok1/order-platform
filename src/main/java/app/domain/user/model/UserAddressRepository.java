@@ -12,4 +12,5 @@ public interface UserAddressRepository extends JpaRepository<UserAddress, UUID> 
 	List<UserAddress> findAllByUserUserId(Long UserId);
 	Optional<UserAddress> findByUser_UserIdAndIsDefaultTrue(Long userId);
 	boolean existsByUserAndAddressAndAddressDetail(User user, String address, String addressDetail);
+	long countByUser(User user);
 }
