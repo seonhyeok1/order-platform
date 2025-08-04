@@ -23,7 +23,7 @@ import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
-import app.domain.user.status.ErrorStatus;
+import app.domain.user.status.UserErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -142,7 +142,7 @@ class UserServiceCreateUserTest {
 			assertThatThrownBy(() -> userService.createUser(req))
 				.isInstanceOf(GeneralException.class)
 				.extracting("errorReasonHttpStatus.code")
-				.isEqualTo(ErrorStatus.USER_ALREADY_EXISTS.getCode());
+				.isEqualTo(UserErrorStatus.USER_ALREADY_EXISTS.getCode());
 
 			verify(userRepository, never()).save(any(User.class));
 		}
@@ -166,7 +166,7 @@ class UserServiceCreateUserTest {
 			assertThatThrownBy(() -> userService.createUser(req))
 				.isInstanceOf(GeneralException.class)
 				.extracting("errorReasonHttpStatus.code")
-				.isEqualTo(ErrorStatus.EMAIL_ALREADY_EXISTS.getCode());
+				.isEqualTo(UserErrorStatus.EMAIL_ALREADY_EXISTS.getCode());
 
 			verify(userRepository, never()).save(any(User.class));
 		}
@@ -191,7 +191,7 @@ class UserServiceCreateUserTest {
 			assertThatThrownBy(() -> userService.createUser(req))
 				.isInstanceOf(GeneralException.class)
 				.extracting("errorReasonHttpStatus.code")
-				.isEqualTo(ErrorStatus.NICKNAME_ALREADY_EXISTS.getCode());
+				.isEqualTo(UserErrorStatus.NICKNAME_ALREADY_EXISTS.getCode());
 
 			verify(userRepository, never()).save(any(User.class));
 		}
@@ -217,7 +217,7 @@ class UserServiceCreateUserTest {
 			assertThatThrownBy(() -> userService.createUser(req))
 				.isInstanceOf(GeneralException.class)
 				.extracting("errorReasonHttpStatus.code")
-				.isEqualTo(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS.getCode());
+				.isEqualTo(UserErrorStatus.PHONE_NUMBER_ALREADY_EXISTS.getCode());
 
 			verify(userRepository, never()).save(any(User.class));
 		}

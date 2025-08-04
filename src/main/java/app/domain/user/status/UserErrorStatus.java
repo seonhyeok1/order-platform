@@ -9,13 +9,16 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum SuccessStatus implements BaseCode {
+public enum UserErrorStatus implements BaseCode {
 
-	// User
-	USER_CREATED(HttpStatus.CREATED, "USER201", "사용자 생성이 성공했습니다."),
-	LOGIN_SUCCESS(HttpStatus.OK, "USER202", "로그인에 성공했습니다."),
-	LOGOUT_SUCCESS(HttpStatus.OK, "USER203", "로그아웃에 성공했습니다."),
-	WITHDRAW_SUCCESS(HttpStatus.OK, "USER204", "회원 탈퇴가 성공적으로 처리되었습니다.");
+	// 인증 관련
+	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
+
+	// User 관련
+	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER001", "이미 존재하는 유저입니다."),
+	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER002", "이미 사용 중인 이메일입니다."),
+	NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER003", "이미 사용 중인 닉네임입니다."),
+	PHONE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER004", "이미 사용 중인 전화번호입니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
@@ -24,7 +27,6 @@ public enum SuccessStatus implements BaseCode {
 	@Override
 	public ReasonDTO getReason() {
 		return ReasonDTO.builder()
-			.isSuccess(true)
 			.message(message)
 			.code(code)
 			.build();
@@ -33,7 +35,7 @@ public enum SuccessStatus implements BaseCode {
 	@Override
 	public ReasonDTO getReasonHttpStatus() {
 		return ReasonDTO.builder()
-			.isSuccess(true)
+			.isSuccess(false)
 			.message(message)
 			.code(code)
 			.httpStatus(httpStatus)
