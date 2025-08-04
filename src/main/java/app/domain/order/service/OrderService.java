@@ -30,13 +30,13 @@ import app.domain.order.model.dto.response.UpdateOrderStatusResponse;
 import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
+import app.domain.order.status.ErrorStatus;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
 import app.global.SecurityUtil;
-import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -58,16 +58,15 @@ public class OrderService {
 	private final ObjectMapper objectMapper;
 
 	@Transactional
-	public UUID createOrder(Long userId, CreateOrderRequest request) {
+	public UUID createOrder(CreateOrderRequest request) {
 		try {
+			User user = securityUtil.getCurrentUser();
+			Long userId = user.getUserId();
+
 			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
 			if (cartItems.isEmpty()) {
-				throw new GeneralException(ErrorStatus.CART_NOT_FOUND);
+				throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus.CART_NOT_FOUND);
 			}
-
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-
 			UUID storeId = cartItems.get(0).getStoreId();
 			boolean allSameStore = cartItems.stream().allMatch(item -> item.getStoreId().equals(storeId));
 			if (!allSameStore) {
@@ -75,12 +74,13 @@ public class OrderService {
 			}
 
 			Store store = storeRepository.findById(storeId)
-				.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
+				.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.STORE_NOT_FOUND));
 
 			Map<UUID, Menu> menuMap = new HashMap<>();
 			for (RedisCartItem cartItem : cartItems) {
 				Menu menu = menuRepository.findById(cartItem.getMenuId())
-					.orElseThrow(() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
+					.orElseThrow(
+						() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.MENU_NOT_FOUND));
 				menuMap.put(cartItem.getMenuId(), menu);
 			}
 
@@ -138,7 +138,7 @@ public class OrderService {
 	public OrderDetailResponse getOrderDetail(UUID orderId) {
 		try {
 			Orders order = ordersRepository.findById(orderId)
-				.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+				.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.ORDER_NOT_FOUND));
 
 			List<OrderItem> orderItems = orderItemRepository.findByOrders(order);
 
@@ -147,7 +147,7 @@ public class OrderService {
 			throw e;
 		} catch (Exception e) {
 			log.error("주문 상세 조회 실패 - orderId: {}", orderId, e);
-			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+			throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -164,8 +164,9 @@ public class OrderService {
 	@PreAuthorize("hasAnyAuthority('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
 	public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, OrderStatus newStatus) {
 		User currentUser = securityUtil.getCurrentUser();
+
 		Orders order = ordersRepository.findById(orderId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.ORDER_NOT_FOUND));
 
 		validateOrderStatusUpdate(currentUser, order, newStatus);
 
@@ -256,7 +257,7 @@ public class OrderService {
 
 		} catch (JsonProcessingException e) {
 			log.error("주문 이력(JSON) 업데이트에 실패했습니다. History: {}", currentHistoryJson, e);
-			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+			throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
 	}
 }
