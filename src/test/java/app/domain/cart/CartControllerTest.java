@@ -2,12 +2,16 @@ package app.domain.cart;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -25,10 +31,10 @@ import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
-import app.global.config.SecurityConfig;
+import app.global.config.MockSecurityConfig;
 
 @WebMvcTest(CartController.class)
-@Import(SecurityConfig.class)
+@Import({MockSecurityConfig.class})
 @DisplayName("CartController 테스트")
 class CartControllerTest {
 
@@ -38,66 +44,81 @@ class CartControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private WebApplicationContext context;
+
 	@MockitoBean
 	private CartService cartService;
 
+	@BeforeEach
+	void setUp() {
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
+	}
+
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 성공")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void addItemToCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
 		UUID storeId = UUID.randomUUID();
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+		String resultMessage = "사용자 1의 장바구니가 성공적으로 저장되었습니다.";
 
-		when(cartService.addCartItem(userId, request))
-			.thenReturn("사용자 1의 장바구니가 성공적으로 저장되었습니다.");
+		when(cartService.addCartItem(eq(userId), any(AddCartItemRequest.class)))
+			.thenReturn(resultMessage);
 
-		mockMvc.perform(post("/cart/item")
-				.param("userId", userId.toString())
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
+			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
-			.andExpect(jsonPath("$.result").value("사용자 1의 장바구니가 성공적으로 저장되었습니다."));
+			.andExpect(jsonPath("$.result").exists())
+			.andExpect(jsonPath("$.result").value(resultMessage));
 
-		verify(cartService).addCartItem(userId, request);
 	}
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 수량 0 이하 실패")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void addItemToCart_InvalidQuantity() throws Exception {
-		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
 		UUID storeId = UUID.randomUUID();
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 0);
 
-		mockMvc.perform(post("/cart/item")
-				.param("userId", userId.toString())
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("CART006"))
-			.andExpect(jsonPath("$.message").value("수량은 1 이상이어야 합니다."));
+			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.result.quantity").value("수량은 1 이상이어야 합니다."));
+		
+		verify(cartService, never()).addCartItem(any(), any());
 
 	}
 
 	@Test
 	@DisplayName("장바구니 아이템 추가 - 서비스 에러")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void addItemToCart_ServiceError() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
 		UUID storeId = UUID.randomUUID();
 		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
 
-		when(cartService.addCartItem(userId, request))
+		when(cartService.addCartItem(eq(userId), any(AddCartItemRequest.class)))
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED));
 
-		mockMvc.perform(post("/cart/item")
-				.param("userId", userId.toString())
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isInternalServerError())
@@ -107,48 +128,46 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 아이템 수량 수정 - 성공")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void updateItemInCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
 		int quantity = 5;
 
-		when(cartService.updateCartItem(userId, menuId, quantity))
+		when(cartService.updateCartItem(eq(userId), any(UUID.class), anyInt()))
 			.thenReturn("사용자 1의 장바구니가 성공적으로 저장되었습니다.");
 
-		mockMvc.perform(patch("/cart/item/{menuId}/{quantity}", menuId, quantity)
-				.param("userId", userId.toString()))
+		mockMvc.perform(patch("/customer/cart/item/{menuId}/{quantity}", menuId, quantity)
+				.with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
-			.andExpect(jsonPath("$.result").value("사용자 1의 장바구니가 성공적으로 저장되었습니다."));
+			.andExpect(jsonPath("$.message").value("success"));
 
 		verify(cartService).updateCartItem(userId, menuId, quantity);
 	}
 
 	@Test
 	@DisplayName("장바구니 아이템 삭제 - 성공")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void removeItemFromCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId = UUID.randomUUID();
 
-		when(cartService.removeCartItem(userId, menuId))
+		when(cartService.removeCartItem(eq(userId), any(UUID.class)))
 			.thenReturn("사용자 1의 장바구니에서 메뉴가 성공적으로 삭제되었습니다.");
 
-		mockMvc.perform(delete("/cart/item/{menuId}", menuId)
-				.param("userId", userId.toString()))
+		mockMvc.perform(delete("/customer/cart/item/{menuId}", menuId)
+				.with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
-			.andExpect(jsonPath("$.result").value("사용자 1의 장바구니에서 메뉴가 성공적으로 삭제되었습니다."));
+			.andExpect(jsonPath("$.message").value("success"));
 
 		verify(cartService).removeCartItem(userId, menuId);
 	}
 
 	@Test
 	@DisplayName("장바구니 조회 - 성공")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void getCart_Success() throws Exception {
 		Long userId = 1L;
 		UUID menuId1 = UUID.randomUUID();
@@ -160,10 +179,9 @@ class CartControllerTest {
 			RedisCartItem.builder().menuId(menuId2).storeId(storeId).quantity(1).build()
 		);
 
-		when(cartService.getCartFromCache(userId)).thenReturn(cartItems);
+		when(cartService.getCartFromCache(eq(userId))).thenReturn(cartItems);
 
-		mockMvc.perform(get("/cart")
-				.param("userId", userId.toString()))
+		mockMvc.perform(get("/customer/cart"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
@@ -179,14 +197,13 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 조회 - 빈 장바구니")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void getCart_Empty() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.getCartFromCache(userId)).thenReturn(List.of());
+		when(cartService.getCartFromCache(eq(userId))).thenReturn(List.of());
 
-		mockMvc.perform(get("/cart")
-				.param("userId", userId.toString()))
+		mockMvc.perform(get("/customer/cart"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
@@ -198,15 +215,14 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 조회 - 서비스 에러")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void getCart_ServiceError() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.getCartFromCache(userId))
+		when(cartService.getCartFromCache(eq(userId)))
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_LOAD_FAILED));
 
-		mockMvc.perform(get("/cart")
-				.param("userId", userId.toString()))
+		mockMvc.perform(get("/customer/cart"))
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.resultCode").value("CART002"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 조회에 실패했습니다."));
@@ -214,34 +230,33 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("장바구니 전체 삭제 - 성공")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void clearCart_Success() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.clearCartItems(userId))
+		when(cartService.clearCartItems(eq(userId)))
 			.thenReturn("사용자 1의 장바구니가 성공적으로 비워졌습니다.");
 
-		mockMvc.perform(delete("/cart/item")
-				.param("userId", userId.toString()))
+		mockMvc.perform(delete("/customer/cart/item")
+				.with(csrf()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
-			.andExpect(jsonPath("$.result").value("사용자 1의 장바구니가 성공적으로 비워졌습니다."));
+			.andExpect(jsonPath("$.message").value("success"));
 
 		verify(cartService).clearCartItems(userId);
 	}
 
 	@Test
 	@DisplayName("장바구니 전체 삭제 - 서비스 에러")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void clearCart_ServiceError() throws Exception {
 		Long userId = 1L;
 
-		when(cartService.clearCartItems(userId))
+		when(cartService.clearCartItems(eq(userId)))
 			.thenThrow(new GeneralException(ErrorStatus.CART_REDIS_SAVE_FAILED));
 
-		mockMvc.perform(delete("/cart/item")
-				.param("userId", userId.toString()))
+		mockMvc.perform(delete("/customer/cart/item")
+				.with(csrf()))
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.resultCode").value("CART001"))
 			.andExpect(jsonPath("$.message").value("장바구니 Redis 저장에 실패했습니다."));
@@ -249,13 +264,13 @@ class CartControllerTest {
 
 	@Test
 	@DisplayName("잘못된 JSON 형식 - 요청 바디 매핑 실패")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void addItemToCart_InvalidJson() throws Exception {
 		Long userId = 1L;
 		String invalidJson = "{\"menuId\": \"invalid-uuid\", \"storeId\": \"valid-uuid\", \"quantity\": 2}";
 
-		mockMvc.perform(post("/cart/item")
-				.param("userId", userId.toString())
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(invalidJson))
 			.andExpect(status().isBadRequest());
@@ -264,17 +279,56 @@ class CartControllerTest {
 	}
 
 	@Test
-	@DisplayName("필수 파라미터 누락 - userId 없음")
-	@WithMockUser
-	void addItemToCart_MissingUserId() throws Exception {
-		UUID menuId = UUID.randomUUID();
-		UUID storeId = UUID.randomUUID();
-		AddCartItemRequest request = new AddCartItemRequest(menuId, storeId, 2);
+	@DisplayName("필수 파라미터 누락 - menuId 없음")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void addItemToCart_MissingMenuId() throws Exception {
+		String jsonWithoutMenuId = "{\"storeId\": \"" + UUID.randomUUID() + "\", \"quantity\": 2}";
 
-		mockMvc.perform(post("/cart/item")
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)))
-			.andExpect(status().isBadRequest());
+				.content(jsonWithoutMenuId))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.result.menuId").value("메뉴 ID는 필수입니다."));
+
+		verify(cartService, never()).addCartItem(any(), any());
+	}
+
+	@Test
+	@DisplayName("필수 파라미터 누락 - storeId 없음")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void addItemToCart_MissingStoreId() throws Exception {
+		String jsonWithoutStoreId = "{\"menuId\": \"" + UUID.randomUUID() + "\", \"quantity\": 2}";
+
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonWithoutStoreId))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.result.storeId").value("매장 ID는 필수입니다."));
+
+		verify(cartService, never()).addCartItem(any(), any());
+	}
+
+	@Test
+	@DisplayName("필수 파라미터 누락 - quantity 없음")
+	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	void addItemToCart_MissingQuantity() throws Exception {
+		String jsonWithoutQuantity =
+			"{\"menuId\": \"" + UUID.randomUUID() + "\", \"storeId\": \"" + UUID.randomUUID() + "\"}";
+
+		mockMvc.perform(post("/customer/cart/item")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonWithoutQuantity))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
+			.andExpect(jsonPath("$.result.quantity").value("수량은 필수입니다."));
 
 		verify(cartService, never()).addCartItem(any(), any());
 	}

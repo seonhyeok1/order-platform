@@ -31,6 +31,7 @@ import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
 import app.global.apiPayload.exception.GeneralException;
 
+
 @ExtendWith(MockitoExtension.class)
 public class StoreControllerTest {
 

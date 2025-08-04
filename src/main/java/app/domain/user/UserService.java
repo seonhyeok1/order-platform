@@ -10,6 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import app.domain.cart.model.CartRepository;
+import app.domain.cart.model.entity.Cart;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.request.LoginRequest;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final CartRepository cartRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
@@ -55,6 +58,8 @@ public class UserService {
 		try {
 			User savedUser = userRepository.save(user);
 			return CreateUserResponse.from(savedUser);
+			cartRepository.save(Cart.builder().user(savedUser).build());
+			return savedUser.getUserId().toString();
 		} catch (DataAccessException e) {
 			log.error("데이터베이스에 사용자 등록을 실패했습니다.", e);
 			throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus._INTERNAL_SERVER_ERROR);

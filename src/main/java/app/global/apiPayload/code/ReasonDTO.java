@@ -10,7 +10,7 @@ import lombok.Getter;
 public class ReasonDTO {
 
 	private final HttpStatus httpStatus;
-	private final boolean isSuccess; // 💡 성공/실패 여부를 나타내는 필드 추가
+	private final boolean isSuccess; // Indicates whether the operation was successful
 	private final String code;
 	private final String message;
 }

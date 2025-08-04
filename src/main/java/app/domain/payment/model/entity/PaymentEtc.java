@@ -9,8 +9,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,11 +29,10 @@ public class PaymentEtc extends BaseEntity {
 	@GeneratedValue
 	private UUID paymentEtcId;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "payment_id", nullable = false)
 	private Payment payment;
 
-	@Lob
-	@Column(nullable = false)
-	private String paymentResponse; // JSON 문자열
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String paymentResponse;
 }
