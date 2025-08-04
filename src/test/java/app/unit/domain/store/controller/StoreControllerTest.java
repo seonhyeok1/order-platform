@@ -6,6 +6,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,17 +26,21 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import app.domain.menu.model.dto.response.MenuListResponse;
+import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.store.StoreController;
 import app.domain.store.StoreService;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
 import app.domain.store.model.dto.response.StoreInfoUpdateResponse;
+import app.domain.store.model.dto.response.StoreOrderListResponse;
 import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
 import app.domain.store.status.StoreSuccessStatus;
+import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -328,6 +335,194 @@ public class StoreControllerTest {
 			assertEquals(StoreErrorCode.STORE_NOT_FOUND, exception.getCode());
 
 			verify(storeService, times(1)).deleteStore(storeId);
+		}
+	}
+
+	private <T> void assertSuccessResponse(ApiResponse<T> response, StoreSuccessStatus expectedStatus,
+		T expectedResult) {
+		assertNotNull(response);
+		assertEquals(expectedStatus.getCode(), response.code());
+		assertEquals(expectedStatus.getMessage(), response.message());
+		assertEquals(expectedResult, response.result());
+	}
+
+	@Nested
+	@DisplayName("점주의 메뉴 목록 조회 API 테스트")
+	class GetStoreMenusTest {
+
+		private final UUID testStoreId = TEST_STORE_ID; // TEST_STORE_ID를 사용하도록 수정
+
+		@Test
+		@DisplayName("성공: 메뉴 목록 조회")
+		void getStoreMenus_Success() {
+			MenuListResponse.MenuDetail menuDetail = new
+				MenuListResponse.MenuDetail(UUID.randomUUID(), "메뉴1", 1000L,
+				"설명1", false);
+			MenuListResponse expectedResponse = new
+				MenuListResponse(testStoreId,
+				Collections.singletonList(menuDetail));
+
+			when(storeService.getStoreMenuList(testStoreId)).thenReturn(expectedResponse);
+
+			ApiResponse<MenuListResponse> response =
+				storeController.getStoreMenus(testStoreId);
+
+			assertSuccessResponse(response, StoreSuccessStatus._OK,
+				expectedResponse);
+			verify(storeService, times(1)).getStoreMenuList(testStoreId);
+		}
+
+		@Test
+		@DisplayName("실패: 가게 없음")
+		void getStoreMenus_Fail_StoreNotFound() {
+			when(storeService.getStoreMenuList(testStoreId))
+				.thenThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.getStoreMenus(testStoreId);
+			});
+
+			assertEquals(StoreErrorCode.STORE_NOT_FOUND,
+				exception.getCode());
+			verify(storeService, times(1)).getStoreMenuList(testStoreId);
+		}
+
+		@Test
+		@DisplayName("실패: 권한 없음")
+		void getStoreMenus_Fail_Unauthorized() {
+			when(storeService.getStoreMenuList(testStoreId))
+				.thenThrow(new
+					GeneralException(StoreErrorCode.INVALID_USER_ROLE));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.getStoreMenus(testStoreId);
+			});
+
+			assertEquals(StoreErrorCode.INVALID_USER_ROLE,
+				exception.getCode());
+			verify(storeService, times(1)).getStoreMenuList(testStoreId);
+		}
+	}
+
+	@Nested
+	@DisplayName("점주의 리뷰 목록 조회 API 테스트")
+	class GetStoreReviewsTest {
+
+		private final UUID testStoreId = TEST_STORE_ID; // TEST_STORE_ID를 사용하도록 수정
+
+		@Test
+		@DisplayName("성공: 리뷰 목록 조회")
+		void getStoreReviews_Success() {
+			GetReviewResponse reviewResponse = new
+				GetReviewResponse(UUID.randomUUID(), "고객1", "가게1", 5L,
+				"맛있어요", LocalDateTime.now());
+			List<GetReviewResponse> expectedResponse =
+				Collections.singletonList(reviewResponse);
+
+			when(storeService.getStoreReviewList(testStoreId)).thenReturn(expectedResponse);
+
+			ApiResponse<List<GetReviewResponse>> response =
+				storeController.getStoreReviews(testStoreId);
+
+			assertSuccessResponse(response, StoreSuccessStatus._OK,
+				expectedResponse);
+			verify(storeService, times(1)).getStoreReviewList(testStoreId);
+		}
+
+		@Test
+		@DisplayName("실패: 가게 없음")
+		void getStoreReviews_Fail_StoreNotFound() {
+			when(storeService.getStoreReviewList(testStoreId))
+				.thenThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.getStoreReviews(testStoreId);
+			});
+
+			assertEquals(StoreErrorCode.STORE_NOT_FOUND,
+				exception.getCode());
+			verify(storeService, times(1)).getStoreReviewList(testStoreId);
+		}
+
+		@Test
+		@DisplayName("실패: 권한 없음")
+		void getStoreReviews_Fail_Unauthorized() {
+			when(storeService.getStoreReviewList(testStoreId))
+				.thenThrow(new
+					GeneralException(StoreErrorCode.INVALID_USER_ROLE));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.getStoreReviews(testStoreId);
+			});
+
+			assertEquals(StoreErrorCode.INVALID_USER_ROLE,
+				exception.getCode());
+			verify(storeService, times(1)).getStoreReviewList(testStoreId);
+		}
+	}
+
+	@Nested
+	@DisplayName("점주의 주문 목록 조회 API 테스트")
+	class GetStoreOrdersTest {
+
+		private final UUID testStoreId = TEST_STORE_ID; // TEST_STORE_ID를 사용하도록 수정
+
+		@Test
+		@DisplayName("성공: 주문 목록 조회")
+		void getStoreOrders_Success() {
+			StoreOrderListResponse.StoreOrderDetail orderDetail =
+				StoreOrderListResponse.StoreOrderDetail.builder()
+					.orderId(UUID.randomUUID())
+					.customerName("고객1")
+					.totalPrice(15000L)
+					.orderStatus(app.domain.order.model.entity.enums.OrderStatus.COMPLETED)
+					.orderedAt(LocalDateTime.now())
+					.build();
+			StoreOrderListResponse expectedResponse =
+				StoreOrderListResponse.builder()
+					.storeId(testStoreId)
+					.orderList(Collections.singletonList(orderDetail))
+					.build();
+
+			when(storeService.getStoreOrderList(testStoreId)).thenReturn(expectedResponse);
+
+			ApiResponse<StoreOrderListResponse> response =
+				storeController.getStoreOrders(testStoreId);
+
+			assertSuccessResponse(response, StoreSuccessStatus._OK,
+				expectedResponse);
+			verify(storeService, times(1)).getStoreOrderList(testStoreId);
+		}
+
+		@Test
+		@DisplayName("실패: 가게 없음")
+		void getStoreOrders_Fail_StoreNotFound() {
+			when(storeService.getStoreOrderList(testStoreId))
+				.thenThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.getStoreOrders(testStoreId);
+			});
+
+			assertEquals(StoreErrorCode.STORE_NOT_FOUND,
+				exception.getCode());
+			verify(storeService, times(1)).getStoreOrderList(testStoreId);
+		}
+
+		@Test
+		@DisplayName("실패: 권한 없음")
+		void getStoreOrders_Fail_Unauthorized() {
+			when(storeService.getStoreOrderList(testStoreId))
+				.thenThrow(new
+					GeneralException(StoreErrorCode.INVALID_USER_ROLE));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.getStoreOrders(testStoreId);
+			});
+
+			assertEquals(StoreErrorCode.INVALID_USER_ROLE,
+				exception.getCode());
+			verify(storeService, times(1)).getStoreOrderList(testStoreId);
 		}
 	}
 }
