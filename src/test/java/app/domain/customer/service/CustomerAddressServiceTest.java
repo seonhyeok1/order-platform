@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import app.domain.customer.CustomerAddressService;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.user.model.UserAddressRepository;
-import app.domain.user.model.UserRepository;
 import app.domain.customer.dto.request.AddCustomerAddressRequest;
 import app.domain.customer.dto.response.AddCustomerAddressResponse;
 import app.domain.user.model.entity.User;
@@ -14,6 +13,7 @@ import app.domain.user.model.entity.UserAddress;
 import app.domain.user.model.entity.enums.UserRole;
 import app.domain.customer.status.CustomerErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
+import app.global.SecurityUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,10 +39,10 @@ class CustomerAddressServiceTest {
 	private CustomerAddressService customerAddressService;
 
 	@Mock
-	private UserRepository userRepository;
+	private UserAddressRepository userAddressRepository;
 
 	@Mock
-	private UserAddressRepository userAddressRepository;
+	private SecurityUtil securityUtil;
 
 	private User testUser;
 
@@ -58,6 +58,8 @@ class CustomerAddressServiceTest {
 				.phoneNumber("01012345678")
 				.userRole(UserRole.CUSTOMER)
 				.build();
+
+		when(securityUtil.getCurrentUser()).thenReturn(testUser);
 	}
 
 	private List<UserAddress> createMockAddressList(User user) {
@@ -95,7 +97,6 @@ class CustomerAddressServiceTest {
 					"1501호",
 					true
 			);
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 
 			when(userAddressRepository.save(any(UserAddress.class)))
 					.thenAnswer(invocation -> {
@@ -113,13 +114,12 @@ class CustomerAddressServiceTest {
 						return useraddress;
 					});
 
-			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(testUser.getUserId(), request);
+			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(request);
 
 			assertNotNull(response);
 			assertNotNull(response.getAddress_id());
 
 			ArgumentCaptor<UserAddress> captor = ArgumentCaptor.forClass(UserAddress.class);
-			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(captor.capture());
 			UserAddress savedArg = captor.getValue();
 
@@ -140,7 +140,6 @@ class CustomerAddressServiceTest {
 					"1501호",
 					false
 			);
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 
 			when(userAddressRepository.save(any(UserAddress.class)))
 					.thenAnswer(invocation -> {
@@ -158,13 +157,12 @@ class CustomerAddressServiceTest {
 						return useraddress;
 					});
 
-			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(testUser.getUserId(), request);
+			AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(request);
 
 			assertNotNull(response);
 			assertNotNull(response.getAddress_id());
 
 			ArgumentCaptor<UserAddress> captor = ArgumentCaptor.forClass(UserAddress.class);
-			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(captor.capture());
 			UserAddress savedArg = captor.getValue();
 
@@ -194,7 +192,6 @@ class CustomerAddressServiceTest {
 					.isDefault(true)
 					.build();
 
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findByUser_UserIdAndIsDefaultTrue(testUser.getUserId()))
 					.thenReturn(Optional.of(previousDefaultAddress));
 
@@ -213,7 +210,7 @@ class CustomerAddressServiceTest {
 				return savedAddress;
 			});
 
-			customerAddressService.addCustomerAddress(testUser.getUserId(), request);
+			customerAddressService.addCustomerAddress(request);
 
 			ArgumentCaptor<UserAddress> addressCaptor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userAddressRepository, times(2)).save(addressCaptor.capture());
@@ -241,8 +238,6 @@ class CustomerAddressServiceTest {
 					false
 			);
 
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
-
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId()))
 					.thenReturn(List.of(UserAddress.builder().build()));
 
@@ -258,7 +253,7 @@ class CustomerAddressServiceTest {
 						.build();
 			});
 
-			customerAddressService.addCustomerAddress(testUser.getUserId(), request);
+			customerAddressService.addCustomerAddress(request);
 
 			ArgumentCaptor<UserAddress> addressCaptor = ArgumentCaptor.forClass(UserAddress.class);
 			verify(userAddressRepository, times(1)).save(addressCaptor.capture());
@@ -277,31 +272,8 @@ class CustomerAddressServiceTest {
 	@Nested
 	@DisplayName("주소 추가 실패 케이스")
 	class addAddressFailureCases {
-
 		@Test
-		@DisplayName("1. 존재하지 않는 사용자 ID로 요청 시")
-		void addUserAddress_Fail_UserNotFound() {
-			long nonExistentUserId = 9999L;
-			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
-					"우리집",
-					"서울시 강남구 테헤란로 212",
-					"1501호",
-					false
-			);
-			when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
-
-			GeneralException ex = assertThrows(
-					GeneralException.class,
-					() -> customerAddressService.addCustomerAddress(nonExistentUserId, request)
-			);
-			assertThat(ex.getErrorStatus()).isEqualTo(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND);
-
-			verify(userRepository, times(1)).findById(nonExistentUserId);
-			verify(userAddressRepository, never()).save(any(UserAddress.class));
-		}
-
-		@Test
-		@DisplayName("2. 동일한 주소(주소+상세주소)를 중복 등록 시 예외 발생")
+		@DisplayName("동일한 주소(주소+상세주소)를 중복 등록 시 예외 발생")
 		void addUserAddress_Fail_WhenAddressIsDuplicate() {
 			AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 
@@ -311,8 +283,6 @@ class CustomerAddressServiceTest {
 					false
 			);
 
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
-
 			when(userAddressRepository.existsByUserAndAddressAndAddressDetail(
 					testUser,
 					request.getAddress(),
@@ -320,10 +290,10 @@ class CustomerAddressServiceTest {
 			)).thenReturn(true);
 
 			GeneralException ex = assertThrows(GeneralException.class,
-					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
+					() -> customerAddressService.addCustomerAddress(request)
 			);
 
-			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS);
+			assertThat(ex.getCode()).isEqualTo(CustomerErrorStatus.ADDRESS_ALREADY_EXISTS);
 
 			verify(userAddressRepository, never()).countByUser(any());
 			verify(userAddressRepository, never()).save(any(UserAddress.class));
@@ -344,26 +314,23 @@ class CustomerAddressServiceTest {
 					true
 			);
 
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
-
 			when(userAddressRepository.save(any(UserAddress.class)))
 					.thenThrow(new DataAccessResourceFailureException("Simulated DB error"));
 
 			GeneralException ex = assertThrows(
 					GeneralException.class,
-					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
+					() -> customerAddressService.addCustomerAddress(request)
 			);
 
-			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_ADD_FAILED);
+			assertThat(ex.getCode()).isEqualTo(CustomerErrorStatus.ADDRESS_ADD_FAILED);
 
-			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).save(any(UserAddress.class));
 		}
 
 		@Test
 		@DisplayName("2. UUID 생성 실패 시 _INTERNAL_SERVER_ERROR 예외 발생")
 		void addUserAddress_Fail_UuidNotAssigned() {
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
+
 			when(userAddressRepository.save(any(UserAddress.class)))
 					.thenAnswer(inv -> {
 						UserAddress ua = inv.getArgument(0);
@@ -385,9 +352,9 @@ class CustomerAddressServiceTest {
 
 			GeneralException ex = assertThrows(
 					GeneralException.class,
-					() -> customerAddressService.addCustomerAddress(testUser.getUserId(), request)
+					() -> customerAddressService.addCustomerAddress(request)
 			);
-			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_ADD_FAILED);
+			assertThat(ex.getCode()).isEqualTo(CustomerErrorStatus.ADDRESS_ADD_FAILED);
 			verify(userAddressRepository, times(1)).save(any(UserAddress.class));
 		}
 	}
@@ -413,10 +380,10 @@ class CustomerAddressServiceTest {
 					.build();
 			List<UserAddress> mockAddressList = List.of(singleAddress);
 
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
+
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(mockAddressList);
 
-			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
+			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses();
 
 			assertThat(result).isNotNull();
 			assertThat(result.size()).isEqualTo(1);
@@ -427,7 +394,6 @@ class CustomerAddressServiceTest {
 			assertThat(result1.addressDetail()).isEqualTo(singleAddress.getAddressDetail());
 			assertThat(result1.isDefault()).isEqualTo(singleAddress.isDefault());
 
-			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).findAllByUserUserId(testUser.getUserId());
 		}
 
@@ -438,10 +404,9 @@ class CustomerAddressServiceTest {
 			UserAddress address1 = mockAddressList.get(0);
 			UserAddress address2 = mockAddressList.get(1);
 
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(mockAddressList);
 
-			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
+			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses();
 
 			assertThat(result).isNotNull();
 			assertThat(result.size()).isEqualTo(2);
@@ -458,41 +423,20 @@ class CustomerAddressServiceTest {
 			assertThat(result2.addressDetail()).isEqualTo(address2.getAddressDetail());
 			assertThat(result2.isDefault()).isEqualTo(address2.isDefault());
 
-			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).findAllByUserUserId(testUser.getUserId());
 		}
 
 		@Test
 		@DisplayName("3. 주소가 없는 사용자의 경우 빈 리스트를 반환함")
 		void getCustomerAddresses_Success_WhenNoAddressesExist_ReturnsEmptyList() {
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId())).thenReturn(List.of());
 
-			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses(testUser.getUserId());
+			List<GetCustomerAddressListResponse> result = customerAddressService.getCustomerAddresses();
 
 			assertThat(result).isNotNull();
 			assertThat(result).isEmpty();
 
-			verify(userRepository, times(1)).findById(testUser.getUserId());
 			verify(userAddressRepository, times(1)).findAllByUserUserId(testUser.getUserId());
-		}
-	}
-
-	@Nested
-	@DisplayName("주소 목록 조회 실패 케이스")
-	class getAddressFailureCases {
-
-		@Test
-		@DisplayName("1. 존재하지 않는 사용자로 조회 시 USER_NOT_FOUND 예외 발생")
-		void getCustomerAddresses_Fail_UserNotFound() {
-			long nonExistentUserId = 9999L;
-			when(userRepository.findById(nonExistentUserId)).thenReturn(Optional.empty());
-
-			GeneralException ex = assertThrows(GeneralException.class,
-					() -> customerAddressService.getCustomerAddresses(nonExistentUserId));
-
-			assertThat(ex.getErrorStatus()).isEqualTo(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND);
-			verify(userAddressRepository, never()).findAllByUserUserId(anyLong());
 		}
 	}
 
@@ -503,14 +447,13 @@ class CustomerAddressServiceTest {
 		@Test
 		@DisplayName("1. DB 조회 중 오류 발생 시 _INTERNAL_SERVER_ERROR 예외 발생")
 		void getCustomerAddresses_Exception_DbError() {
-			when(userRepository.findById(testUser.getUserId())).thenReturn(Optional.of(testUser));
 			when(userAddressRepository.findAllByUserUserId(testUser.getUserId()))
 					.thenThrow(new DataAccessResourceFailureException("Simulated DB Connection Failure"));
 
 			GeneralException ex = assertThrows(GeneralException.class,
-					() -> customerAddressService.getCustomerAddresses(testUser.getUserId()));
+					() -> customerAddressService.getCustomerAddresses());
 
-			assertThat(ex.getErrorStatus()).isEqualTo(CustomerErrorStatus.ADDRESS_READ_FAILED);
+			assertThat(ex.getCode()).isEqualTo(CustomerErrorStatus.ADDRESS_READ_FAILED);
 		}
 	}
 }
