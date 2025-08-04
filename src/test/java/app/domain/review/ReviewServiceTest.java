@@ -17,7 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.request.CreateReviewRequest;

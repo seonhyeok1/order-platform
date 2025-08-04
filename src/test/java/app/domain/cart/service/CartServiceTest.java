@@ -18,17 +18,18 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import app.domain.cart.model.CartItemRepository;
-import app.domain.cart.model.CartRepository;
 import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
+import app.domain.cart.model.repository.CartItemRepository;
+import app.domain.cart.model.repository.CartRepository;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.entity.User;
+import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 
 @ExtendWith(MockitoExtension.class)
@@ -75,7 +76,7 @@ class CartServiceTest {
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.addCartItem(userId, request);
+		cartService.addCartItem(request);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.size() == 1 &&
@@ -95,7 +96,7 @@ class CartServiceTest {
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.addCartItem(userId, request);
+		cartService.addCartItem(request);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.get(0).getQuantity() == 3
@@ -114,7 +115,7 @@ class CartServiceTest {
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.addCartItem(userId, request);
+		cartService.addCartItem(request);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.size() == 1 &&
@@ -130,7 +131,7 @@ class CartServiceTest {
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.updateCartItem(userId, menuId, 5);
+		cartService.updateCartItem(menuId, 5);
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.get(0).getQuantity() == 5
@@ -142,7 +143,7 @@ class CartServiceTest {
 	void removeItem() {
 		when(cartRedisService.removeCartItem(userId, menuId)).thenReturn("성공");
 
-		cartService.removeCartItem(userId, menuId);
+		cartService.removeCartItem(menuId);
 
 		verify(cartRedisService).removeCartItem(userId, menuId);
 	}
@@ -153,7 +154,7 @@ class CartServiceTest {
 		when(cartRedisService.existsCartInRedis(userId)).thenReturn(true);
 		when(cartRedisService.getCartFromRedis(userId)).thenReturn(cartItems);
 
-		List<RedisCartItem> result = cartService.getCartFromCache(userId);
+		List<RedisCartItem> result = cartService.getCartFromCache();
 
 		assertThat(result).isEqualTo(cartItems);
 		verify(cartRedisService, never()).saveCartToRedis(any(), any());
@@ -175,7 +176,7 @@ class CartServiceTest {
 		when(cartRepository.findByUser_UserId(userId)).thenReturn(Optional.of(cart));
 		when(cartItemRepository.findByCart_CartId(cart.getCartId())).thenReturn(List.of(cartItem));
 
-		List<RedisCartItem> result = cartService.getCartFromCache(userId);
+		List<RedisCartItem> result = cartService.getCartFromCache();
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), any());
 		assertThat(result).isEqualTo(cartItems);
@@ -186,7 +187,7 @@ class CartServiceTest {
 	void clearItems() {
 		when(cartRedisService.clearCartItems(userId)).thenReturn("성공");
 
-		cartService.clearCartItems(userId);
+		cartService.clearCartItems();
 
 		verify(cartRedisService).clearCartItems(userId);
 	}
@@ -205,7 +206,7 @@ class CartServiceTest {
 		when(cartItemRepository.findByCart_CartId(cart.getCartId())).thenReturn(List.of(cartItem));
 		when(cartRedisService.saveCartToRedis(eq(userId), any())).thenReturn("성공");
 
-		cartService.loadDbToRedis(userId);
+		cartService.loadDbToRedis();
 
 		verify(cartRedisService).saveCartToRedis(eq(userId), argThat(items ->
 			items.size() == 1 &&
@@ -290,11 +291,11 @@ class CartServiceTest {
 		when(menuRepository.existsById(menuId)).thenReturn(false);
 
 		// When & Then
-		assertThatThrownBy(() -> cartService.addCartItem(userId, request))
+		assertThatThrownBy(() -> cartService.addCartItem(request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("메뉴를 찾을 수 없습니다.");
+				GeneralException generalEx = (GeneralException)ex;
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo(ErrorStatus.MENU_NOT_FOUND.getCode());
 			});
 
 		verify(menuRepository).existsById(menuId);
@@ -311,11 +312,11 @@ class CartServiceTest {
 		when(storeRepository.existsById(storeId)).thenReturn(false);
 
 		// When & Then
-		assertThatThrownBy(() -> cartService.addCartItem(userId, request))
+		assertThatThrownBy(() -> cartService.addCartItem(request))
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
-				GeneralException generalEx = (GeneralException) ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
+				GeneralException generalEx = (GeneralException)ex;
+				assertThat(generalEx.getErrorReason().getCode()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
 			});
 
 		verify(menuRepository).existsById(menuId);

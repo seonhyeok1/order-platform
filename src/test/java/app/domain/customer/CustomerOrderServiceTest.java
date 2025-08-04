@@ -19,7 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.customer.dto.response.CustomerOrderResponse;
 import app.domain.customer.status.CustomerErrorStatus;
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderChannel;
 import app.domain.order.model.entity.enums.OrderStatus;

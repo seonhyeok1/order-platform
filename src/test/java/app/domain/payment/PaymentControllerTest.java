@@ -76,7 +76,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 
@@ -101,7 +101,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isInternalServerError())
-			.andExpect(jsonPath("$.resultCode").value("PAYMENT002"))
+			.andExpect(jsonPath("$.code").value("PAYMENT002"))
 			.andExpect(jsonPath("$.message").value("결제 승인에 실패했습니다."));
 	}
 
@@ -124,7 +124,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 
@@ -149,7 +149,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
+			.andExpect(jsonPath("$.code").value("COMMON200"))
 			.andExpect(jsonPath("$.message").value("success"))
 			.andExpect(jsonPath("$.result").value(resultMessage));
 
@@ -174,7 +174,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("ORDER006"))
+			.andExpect(jsonPath("$.code").value("ORDER006"))
 			.andExpect(jsonPath("$.message").value("주문을 찾을 수 없습니다."));
 	}
 
@@ -195,7 +195,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("PAYMENT005"))
+			.andExpect(jsonPath("$.code").value("PAYMENT005"))
 			.andExpect(jsonPath("$.message").value("결제내역을 찾을 수 없습니다."));
 	}
 
@@ -210,7 +210,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutPaymentKey))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.paymentKey").value("결제 키는 필수입니다."));
 
@@ -228,7 +228,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutOrderId))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.orderId").value("주문 ID는 필수입니다."));
 
@@ -246,7 +246,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutAmount))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.amount").value("결제 금액은 필수입니다."));
 
@@ -264,7 +264,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutErrorCode))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.errorCode").value("에러 코드는 필수입니다."));
 
@@ -282,7 +282,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutMessage))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.message").value("실패 사유는 필수입니다."));
 
@@ -300,7 +300,7 @@ class PaymentControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutOrderId))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.resultCode").value("COMMON400"))
+			.andExpect(jsonPath("$.code").value("COMMON400"))
 			.andExpect(jsonPath("$.message").value("잘못된 요청입니다."))
 			.andExpect(jsonPath("$.result.orderId").value("주문 ID는 필수입니다."));
 

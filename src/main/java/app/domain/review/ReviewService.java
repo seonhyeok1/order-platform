@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.request.CreateReviewRequest;

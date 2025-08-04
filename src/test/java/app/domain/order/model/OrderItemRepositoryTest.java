@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
+import app.domain.order.model.repository.OrderItemRepository;
 
 @ExtendWith(MockitoExtension.class)
 class OrderItemRepositoryTest {
