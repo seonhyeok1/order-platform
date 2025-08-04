@@ -97,9 +97,9 @@ class CustomerOrderServiceTest {
 		when(ordersRepository.findByUser(testUser)).thenReturn(Collections.emptyList());
 
 		assertThatThrownBy(() -> customerOrderService.getCustomerOrders())
-			.isInstanceOf(GeneralException.class) // 1. GeneralException 타입의 예외가 발생하는지 확인
+			.isInstanceOf(GeneralException.class)
 			.extracting(ex -> ((GeneralException)ex).getErrorReason())
-			.isEqualTo(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND); // 3. 예상하는 특정 에러 코드와 일치하는지 확인
+			.isEqualTo(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND);
 
 		verify(userRepository, times(1)).findById(testUser.getUserId());
 		verify(ordersRepository, times(1)).findByUser(testUser);
