@@ -25,7 +25,7 @@ import app.domain.user.UserService;
 import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
 import app.domain.user.model.entity.enums.UserRole;
-import app.domain.user.status.ErrorStatus;
+import app.domain.user.status.UserErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
 
@@ -113,7 +113,7 @@ class UserControllerTest {
 			CreateUserRequest req = createValidUserReq(UserRole.CUSTOMER);
 			// 💡 서비스가 GeneralException을 던지도록 설정합니다.
 			given(userService.createUser(any(CreateUserRequest.class)))
-				.willThrow(new GeneralException(ErrorStatus.USER_ALREADY_EXISTS));
+				.willThrow(new GeneralException(UserErrorStatus.USER_ALREADY_EXISTS));
 
 			// when
 			ResultActions resultActions = mockMvc.perform(post("/user/signup") // 올바른 API 경로
@@ -125,8 +125,8 @@ class UserControllerTest {
 				.andExpect(status().isConflict()) // HTTP 409 Conflict 검증
 				.andExpect(jsonPath("$.isSuccess").value(false))
 				.andExpect(
-					jsonPath("$.code").value(ErrorStatus.USER_ALREADY_EXISTS.getCode())) // 'resultCode' -> 'code'
-				.andExpect(jsonPath("$.message").value(ErrorStatus.USER_ALREADY_EXISTS.getMessage()))
+					jsonPath("$.code").value(UserErrorStatus.USER_ALREADY_EXISTS.getCode())) // 'resultCode' -> 'code'
+				.andExpect(jsonPath("$.message").value(UserErrorStatus.USER_ALREADY_EXISTS.getMessage()))
 				.andExpect(jsonPath("$.result").doesNotExist()) // 실패 시 result는 없음
 				.andDo(print());
 		}

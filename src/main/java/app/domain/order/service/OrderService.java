@@ -1,6 +1,5 @@
 package app.domain.order.service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
@@ -11,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,9 +28,9 @@ import app.domain.order.model.dto.response.UpdateOrderStatusResponse;
 import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
+import app.domain.order.status.OrderErrorStatus;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;
-import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
 import app.global.SecurityUtil;
@@ -50,7 +48,6 @@ public class OrderService {
 	private final OrdersRepository ordersRepository;
 	private final OrderItemRepository orderItemRepository;
 	private final CartService cartService;
-	private final UserRepository userRepository;
 	private final StoreRepository storeRepository;
 	private final MenuRepository menuRepository;
 	private final OrderDelayService orderDelayService;
@@ -58,20 +55,19 @@ public class OrderService {
 	private final ObjectMapper objectMapper;
 
 	@Transactional
-	public UUID createOrder(Long userId, CreateOrderRequest request) {
+	public UUID createOrder(CreateOrderRequest request) {
 		try {
+			User user = securityUtil.getCurrentUser();
+			Long userId = user.getUserId();
+
 			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
 			if (cartItems.isEmpty()) {
 				throw new GeneralException(ErrorStatus.CART_NOT_FOUND);
 			}
-
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
-
 			UUID storeId = cartItems.get(0).getStoreId();
 			boolean allSameStore = cartItems.stream().allMatch(item -> item.getStoreId().equals(storeId));
 			if (!allSameStore) {
-				throw new GeneralException(ErrorStatus.ORDER_DIFFERENT_STORE);
+				throw new GeneralException(OrderErrorStatus.ORDER_DIFFERENT_STORE);
 			}
 
 			Store store = storeRepository.findById(storeId)
@@ -80,7 +76,8 @@ public class OrderService {
 			Map<UUID, Menu> menuMap = new HashMap<>();
 			for (RedisCartItem cartItem : cartItems) {
 				Menu menu = menuRepository.findById(cartItem.getMenuId())
-					.orElseThrow(() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
+					.orElseThrow(
+						() -> new GeneralException(ErrorStatus.MENU_NOT_FOUND));
 				menuMap.put(cartItem.getMenuId(), menu);
 			}
 
@@ -89,7 +86,7 @@ public class OrderService {
 				.sum();
 
 			if (request.getTotalPrice() != calculatedTotalPrice) {
-				throw new GeneralException(ErrorStatus.ORDER_PRICE_MISMATCH);
+				throw new GeneralException(OrderErrorStatus.ORDER_PRICE_MISMATCH);
 			}
 
 			Orders order = Orders.builder()
@@ -126,12 +123,12 @@ public class OrderService {
 			return savedOrder.getOrdersId();
 		} catch (IllegalArgumentException e) {
 			log.error("주문 생성 실패 - 유효하지 않은 요청: {}", request, e);
-			throw new GeneralException(ErrorStatus.INVALID_ORDER_REQUEST);
+			throw new GeneralException(OrderErrorStatus.INVALID_ORDER_REQUEST);
 		} catch (GeneralException e) {
 			throw e;
 		} catch (Exception e) {
 			log.error("주문 생성 실패 - request: {}", request, e);
-			throw new GeneralException(ErrorStatus.ORDER_CREATE_FAILED);
+			throw new GeneralException(OrderErrorStatus.ORDER_CREATE_FAILED);
 		}
 	}
 
@@ -151,92 +148,58 @@ public class OrderService {
 		}
 	}
 
-	// 상태 전이 정의
 	private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = Map.of(
-		OrderStatus.PENDING, EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED),
+		OrderStatus.PENDING, EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED, OrderStatus.REFUNDED),
 		OrderStatus.ACCEPTED, EnumSet.of(OrderStatus.COOKING),
 		OrderStatus.COOKING, EnumSet.of(OrderStatus.IN_DELIVERY),
-		OrderStatus.IN_DELIVERY, EnumSet.of(OrderStatus.COMPLETED),
-		OrderStatus.REJECTED, EnumSet.of(OrderStatus.REFUNDED)
+		OrderStatus.IN_DELIVERY, EnumSet.of(OrderStatus.COMPLETED)
 	);
 
 	@Transactional
-	@PreAuthorize("hasAnyAuthority('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
 	public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, OrderStatus newStatus) {
 		User currentUser = securityUtil.getCurrentUser();
+
 		Orders order = ordersRepository.findById(orderId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+
+		OrderStatus oldStatus = order.getOrderStatus();
 
 		validateOrderStatusUpdate(currentUser, order, newStatus);
 
 		String updatedHistory = appendToHistory(order.getOrderHistory(), newStatus);
-
 		order.updateStatusAndHistory(newStatus, updatedHistory);
 
 		log.info("주문 상태 변경 완료 - orderId: {}, user: {}, {} -> {}",
-			orderId, currentUser.getUserId(), order.getOrderStatus(), newStatus);
+			orderId, currentUser.getUserId(), oldStatus, newStatus);
 
 		return UpdateOrderStatusResponse.from(order);
 	}
 
-	private boolean isValidTransition(OrderStatus current, OrderStatus next) {
-		Set<OrderStatus> validNextStatuses = VALID_TRANSITIONS.getOrDefault(current, Set.of());
-		return validNextStatuses.contains(next);
-	}
-
-	/**
-	 * 사용자의 역할과 주문의 현재 상태에 따라 상태 변경이 유효한지 검증합니다.
-	 */
 	private void validateOrderStatusUpdate(User user, Orders order, OrderStatus newStatus) {
 		UserRole role = user.getUserRole();
-		OrderStatus currentStatus = order.getOrderStatus();
 
-		log.info("Validating order status update. " +
-				"CurrentUser(ID: {}, Role: {}), " +
-				"Order(ID: {}), " +
-				"StoreOwner(ID: {}), " +
-				"CurrentStatus: {}, NewStatus: {}",
-			user.getUserId(), role,
-			order.getOrdersId(),
-			order.getStore().getUser().getUserId(),
-			currentStatus, newStatus);
+		log.info(
+			"Validating order status update. CurrentUser(ID: {}, Role: {}), Order(ID: {}), StoreOwner(ID: {}), CurrentStatus: {}, NewStatus: {}",
+			user.getUserId(), role, order.getOrdersId(), order.getStore().getUser().getUserId(), order.getOrderStatus(),
+			newStatus);
 
-		boolean isAuthorized = switch (role) {
-			case OWNER, MANAGER, MASTER -> {
-				if (!order.getStore().getUser().getUserId().equals(user.getUserId())) {
-					throw new GeneralException(ErrorStatus.ORDER_ACCESS_DENIED);
-				}
-				yield validateOwnerTransition(currentStatus, newStatus);
-			}
-			case CUSTOMER -> {
-				if (order.getUser() == null || !order.getUser().getUserId().equals(user.getUserId())) {
-					throw new GeneralException(ErrorStatus.ORDER_ACCESS_DENIED);
-				}
-				yield validateCustomerTransition(order, newStatus);
-			}
-			default -> false;
-		};
-		if (!isAuthorized) {
+		switch (role) {
+			case OWNER, MANAGER, MASTER -> validateOwnerUpdate(user, order, newStatus);
+			default -> throw new GeneralException(OrderErrorStatus.ORDER_ACCESS_DENIED);
+		}
+	}
+
+	private void validateOwnerUpdate(User owner, Orders order, OrderStatus newStatus) {
+		if (!order.getStore().getUser().getUserId().equals(owner.getUserId())) {
+			throw new GeneralException(OrderErrorStatus.ORDER_ACCESS_DENIED);
+		}
+
+		Set<OrderStatus> allowedTransitions = VALID_TRANSITIONS.getOrDefault(order.getOrderStatus(),
+			EnumSet.noneOf(OrderStatus.class));
+
+		if (!allowedTransitions.contains(newStatus)) {
 			throw new GeneralException(ErrorStatus.INVALID_ORDER_STATUS_TRANSITION);
 		}
-	}
-
-	private boolean validateOwnerTransition(OrderStatus current, OrderStatus next) {
-		return switch (current) {
-			case PENDING -> next == OrderStatus.ACCEPTED || next == OrderStatus.REJECTED;
-			case COOKING -> next == OrderStatus.IN_DELIVERY;
-			default -> false;
-		};
-	}
-
-	private boolean validateCustomerTransition(Orders order, OrderStatus next) {
-		if (order.getOrderStatus() != OrderStatus.PENDING || next != OrderStatus.REFUNDED) {
-			return false;
-		}
-		if (Duration.between(order.getCreatedAt(), LocalDateTime.now()).toMinutes() >= 5) {
-			throw new GeneralException(ErrorStatus.ORDER_CANCEL_TIME_EXPIRED);
-		}
-		return true;
 	}
 
 	private String appendToHistory(String currentHistoryJson, OrderStatus newStatus) {

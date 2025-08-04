@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.status.StoreErrorCode;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -16,7 +17,7 @@ public class RegionService {
 
 	public UUID getRegionIdByCode(String regionCode) {
 		return regionRepository.findByRegionCode(regionCode)
-			.orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND))
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.REGION_NOT_FOUND))
 			.getRegionId();
 	}
 }

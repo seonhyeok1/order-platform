@@ -1,4 +1,4 @@
-package app.domain.user.status;
+package app.domain.order.status;
 
 import org.springframework.http.HttpStatus;
 
@@ -9,16 +9,11 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ErrorStatus implements BaseCode {
+public enum OrderSuccessStatus implements BaseCode {
 
-	// 인증 관련
-	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
-
-	// User 관련
-	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER001", "이미 존재하는 유저입니다."),
-	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER002", "이미 사용 중인 이메일입니다."),
-	NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER003", "이미 사용 중인 닉네임입니다."),
-	PHONE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER004", "이미 사용 중인 전화번호입니다.");
+	ORDER_STATUS_UPDATED(HttpStatus.OK, "ORDER201", "주문 상태 전이에 성공하였습니다."),
+	ORDER_DETAIL_FETCHED(HttpStatus.OK, "ORDER202", "주문 상세 조회에 성공하였습니다."),
+	ORDER_CREATED(HttpStatus.OK, "ORDER203", "주문 생성에 성공하였습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

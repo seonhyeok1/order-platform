@@ -21,7 +21,7 @@ import org.springframework.data.domain.Pageable;
 import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.dto.response.GetMenuListResponse;
 import app.domain.menu.model.entity.Menu;
-import app.domain.store.model.entity.StoreRepository;
+import app.domain.store.repository.StoreRepository;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
@@ -29,10 +29,10 @@ import app.global.apiPayload.exception.GeneralException;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-class MenuServiceTest {
+class CustomerMenuServiceTest {
 
 	@InjectMocks
-	private MenuService menuService;
+	private CustomerMenuService menuService;
 
 	@Mock
 	private MenuRepository menuRepository;
@@ -87,8 +87,8 @@ class MenuServiceTest {
 			() -> menuService.getMenusByStoreId(storeId, pageable));
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
-		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
+		assertThat(ex.getErrorReasonHttpStatus().getHttpStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getMessage()).isEqualTo("해당 가맹점을 찾을 수 없습니다.");
 	}
 
 	@Test

@@ -1,5 +1,6 @@
 package app.domain.menu.model.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import app.domain.store.model.entity.Store;
@@ -17,10 +18,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "p_menu")
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
@@ -37,12 +40,36 @@ public class Menu extends BaseEntity {
 	@Column(nullable = false, length = 100)
 	private String name;
 
+	@Column(nullable = false)
+	private Long price;
+
 	@Column
 	private String description;
 
 	@Column(nullable = false)
-	private int price;
-
-	@Column(nullable = false)
+	@Builder.Default
 	private boolean isHidden = false;
+
+	public void update(String name, Long price, String description, Boolean isHidden) {
+		if (name != null) {
+			this.name = name;
+		}
+		if (price != null) {
+			this.price = price;
+		}
+		if (description != null) {
+			this.description = description;
+		}
+		if (isHidden != null) {
+			this.isHidden = isHidden;
+		}
+	}
+
+	private LocalDateTime deletedAt;
+
+	public void markAsDeleted() {
+		this.setDeletedAt(java.time.LocalDateTime.now());
+	}
+
 }
+
