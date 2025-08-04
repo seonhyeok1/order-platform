@@ -290,7 +290,7 @@ class PaymentServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException generalEx = (GeneralException)ex;
-				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("주문을 찾을 수 없습니다.");
+				assertThat(generalEx.getErrorStatus().getMessage()).isEqualTo("결제내역을 찾을 수 없습니다.");
 			});
 
 		verify(ordersRepository).findById(orderId);

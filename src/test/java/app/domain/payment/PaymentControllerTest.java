@@ -188,15 +188,15 @@ class PaymentControllerTest {
 		);
 
 		when(paymentService.cancelPayment(any(CancelPaymentRequest.class)))
-			.thenThrow(new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+			.thenThrow(new GeneralException(ErrorStatus.PAYMENT_NOT_FOUND));
 
 		mockMvc.perform(post("/payment/cancel")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("ORDER006"))
-			.andExpect(jsonPath("$.message").value("주문을 찾을 수 없습니다."));
+			.andExpect(jsonPath("$.resultCode").value("PAYMENT005"))
+			.andExpect(jsonPath("$.message").value("결제내역을 찾을 수 없습니다."));
 	}
 
 	@Test

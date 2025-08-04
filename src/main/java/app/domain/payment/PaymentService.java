@@ -184,7 +184,7 @@ public class PaymentService {
 			}
 
 			Payment payment = paymentRepository.findByOrdersId(request.getOrderId())
-				.orElseThrow(() -> new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
+				.orElseThrow(() -> new GeneralException(ErrorStatus.PAYMENT_NOT_FOUND));
 
 			String widgetSecretKey = tossSecretKey;
 			Base64.Encoder encoder = Base64.getEncoder();
