@@ -73,6 +73,11 @@ public class Orders extends BaseEntity {
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String orderHistory; // JSON 문자열
 
-	@Lob
 	private String requestMessage;
+
+	public void updateStatusAndHistory(OrderStatus newStatus, String updatedHistory) {
+		this.orderStatus = newStatus;
+		this.orderHistory = updatedHistory;
+	}
+
 }
