@@ -25,10 +25,7 @@ public enum ErrorStatus implements BaseCode {
 	NOTICE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTICE400", "공지사항을 찾을 수 없습니다."),
 
 	// Store 관련
-	STORE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_001", "존재하지 않는 매장 카테고리입니다."),
-	REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_002", "존재하지 않는 지역입니다."),
-	MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_003", "존재하지 않는 가맹점입니다."),
-	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_004", "해당 가맹점을 찾을 수 없습니다."),
+	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE004", "해당 가맹점을 찾을 수 없습니다."),
 
 	// Wallet 관련
 	USER_WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "WALLET_001", "사용자 지갑이 존재하지 않습니다."),
@@ -104,7 +101,13 @@ public enum ErrorStatus implements BaseCode {
 	TOKEN_BALANCE_QUERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_003", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다."),
 	TOKEN_BURN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_004", "토큰 소각(burn) 처리 중 오류가 발생했습니다."),
 	BALANCE_MISMATCH(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트와 DB의 토큰 잔액이 일치하지 않습니다."),
-	BALANCE_VERIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다.");
+	BALANCE_VERIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다."),
+
+	// address 관련
+	ADDRESS_ALREADY_EXISTS(HttpStatus.CONFLICT, "ADDRESS_001", "이미 존재하는 주소입니다."),
+	ADDRESS_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_002", "주소 등록에 실패했습니다."),
+	ADDRESS_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_003", "주소 목록 조회에 실패했습니다.");
+
 
 	private final HttpStatus httpStatus;
 	private final String code;

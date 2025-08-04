@@ -67,6 +67,7 @@ class ReviewControllerTest {
 		CreateReviewRequest request = new CreateReviewRequest(UUID.randomUUID(), 5L, "맛있어요");
 		String resultMessage = "리뷰 : " + UUID.randomUUID() + " 가 생성되었습니다.";
 
+
 		when(reviewService.createReview(eq(1L), any(CreateReviewRequest.class)))
 			.thenReturn(resultMessage);
 
@@ -78,6 +79,7 @@ class ReviewControllerTest {
 			.andExpect(content().contentType(MediaType.APPLICATION_JSON))
 			.andExpect(jsonPath("$.code").value(ReviewSuccessStatus.REVIEW_CREATED.getCode()))
 			.andExpect(jsonPath("$.message").value(ReviewSuccessStatus.REVIEW_CREATED.getMessage()))
+
 			.andExpect(jsonPath("$.result").value(resultMessage));
 	}
 
@@ -171,5 +173,6 @@ class ReviewControllerTest {
 			.andExpect(status().isBadRequest())
 			.andExpect(jsonPath("$.isSuccess").value(false))
 			.andExpect(jsonPath("$.code").value("COMMON400"));
+
 	}
 }
