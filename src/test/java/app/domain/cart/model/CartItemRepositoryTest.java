@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
+import app.domain.cart.model.repository.CartItemRepository;
 import app.domain.menu.model.entity.Menu;
 
 @ExtendWith(MockitoExtension.class)
@@ -168,7 +169,7 @@ class CartItemRepositoryTest {
 
 		// When
 		Optional<CartItem> foundCartItem = cartItemRepository.findById(cartItemId1);
-		
+
 		// CartItem 조회 시점에는 Cart 쿼리가 실행되지 않음
 		verify(cartItemRepository).findById(cartItemId1);
 		verify(mockCart, never()).getCartId();
@@ -191,7 +192,7 @@ class CartItemRepositoryTest {
 
 		// When
 		Optional<CartItem> foundCartItem = cartItemRepository.findById(cartItemId1);
-		
+
 		// CartItem 조회 시점에는 Menu 쿼리가 실행되지 않음
 		verify(cartItemRepository).findById(cartItemId1);
 		verify(mockMenu, never()).getMenuId();

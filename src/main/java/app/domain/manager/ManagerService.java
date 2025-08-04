@@ -13,8 +13,8 @@ import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
-import app.domain.order.model.OrderItemRepository;
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrderItemRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
@@ -53,6 +53,7 @@ public class ManagerService {
 
 		return PagedResponse.from(page);
 	}
+
 	@Transactional(readOnly = true)
 	public GetCustomerDetailResponse getCustomerDetailById(Long userId) {
 		User user = userRepository.findById(userId)
@@ -62,6 +63,7 @@ public class ManagerService {
 
 		return GetCustomerDetailResponse.from(user, addressList);
 	}
+
 	@Transactional(readOnly = true)
 	public PagedResponse<OrderDetailResponse> getCustomerOrderListById(Long userId, Pageable pageable) {
 		User user = userRepository.findById(userId)
@@ -76,6 +78,7 @@ public class ManagerService {
 
 		return PagedResponse.from(mapped);
 	}
+
 	@Transactional(readOnly = true)
 	public PagedResponse<GetCustomerListResponse> searchCustomer(String keyWord, Pageable pageable) {
 		Page<User> users = userSearchRepository.searchUser(keyWord, pageable);
@@ -84,10 +87,12 @@ public class ManagerService {
 
 		return PagedResponse.from(content);
 	}
+
 	@Transactional(readOnly = true)
 	public PagedResponse<GetStoreListResponse> getAllStore(StoreAcceptStatus status, Pageable pageable) {
-	   return storeQueryRepository.getAllStore(status, pageable);
+		return storeQueryRepository.getAllStore(status, pageable);
 	}
+
 	@Transactional(readOnly = true)
 	public GetStoreDetailResponse getStoreDetail(UUID storeId) {
 		Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
@@ -98,8 +103,6 @@ public class ManagerService {
 		return GetStoreDetailResponse.from(store, avgRating != null ? avgRating : 0.0);
 	}
 
-
-
 	@Transactional
 	public String approveStore(UUID storeId, StoreAcceptStatus status) {
 		Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
@@ -108,14 +111,13 @@ public class ManagerService {
 			throw new GeneralException(ErrorStatus.INVALID_STORE_STATUS);
 		}
 		store.updateAcceptStatus(status);
-		return store.getStoreName()+ "의 상태가 변경 되었습니다.";
+		return store.getStoreName() + "의 상태가 변경 되었습니다.";
 	}
 
 	@Transactional(readOnly = true)
-	public PagedResponse<GetStoreListResponse> searchStore(StoreAcceptStatus status, String keyword, Pageable pageable) {
-		return storeQueryRepository.searchStoresWithAvgRating(keyword,status,pageable);
+	public PagedResponse<GetStoreListResponse> searchStore(StoreAcceptStatus status, String keyword,
+		Pageable pageable) {
+		return storeQueryRepository.searchStoresWithAvgRating(keyword, status, pageable);
 	}
-
-
 
 }

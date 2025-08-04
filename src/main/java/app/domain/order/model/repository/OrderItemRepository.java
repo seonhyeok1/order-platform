@@ -1,4 +1,4 @@
-package app.domain.order.model;
+package app.domain.order.model.repository;
 
 import java.util.List;
 import java.util.UUID;

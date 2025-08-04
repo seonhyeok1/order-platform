@@ -1,4 +1,4 @@
-package app.domain.payment.model;
+package app.domain.payment.model.repository;
 
 import java.util.Optional;
 import java.util.UUID;

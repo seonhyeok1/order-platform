@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.domain.cart.model.CartRepository;
+import app.domain.cart.model.repository.CartRepository;
 import app.domain.cart.model.entity.Cart;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.request.CreateUserRequest;

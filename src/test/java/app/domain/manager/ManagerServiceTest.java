@@ -23,13 +23,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
 import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
 import app.domain.menu.model.entity.Category;
-import app.domain.order.model.OrderItemRepository;
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrderItemRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.entity.Orders;
 import app.domain.review.model.ReviewRepository;
@@ -76,7 +77,6 @@ class ManagerServiceTest {
 
 	@Mock
 	private StoreQueryRepository storeQueryRepository;
-
 
 	@InjectMocks
 	private ManagerService managerService;
@@ -493,7 +493,8 @@ class ManagerServiceTest {
 			.thenReturn(pagedResponse);
 
 		// when
-		PagedResponse<GetStoreListResponse> response = managerService.searchStore(StoreAcceptStatus.PENDING, "족발", pageable);
+		PagedResponse<GetStoreListResponse> response = managerService.searchStore(StoreAcceptStatus.PENDING, "족발",
+			pageable);
 
 		// then
 		assertThat(response.getContent()).hasSize(1);
@@ -522,7 +523,6 @@ class ManagerServiceTest {
 		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
 
-
 	@Test
 	@DisplayName("가게 승인 실패 - 존재하지 않는 storeId")
 	void approveStore_notFound_shouldThrowException() {
@@ -539,7 +539,6 @@ class ManagerServiceTest {
 		// then
 		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
-
 
 	@Test
 	@DisplayName("가게 승인 실패 - 이미 같은 상태")

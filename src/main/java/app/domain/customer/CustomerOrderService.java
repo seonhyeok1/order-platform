@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import app.domain.customer.dto.response.CustomerOrderResponse;
 import app.domain.customer.status.CustomerErrorStatus;
-import app.domain.order.model.OrdersRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
