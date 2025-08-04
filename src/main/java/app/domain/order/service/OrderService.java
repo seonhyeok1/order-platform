@@ -1,6 +1,5 @@
 package app.domain.order.service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
@@ -161,7 +160,7 @@ public class OrderService {
 	);
 
 	@Transactional
-	@PreAuthorize("hasAnyAuthority('OWNER', 'MANAGER', 'MASTER', 'CUSTOMER')")
+	@PreAuthorize("hasAnyAuthority('OWNER', 'MANAGER', 'MASTER')")
 	public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, OrderStatus newStatus) {
 		User currentUser = securityUtil.getCurrentUser();
 
@@ -180,14 +179,6 @@ public class OrderService {
 		return UpdateOrderStatusResponse.from(order);
 	}
 
-	private boolean isValidTransition(OrderStatus current, OrderStatus next) {
-		Set<OrderStatus> validNextStatuses = VALID_TRANSITIONS.getOrDefault(current, Set.of());
-		return validNextStatuses.contains(next);
-	}
-
-	/**
-	 * 사용자의 역할과 주문의 현재 상태에 따라 상태 변경이 유효한지 검증합니다.
-	 */
 	private void validateOrderStatusUpdate(User user, Orders order, OrderStatus newStatus) {
 		UserRole role = user.getUserRole();
 		OrderStatus currentStatus = order.getOrderStatus();
@@ -209,12 +200,6 @@ public class OrderService {
 				}
 				yield validateOwnerTransition(currentStatus, newStatus);
 			}
-			case CUSTOMER -> {
-				if (order.getUser() == null || !order.getUser().getUserId().equals(user.getUserId())) {
-					throw new GeneralException(ErrorStatus.ORDER_ACCESS_DENIED);
-				}
-				yield validateCustomerTransition(order, newStatus);
-			}
 			default -> false;
 		};
 		if (!isAuthorized) {
@@ -228,16 +213,6 @@ public class OrderService {
 			case COOKING -> next == OrderStatus.IN_DELIVERY;
 			default -> false;
 		};
-	}
-
-	private boolean validateCustomerTransition(Orders order, OrderStatus next) {
-		if (order.getOrderStatus() != OrderStatus.PENDING || next != OrderStatus.REFUNDED) {
-			return false;
-		}
-		if (Duration.between(order.getCreatedAt(), LocalDateTime.now()).toMinutes() >= 5) {
-			throw new GeneralException(ErrorStatus.ORDER_CANCEL_TIME_EXPIRED);
-		}
-		return true;
 	}
 
 	private String appendToHistory(String currentHistoryJson, OrderStatus newStatus) {
