@@ -29,8 +29,8 @@ public enum ErrorStatus implements BaseCode {
 	STORE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_001", "존재하지 않는 매장 카테고리입니다."),
 	REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE002", "존재하지 않는 지역입니다."),
 	MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE003", "존재하지 않는 가맹점입니다."),
-	INVALID_STORE_STATUS(HttpStatus.NOT_FOUND,"STORE005","상태명이 올바르지 않습니다."),
-	INVALID_STATUS_CHANGE(HttpStatus.BAD_REQUEST,"STORE006","이미 변경이 완료 되었습니다."),
+	INVALID_STORE_STATUS(HttpStatus.NOT_FOUND, "STORE005", "상태명이 올바르지 않습니다."),
+	INVALID_STATUS_CHANGE(HttpStatus.BAD_REQUEST, "STORE006", "이미 변경이 완료 되었습니다."),
 	// 인증 관련
 	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
 
@@ -95,13 +95,8 @@ public enum ErrorStatus implements BaseCode {
 	INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "CART006", "수량은 1 이상이어야 합니다."),
 
 	// Order 관련
-	ORDER_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER001", "주문 생성에 실패했습니다."),
-	INVALID_ORDER_REQUEST(HttpStatus.BAD_REQUEST, "ORDER002", "유효하지 않은 주문 요청입니다."),
-	ORDER_DIFFERENT_STORE(HttpStatus.BAD_REQUEST, "ORDER003", "서로 다른 매장의 메뉴는 함께 주문할 수 없습니다."),
-	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER004", "메뉴를 찾을 수 없습니다."),
-	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
-	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
-	ORDER_PRICE_MISMATCH(HttpStatus.BAD_REQUEST, "ORDER007", "요청 총액과 장바구니 아이템 총액이 일치하지 않습니다."),
+	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "MENU000", "메뉴를 찾을 수 없습니다."),
+	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER000", "주문을 찾을 수 없습니다."),
 
 	// Payment 관련
 	PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT001", "결제 승인 정보가 결제 요청할 때의 정보와 다릅니다."),
