@@ -69,7 +69,6 @@ class UserServiceLoginTest {
 			// given
 			LoginRequest request = createLoginRequest("testuser", "password123!");
 			User mockUser = User.builder()
-				.userId(1L)
 				.username("testuser")
 				.password("encodedPassword")
 				.build();
@@ -102,7 +101,6 @@ class UserServiceLoginTest {
 				timeUnitCaptor.capture()
 			);
 
-			// [검증 강화] 캡처된 값들이 예상과 일치하는지 개별적으로 검증
 			assertThat(keyCaptor.getValue()).isEqualTo("RT:" + mockUser.getUserId());
 			assertThat(valueCaptor.getValue()).isEqualTo("dummy-refresh-token");
 			assertThat(timeoutCaptor.getValue()).isEqualTo(1209600000L);
