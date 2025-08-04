@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ErrorStatus implements BaseCode {
+public enum OrderErrorStatus implements BaseCode {
 
 	// Order
 	ORDER_CREATE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ORDER001", "주문 생성에 실패했습니다."),

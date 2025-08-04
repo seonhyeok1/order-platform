@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum SuccessStatus implements BaseCode {
+public enum OrderSuccessStatus implements BaseCode {
 
 	// Order 관련
 	ORDER_STATUS_UPDATED(HttpStatus.OK, "ORDER201", "주문 상태 전이에 성공하였습니다."),
