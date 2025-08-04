@@ -6,23 +6,24 @@ import java.util.List;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.user.model.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Schema(description = "관리자 유저 상세 정보 응답 DTO")
-public record GetCustomerDetailResponse(
-	Long userId,
-	String email,
-	String userName,
-	String name,
-	String nickName,
-	String phoneNumber,
-	LocalDateTime createdAt,
-	LocalDateTime updatedAt,
-	List<GetCustomerAddressListResponse> address
-) {
-	public static GetCustomerDetailResponse from(
-		User user,
-		List<GetCustomerAddressListResponse> addressList
-	) {
+@Getter
+@AllArgsConstructor
+public class GetCustomerDetailResponse {
+
+	private Long userId;
+	private String email;
+	private String userName;
+	private String name;
+	private String nickName;
+	private String phoneNumber;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
+	private List<GetCustomerAddressListResponse> address;
+
+	public static GetCustomerDetailResponse from(User user, List<GetCustomerAddressListResponse> addressList) {
 		return new GetCustomerDetailResponse(
 			user.getUserId(),
 			user.getEmail(),

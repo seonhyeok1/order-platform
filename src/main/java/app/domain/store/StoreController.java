@@ -21,7 +21,6 @@ import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
-import app.domain.store.status.StoreException;
 import lombok.RequiredArgsConstructor;
 
 @RestController

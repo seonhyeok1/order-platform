@@ -45,7 +45,7 @@ public class Store extends BaseEntity {
 	@JoinColumn(name = "region_id", nullable = false)
 	private Region region;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
 
@@ -68,6 +68,11 @@ public class Store extends BaseEntity {
 	@Column(nullable = false)
 	@Builder.Default
 	private StoreAcceptStatus storeAcceptStatus = StoreAcceptStatus.PENDING;
+
+
+	public void updateAcceptStatus(StoreAcceptStatus newStatus) {
+		this.storeAcceptStatus = newStatus;
+	}
 
 	public boolean isDeleted() {
 		return this.deletedAt != null;
