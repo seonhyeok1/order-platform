@@ -14,8 +14,8 @@ import app.domain.review.model.ReviewRepository;
 import app.domain.store.StoreService;
 import app.domain.store.model.StoreQueryRepository;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreAcceptStatus;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
@@ -44,8 +44,7 @@ class CustomerStoreServiceTest {
 	private CustomerStoreService customerStoreService;
 
 	UUID storeId = UUID.randomUUID();
-	@Autowired
-	private StoreService storeService;
+
 
 	@Test
 	@DisplayName("승인된 가게 목록 조회 성공")
@@ -109,7 +108,7 @@ class CustomerStoreServiceTest {
 			.isInstanceOf(GeneralException.class)
 			.satisfies(ex -> {
 				GeneralException ge = (GeneralException) ex;
-				assertThat(ge.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+				assertThat(((GeneralException)ex).getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 			});
 	}
 
@@ -176,7 +175,7 @@ class CustomerStoreServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
 
 

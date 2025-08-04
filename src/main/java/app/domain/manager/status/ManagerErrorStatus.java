@@ -1,4 +1,4 @@
-package app.domain.order.status;
+package app.domain.manager.status;
 
 import org.springframework.http.HttpStatus;
 
@@ -7,16 +7,12 @@ import app.global.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@Getter
 @AllArgsConstructor
-public enum OrderSuccessStatus implements BaseCode {
+@Getter
+public enum ManagerErrorStatus implements BaseCode {
 
-	// Order 관련
-	ORDER_STATUS_UPDATED(HttpStatus.OK, "ORDER201", "주문 상태 전이에 성공하였습니다."),
-	ORDER_DETAIL_FETCHED(HttpStatus.OK, "ORDER202", "주문 상세 조회에 성공하였습니다."),
-	ORDER_CREATED(HttpStatus.OK, "ORDER203", "주문 생성에 성공하였습니다.");
+	INVALID_STORE_STATUS(HttpStatus.NOT_FOUND,"STORE001","이미 처리된 상태명 입니다.");
 
-	// Payment 관련
 
 	private final HttpStatus httpStatus;
 	private final String code;

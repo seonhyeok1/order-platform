@@ -28,7 +28,6 @@ public class CustomerOrderController {
 	public ApiResponse<List<CustomerOrderResponse>> getCustomerOrders(
 		@AuthenticationPrincipal UserDetails principal
 	) {
-		Long userId = Long.parseLong(principal.getUsername());
-		return ApiResponse.onSuccess(CustomerSuccessStatus.CUSTOMER_OK, customerOrderService.getCustomerOrders(userId));
+		return ApiResponse.onSuccess(CustomerSuccessStatus.CUSTOMER_OK, customerOrderService.getCustomerOrders());
 	}
 }

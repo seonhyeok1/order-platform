@@ -100,7 +100,7 @@ class AiServiceImplTest {
 		void givenMissingMenuNameForMenuDescription_whenGenerateDescription_thenThrowsException() {
 			AiRequest invalidRequest = new AiRequest(
 				"맛있는 족발집",
-				null, // menuName 누락
+				null,
 				ReqType.MENU_DESCRIPTION,
 				"쫄깃하고 부드러운 식감을 강조해주세요."
 			);
