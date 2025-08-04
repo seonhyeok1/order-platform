@@ -112,15 +112,16 @@ public class StoreTest {
 		String responseString = mockMvc.perform(post("/store")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestJson))
-				.andReturn().getResponse().getContentAsString();
+			.andReturn().getResponse().getContentAsString();
 
 		UUID storeId = UUID.fromString(objectMapper.readTree(responseString).get("storeId").asText());
 
 		// when & then
 		mockMvc.perform(delete("/store/{storeId}", storeId))
-				.andExpect(status().isOk())
-				.andExpect(content().string("가게 삭제가 완료되었습니다."));
+			.andExpect(status().isOk())
+			.andExpect(content().string("가게 삭제가 완료되었습니다."));
 	}
 }
+
 
 
