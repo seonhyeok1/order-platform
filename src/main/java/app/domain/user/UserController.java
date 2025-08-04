@@ -1,5 +1,6 @@
 package app.domain.user;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@Tag(name = "Auth", description = "인증 및 로그인, 회원가입")
+@Tag(name = "User", description = "로그인, 회원가입")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -99,5 +100,12 @@ public class UserController {
 	public ApiResponse<String> logout() {
 		userService.logout();
 		return ApiResponse.onSuccess("로그아웃 되었습니다.");
+	}
+
+	@DeleteMapping("/withdraw")
+	@Operation(summary = "회원 탈퇴 API", description = "현재 로그인된 사용자의 계정을 비활성화하고 개인정보를 익명화 처리합니다.")
+	public ApiResponse<String> withdraw() {
+		userService.withdrawMembership();
+		return ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다.");
 	}
 }
