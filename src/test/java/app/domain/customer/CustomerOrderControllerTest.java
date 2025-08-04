@@ -61,8 +61,6 @@ class CustomerOrderControllerTest {
 	@DisplayName("고객 주문 내역 조회 성공")
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getCustomerOrders_Success() throws Exception {
-		// given
-		Long userId = 1L;
 		CustomerOrderResponse response = new CustomerOrderResponse(
 			UUID.randomUUID(),
 			"테스트 가게",
@@ -79,7 +77,7 @@ class CustomerOrderControllerTest {
 		);
 		List<CustomerOrderResponse> responses = Collections.singletonList(response);
 
-		given(customerOrderService.getCustomerOrders(userId)).willReturn(responses);
+		given(customerOrderService.getCustomerOrders()).willReturn(responses);
 
 		mockMvc.perform(get("/customer/order"))
 			.andExpect(status().isOk())
@@ -90,8 +88,7 @@ class CustomerOrderControllerTest {
 	@DisplayName("고객 주문 내역 조회 실패 - 사용자를 찾을 수 없음")
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getCustomerOrders_UserNotFound() throws Exception {
-		Long userId = 1L;
-		given(customerOrderService.getCustomerOrders(userId)).willThrow(
+		given(customerOrderService.getCustomerOrders()).willThrow(
 			new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
 		mockMvc.perform(get("/customer/order"))

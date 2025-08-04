@@ -2,8 +2,6 @@ package app.domain.review;
 
 import java.util.List;
 
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,19 +28,15 @@ public class ReviewController {
 	@PostMapping
 	@Operation(summary = "리뷰 생성 API", description = "리뷰를 생성합니다.")
 	public ApiResponse<String> createReview(
-		@AuthenticationPrincipal UserDetails principal,
 		@Valid @RequestBody CreateReviewRequest request
 	) {
-		Long userId = Long.parseLong(principal.getUsername());
-		return ApiResponse.onSuccess(ReviewSuccessStatus.REVIEW_CREATED, reviewService.createReview(userId, request));
+		return ApiResponse.onSuccess(ReviewSuccessStatus.REVIEW_CREATED, reviewService.createReview(request));
 	}
 
 	@GetMapping
 	@Operation(summary = "리뷰 조회 API", description = "리뷰를 조회합니다.")
 	public ApiResponse<List<GetReviewResponse>> getReviews(
-		@AuthenticationPrincipal UserDetails principal
 	) {
-		Long userId = Long.parseLong(principal.getUsername());
-		return ApiResponse.onSuccess(ReviewSuccessStatus.GET_REVIEWS_SUCCESS, reviewService.getReviews(userId));
+		return ApiResponse.onSuccess(ReviewSuccessStatus.GET_REVIEWS_SUCCESS, reviewService.getReviews());
 	}
 }
