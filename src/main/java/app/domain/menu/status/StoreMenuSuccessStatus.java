@@ -9,12 +9,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum MenuSuccessStatus implements BaseCode {
+public enum StoreMenuSuccessStatus implements BaseCode {
 
-	// 일반적인 응답
 	_OK(HttpStatus.OK, "COMMON200", "성공입니다."),
 
-	// 메뉴 관련 응답
 	MENU_CREATED_SUCCESS(HttpStatus.CREATED, "MENU201", "메뉴가 성공적으로 생성되었습니다."),
 	MENU_UPDATED_SUCCESS(HttpStatus.OK, "MENU202", "메뉴가 성공적으로 업데이트되었습니다."),
 	MENU_DELETED_SUCCESS(HttpStatus.OK, "MENU203", "메뉴가 성공적으로 삭제되었습니다.");

@@ -66,7 +66,7 @@ public class StoreService {
 	public StoreInfoUpdateResponse updateStoreInfo(StoreInfoUpdateRequest request) {
 
 		User user = securityUtil.getCurrentUser();
-		long userId = user.getUserId();
+		Long userId = user.getUserId();
 
 		Store store = storeRepository.findById(request.getStoreId())
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));

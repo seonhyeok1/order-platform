@@ -1,6 +1,7 @@
 package app.domain.menu.model.dto.response;
 
 import java.util.UUID;
+
 import app.domain.menu.model.entity.Menu;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +12,7 @@ public class GetMenuListResponse {
 	private UUID menuId;
 	private String name;
 	private String description;
-	private int price;
+	private Long price;
 
 	public static GetMenuListResponse from(Menu menu) {
 		return new GetMenuListResponse(

@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum MenuErrorCode implements BaseCode {
+public enum StoreMenuErrorCode implements BaseCode {
 
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "MENU001", "해당 메뉴를 찾을 수 없습니다."),
 	STORE_NOT_FOUND_FOR_MENU(HttpStatus.NOT_FOUND, "MENU002", "메뉴를 등록할 가게를 찾을 수 없습니다."),

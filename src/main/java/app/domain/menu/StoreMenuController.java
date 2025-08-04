@@ -21,47 +21,47 @@ import app.domain.menu.model.dto.response.MenuCreateResponse;
 import app.domain.menu.model.dto.response.MenuDeleteResponse;
 import app.domain.menu.model.dto.response.MenuListResponse;
 import app.domain.menu.model.dto.response.MenuUpdateResponse;
-import app.domain.menu.status.MenuSuccessStatus;
+import app.domain.menu.status.StoreMenuSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/menu")
 @RequiredArgsConstructor
-public class MenuController {
+public class StoreMenuController {
 
-	private final MenuService menuService;
+	private final StoreMenuService storeMenuService;
 
 	@PostMapping("/store/menu")
 	public ApiResponse<MenuCreateResponse> createMenu(@RequestBody MenuCreateRequest request) {
-		MenuCreateResponse response = menuService.createMenu(request);
-		return ApiResponse.onSuccess(MenuSuccessStatus.MENU_CREATED_SUCCESS, response);
+		MenuCreateResponse response = storeMenuService.createMenu(request);
+		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_CREATED_SUCCESS, response);
 	}
 
 	@PutMapping("/store/menu")
 	public ApiResponse<MenuUpdateResponse> updateMenu(@RequestBody MenuUpdateRequest request) {
-		MenuUpdateResponse response = menuService.updateMenu(request);
-		return ApiResponse.onSuccess(MenuSuccessStatus.MENU_UPDATED_SUCCESS, response);
+		MenuUpdateResponse response = storeMenuService.updateMenu(request);
+		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_UPDATED_SUCCESS, response);
 	}
 
 	@DeleteMapping("/store/menu/delete")
 	public ApiResponse<MenuDeleteResponse> deleteMenu(@RequestBody MenuDeleteRequest request) {
-		MenuDeleteResponse response = menuService.deleteMenu(request);
-		return ApiResponse.onSuccess(MenuSuccessStatus.MENU_DELETED_SUCCESS, response);
+		MenuDeleteResponse response = storeMenuService.deleteMenu(request);
+		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_DELETED_SUCCESS, response);
 	}
 
 	@PutMapping("/store/menu/{menuId}/visible")
 	public ApiResponse<MenuUpdateResponse> updateMenuVisibility(@PathVariable UUID menuId,
 		@RequestBody MenuVisibleRequest request) {
-		MenuUpdateResponse response = menuService.updateMenuVisibility(menuId,
+		MenuUpdateResponse response = storeMenuService.updateMenuVisibility(menuId,
 			request.getVisible());
-		return ApiResponse.onSuccess(MenuSuccessStatus.MENU_UPDATED_SUCCESS, response);
+		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_UPDATED_SUCCESS, response);
 	}
 
 	@GetMapping("/store/menu")
 	public ApiResponse<MenuListResponse> getMenuList(@RequestParam("storeId") String storeId) {
 		MenuListRequest request = MenuListRequest.builder().storeId(UUID.fromString(storeId)).build();
-		MenuListResponse response = menuService.getMenuList(request);
-		return ApiResponse.onSuccess(MenuSuccessStatus._OK, response);
+		MenuListResponse response = storeMenuService.getMenuList(request);
+		return ApiResponse.onSuccess(StoreMenuSuccessStatus._OK, response);
 	}
 }
