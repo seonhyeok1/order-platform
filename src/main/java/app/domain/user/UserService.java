@@ -18,7 +18,8 @@ import app.domain.user.model.dto.request.LoginRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
 import app.domain.user.model.dto.response.LoginResponse;
 import app.domain.user.model.entity.User;
-import app.domain.user.status.ErrorStatus;
+import app.domain.user.status.UserErrorStatus;
+import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -61,17 +62,17 @@ public class UserService {
 			return CreateUserResponse.from(savedUser);
 		} catch (DataAccessException e) {
 			log.error("데이터베이스에 사용자 등록을 실패했습니다.", e);
-			throw new GeneralException(app.global.apiPayload.code.status.ErrorStatus._INTERNAL_SERVER_ERROR);
+			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	@Transactional
 	public LoginResponse login(LoginRequest request) {
 		User user = userRepository.findByUsername(request.getUsername())
-			.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
 		if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-			throw new GeneralException(ErrorStatus.INVALID_PASSWORD);
+			throw new GeneralException(UserErrorStatus.INVALID_PASSWORD);
 		}
 
 		String accessToken = jwtTokenProvider.createAccessToken(user);
@@ -119,7 +120,7 @@ public class UserService {
 		Long currentUserId = Long.parseLong(authentication.getName());
 
 		User user = userRepository.findById(currentUserId)
-			.orElseThrow(() -> new GeneralException(app.global.apiPayload.code.status.ErrorStatus.USER_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
 		user.anonymizeForWithdrawal();
 
@@ -136,16 +137,16 @@ public class UserService {
 			createUserRequest.getPhoneNumber()
 		).ifPresent(user -> {
 			if (user.getUsername().equals(createUserRequest.getUsername())) {
-				throw new GeneralException(ErrorStatus.USER_ALREADY_EXISTS);
+				throw new GeneralException(UserErrorStatus.USER_ALREADY_EXISTS);
 			}
 			if (user.getEmail().equals(createUserRequest.getEmail())) {
-				throw new GeneralException(ErrorStatus.EMAIL_ALREADY_EXISTS);
+				throw new GeneralException(UserErrorStatus.EMAIL_ALREADY_EXISTS);
 			}
 			if (user.getNickname().equals(createUserRequest.getNickname())) {
-				throw new GeneralException(ErrorStatus.NICKNAME_ALREADY_EXISTS);
+				throw new GeneralException(UserErrorStatus.NICKNAME_ALREADY_EXISTS);
 			}
 			if (user.getPhoneNumber().equals(createUserRequest.getPhoneNumber())) {
-				throw new GeneralException(ErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
+				throw new GeneralException(UserErrorStatus.PHONE_NUMBER_ALREADY_EXISTS);
 			}
 		});
 	}
