@@ -148,7 +148,6 @@ public class OrderService {
 		}
 	}
 
-	// 상태 전이 정의
 	private static final Map<OrderStatus, Set<OrderStatus>> VALID_TRANSITIONS = Map.of(
 		OrderStatus.PENDING, EnumSet.of(OrderStatus.ACCEPTED, OrderStatus.REJECTED),
 		OrderStatus.ACCEPTED, EnumSet.of(OrderStatus.COOKING),
