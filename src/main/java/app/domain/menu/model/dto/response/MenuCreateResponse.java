@@ -2,8 +2,17 @@ package app.domain.menu.model.dto.response;
 
 import java.util.UUID;
 
-public record MenuCreateResponse(
-	UUID menuId
-) {
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class MenuCreateResponse {
+	private UUID menuId;
+	private String name;
 }

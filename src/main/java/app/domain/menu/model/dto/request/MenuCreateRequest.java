@@ -1,9 +1,20 @@
 package app.domain.menu.model.dto.request;
 
-public record MenuCreateRequest(
-	String name,
-	String desc,
-	Long price
-) {
+import java.util.UUID;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class MenuCreateRequest {
+	private UUID storeId;
+	private String name;
+	private Long price;
+	private String description;
 }

@@ -2,7 +2,16 @@ package app.domain.menu.model.dto.request;
 
 import java.util.UUID;
 
-public record MenuListRequest(
-	UUID storeId
-) {
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+public class MenuListRequest {
+	private UUID storeId;
 }
