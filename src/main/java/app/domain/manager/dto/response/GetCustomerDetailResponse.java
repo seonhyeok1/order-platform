@@ -5,12 +5,11 @@ import java.util.List;
 
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.user.model.entity.User;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
+@Builder
 public class GetCustomerDetailResponse {
 
 	private Long userId;
@@ -24,16 +23,16 @@ public class GetCustomerDetailResponse {
 	private List<GetCustomerAddressListResponse> address;
 
 	public static GetCustomerDetailResponse from(User user, List<GetCustomerAddressListResponse> addressList) {
-		return new GetCustomerDetailResponse(
-			user.getUserId(),
-			user.getEmail(),
-			user.getUsername(),
-			user.getRealName(),
-			user.getNickname(),
-			user.getPhoneNumber(),
-			user.getCreatedAt(),
-			user.getUpdatedAt(),
-			addressList
-		);
+		return GetCustomerDetailResponse.builder()
+			.userId(user.getUserId())
+			.email(user.getEmail())
+			.userName(user.getUsername())
+			.name(user.getRealName())
+			.nickName(user.getNickname())
+			.phoneNumber(user.getPhoneNumber())
+			.createdAt(user.getCreatedAt())
+			.updatedAt(user.getUpdatedAt())
+			.address(addressList)
+			.build();
 	}
 }
