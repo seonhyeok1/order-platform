@@ -4,7 +4,6 @@ import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.customer.status.CustomerErrorStatus;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.UserAddress;
-import app.domain.user.model.UserRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.customer.dto.request.AddCustomerAddressRequest;
 import app.domain.customer.dto.response.AddCustomerAddressResponse;
@@ -23,7 +22,6 @@ import java.util.List;
 public class CustomerAddressService {
 
 	private final UserAddressRepository userAddressRepository;
-	private final UserRepository userRepository;
 	private final SecurityUtil securityUtil;
 
 	@Transactional(readOnly = true)
