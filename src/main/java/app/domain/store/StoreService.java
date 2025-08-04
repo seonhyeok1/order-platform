@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.domain.menu.model.entity.Category;
-import app.domain.menu.model.entity.CategoryRepository;
+import app.domain.menu.repository.CategoryRepository;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
@@ -17,8 +17,9 @@ import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreAcceptStatus;
 import app.domain.store.status.StoreErrorCode;
-import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
+import app.global.SecurityUtil;
+import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -27,49 +28,43 @@ public class StoreService {
 
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
-	private final UserRepository userRepository;
 	private final CategoryRepository categoryRepository;
+	private final SecurityUtil securityUtil;
 
 	@Transactional
-	public StoreApproveResponse createStore(Long userId, StoreApproveRequest request) {
+	public StoreApproveResponse createStore(StoreApproveRequest request) {
+
+		User user = securityUtil.getCurrentUser();
 
 		Region region = regionRepository.findById(request.getRegionId())
-			.orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
-
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new StoreException(StoreErrorCode.USER_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.REGION_NOT_FOUND));
 
 		Category category = categoryRepository.findById(request.getCategoryId())
-			.orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-		Store store = Store.builder()
-			.storeName(request.getStoreName())
-			.region(region)
-			.user(user)
-			.category(category)
-			.address(request.getAddress())
-			.description(request.getDesc())
-			.phoneNumber(request.getPhoneNumber())
-			.minOrderAmount(request.getMinOrderAmount().intValue())
-			.storeAcceptStatus(StoreAcceptStatus.PENDING)
-			.build();
+		Store store = new Store(null, user, region, category, request.getStoreName(), request.getDesc(), request.getAddress(), request.getPhoneNumber(), request.getMinOrderAmount(), StoreAcceptStatus.PENDING);
 
 		Store savedStore = storeRepository.save(store);
 
-		return StoreApproveResponse.builder()
-			.storeId(savedStore.getStoreId())
-			.storeApprovalStatus(savedStore.getStoreAcceptStatus().name())
-			.build();
+		return new StoreApproveResponse(savedStore.getStoreId(), savedStore.getStoreAcceptStatus().name());
 	}
 
 	@Transactional
 	public StoreInfoUpdateResponse updateStoreInfo(StoreInfoUpdateRequest request) {
+
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
 		Store store = storeRepository.findById(request.getStoreId())
-			.orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+		if (!store.getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.STORE_NOT_FOUND);
+		}
 
 		if (request.getCategoryId() != null) {
 			Category category = categoryRepository.findById(request.getCategoryId())
-				.orElseThrow(() -> new StoreException(StoreErrorCode.CATEGORY_NOT_FOUND));
+				.orElseThrow(() -> new GeneralException(StoreErrorCode.CATEGORY_NOT_FOUND));
 			store.setCategory(category);
 		}
 		if (request.getName() != null) {
@@ -89,15 +84,21 @@ public class StoreService {
 		}
 
 		Store updatedStore = storeRepository.save(store);
-		return StoreInfoUpdateResponse.builder().storeId(updatedStore.getStoreId()).build();
+		return new StoreInfoUpdateResponse(updatedStore.getStoreId());
 	}
 
 	@Transactional
 	public void deleteStore(UUID storeId) {
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
 		Store store = storeRepository.findById(storeId)
-			.orElseThrow(() -> new StoreException(StoreErrorCode.STORE_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
+
+		if (!store.getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.STORE_NOT_FOUND);
+		}
 
 		store.markAsDeleted();
 	}
 }
-
