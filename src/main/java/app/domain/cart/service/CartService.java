@@ -9,14 +9,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import app.domain.cart.model.repository.CartItemRepository;
-import app.domain.cart.model.repository.CartRepository;
 import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
-import app.domain.menu.model.MenuRepository;
+import app.domain.cart.model.repository.CartItemRepository;
+import app.domain.cart.model.repository.CartRepository;
 import app.domain.menu.model.entity.Menu;
+import app.domain.menu.model.repository.MenuRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.entity.User;
 import app.global.SecurityUtil;

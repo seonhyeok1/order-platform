@@ -18,16 +18,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.service.CartService;
-import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
-import app.domain.order.model.repository.OrderItemRepository;
-import app.domain.order.model.repository.OrdersRepository;
+import app.domain.menu.model.repository.MenuRepository;
 import app.domain.order.model.dto.request.CreateOrderRequest;
 import app.domain.order.model.dto.response.OrderDetailResponse;
 import app.domain.order.model.dto.response.UpdateOrderStatusResponse;
 import app.domain.order.model.entity.OrderItem;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
+import app.domain.order.model.repository.OrderItemRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.status.OrderErrorStatus;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;
@@ -60,7 +60,7 @@ public class OrderService {
 			User user = securityUtil.getCurrentUser();
 			Long userId = user.getUserId();
 
-			List<RedisCartItem> cartItems = cartService.getCartFromCache(userId);
+			List<RedisCartItem> cartItems = cartService.getCartFromCache();
 			if (cartItems.isEmpty()) {
 				throw new GeneralException(ErrorStatus.CART_NOT_FOUND);
 			}
@@ -198,7 +198,7 @@ public class OrderService {
 			EnumSet.noneOf(OrderStatus.class));
 
 		if (!allowedTransitions.contains(newStatus)) {
-			throw new GeneralException(ErrorStatus.INVALID_ORDER_STATUS_TRANSITION);
+			throw new GeneralException(OrderErrorStatus.INVALID_ORDER_STATUS_TRANSITION);
 		}
 	}
 

@@ -16,7 +16,7 @@ import app.domain.menu.model.dto.response.MenuDeleteResponse;
 import app.domain.menu.model.dto.response.MenuListResponse;
 import app.domain.menu.model.dto.response.MenuUpdateResponse;
 import app.domain.menu.model.entity.Menu;
-import app.domain.menu.repository.MenuRepository;
+import app.domain.menu.model.repository.MenuRepository;
 import app.domain.menu.status.StoreMenuErrorCode;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;

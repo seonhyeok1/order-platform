@@ -16,7 +16,8 @@ public enum OrderErrorStatus implements BaseCode {
 	ORDER_DIFFERENT_STORE(HttpStatus.BAD_REQUEST, "ORDER003", "서로 다른 매장의 메뉴는 함께 주문할 수 없습니다."),
 	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER004", "총 금액은 양의 정수입니다."),
 	ORDER_PRICE_MISMATCH(HttpStatus.BAD_REQUEST, "ORDER005", "요청 총액과 장바구니 아이템 총액이 일치하지 않습니다."),
-	ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER006", "해당 주문에 대한 접근 권한이 없습니다.");
+	ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER006", "해당 주문에 대한 접근 권한이 없습니다."),
+	INVALID_ORDER_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "ORDER007", "유효하지 않은 주문 상태 전환입니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

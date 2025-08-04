@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import app.domain.menu.model.entity.Category;
-import app.domain.menu.repository.CategoryRepository;
+import app.domain.menu.model.repository.CategoryRepository;
 import app.domain.store.model.dto.request.StoreApproveRequest;
 import app.domain.store.model.dto.request.StoreInfoUpdateRequest;
 import app.domain.store.model.dto.response.StoreApproveResponse;
@@ -42,7 +42,8 @@ public class StoreService {
 		Category category = categoryRepository.findById(request.getCategoryId())
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-		Store store = new Store(null, user, region, category, request.getStoreName(), request.getDesc(), request.getAddress(), request.getPhoneNumber(), request.getMinOrderAmount(), StoreAcceptStatus.PENDING);
+		Store store = new Store(null, user, region, category, request.getStoreName(), request.getDesc(),
+			request.getAddress(), request.getPhoneNumber(), request.getMinOrderAmount(), StoreAcceptStatus.PENDING);
 
 		Store savedStore = storeRepository.save(store);
 
