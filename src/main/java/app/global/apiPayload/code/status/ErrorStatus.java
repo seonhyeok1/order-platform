@@ -26,6 +26,13 @@ public enum ErrorStatus implements BaseCode {
 
 	// Store 관련
 	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE004", "해당 가맹점을 찾을 수 없습니다."),
+	STORE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_001", "존재하지 않는 매장 카테고리입니다."),
+	REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE002", "존재하지 않는 지역입니다."),
+	MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE003", "존재하지 않는 가맹점입니다."),
+	INVALID_STORE_STATUS(HttpStatus.NOT_FOUND,"STORE005","상태명이 올바르지 않습니다."),
+	INVALID_STATUS_CHANGE(HttpStatus.BAD_REQUEST,"STORE006","이미 변경이 완료 되었습니다."),
+	// 인증 관련
+	INVALID_PASSWORD(HttpStatus.FORBIDDEN, "AUTH_001", "비밀번호가 일치하지 않습니다."),
 
 	// Wallet 관련
 	USER_WALLET_NOT_FOUND(HttpStatus.NOT_FOUND, "WALLET_001", "사용자 지갑이 존재하지 않습니다."),
@@ -94,6 +101,17 @@ public enum ErrorStatus implements BaseCode {
 	MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER004", "메뉴를 찾을 수 없습니다."),
 	INVALID_TOTAL_PRICE(HttpStatus.BAD_REQUEST, "ORDER005", "총 금액은 양의 정수입니다."),
 	ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "ORDER006", "주문을 찾을 수 없습니다."),
+	ORDER_PRICE_MISMATCH(HttpStatus.BAD_REQUEST, "ORDER007", "요청 총액과 장바구니 아이템 총액이 일치하지 않습니다."),
+
+	// Payment 관련
+	PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "PAYMENT001", "결제 승인 정보가 결제 요청할 때의 정보와 다릅니다."),
+	PAYMENT_CONFIRM_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT002", "결제 승인에 실패했습니다."),
+	TOSS_API_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "PAYMENT003", "토스페이먼츠 API 오류가 발생했습니다."),
+	PAYMENT_NOT_REFUNDABLE(HttpStatus.BAD_REQUEST, "PAYMENT004", "환불이 불가능한 주문입니다."),
+	PAYMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "PAYMENT005", "결제내역을 찾을 수 없습니다."),
+	INVALID_ORDER_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "ORDER007", "유효하지 않은 주문 상태 전이입니다."),
+	ORDER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "ORDER008", "해당 주문에 대한 접근 권한이 없습니다."),
+	ORDER_CANCEL_TIME_EXPIRED(HttpStatus.BAD_REQUEST, "ORDER009", "주문 취소 가능 시간이 초과되었습니다."),
 
 	// 스마트컨트랙트 (Token) 관련
 	TOKEN_TRANSFER_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_001", "스마트컨트랙트 전송 중 오류가 발생했습니다."),
@@ -107,7 +125,6 @@ public enum ErrorStatus implements BaseCode {
 	ADDRESS_ALREADY_EXISTS(HttpStatus.CONFLICT, "ADDRESS_001", "이미 존재하는 주소입니다."),
 	ADDRESS_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_002", "주소 등록에 실패했습니다."),
 	ADDRESS_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_003", "주소 목록 조회에 실패했습니다.");
-
 
 	private final HttpStatus httpStatus;
 	private final String code;

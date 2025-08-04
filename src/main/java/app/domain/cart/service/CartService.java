@@ -15,7 +15,9 @@ import app.domain.cart.model.dto.AddCartItemRequest;
 import app.domain.cart.model.dto.RedisCartItem;
 import app.domain.cart.model.entity.Cart;
 import app.domain.cart.model.entity.CartItem;
+import app.domain.menu.model.MenuRepository;
 import app.domain.menu.model.entity.Menu;
+import app.domain.store.repository.StoreRepository;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
@@ -29,26 +31,37 @@ public class CartService {
 	private final CartRedisService cartRedisService;
 	private final CartRepository cartRepository;
 	private final CartItemRepository cartItemRepository;
+	private final MenuRepository menuRepository;
+	private final StoreRepository storeRepository;
 
 	public String addCartItem(Long userId, AddCartItemRequest request) {
+		log.info("[CART] addCartItem 진입 - userId: {}, menuId: {}", userId, request.getMenuId());
 		try {
+			if (!menuRepository.existsById(request.getMenuId())) {
+				throw new GeneralException(ErrorStatus.MENU_NOT_FOUND);
+			}
+
+			if (!storeRepository.existsById(request.getStoreId())) {
+				throw new GeneralException(ErrorStatus.STORE_NOT_FOUND);
+			}
+
 			List<RedisCartItem> items = getCartFromCache(userId);
 
-			if (!items.isEmpty() && !items.get(0).getStoreId().equals(request.storeId())) {
+			if (!items.isEmpty() && !items.get(0).getStoreId().equals(request.getStoreId())) {
 				items.clear();
 			}
 
-			boolean isExist = items.stream().anyMatch(i -> i.getMenuId().equals(request.menuId()));
+			boolean isExist = items.stream().anyMatch(i -> i.getMenuId().equals(request.getMenuId()));
 			if (isExist) {
 				items.stream()
-					.filter(item -> item.getMenuId().equals(request.menuId()))
+					.filter(item -> item.getMenuId().equals(request.getMenuId()))
 					.findFirst()
-					.ifPresent(item -> item.setQuantity(item.getQuantity() + request.quantity()));
+					.ifPresent(item -> item.setQuantity(item.getQuantity() + request.getQuantity()));
 			} else {
 				items.add(RedisCartItem.builder()
-					.menuId(request.menuId())
-					.storeId(request.storeId())
-					.quantity(request.quantity())
+					.menuId(request.getMenuId())
+					.storeId(request.getStoreId())
+					.quantity(request.getQuantity())
 					.build());
 			}
 
@@ -56,12 +69,13 @@ public class CartService {
 		} catch (GeneralException e) {
 			throw e;
 		} catch (Exception e) {
-			log.error("장바구니 아이템 추가 실패 - userId: {}, menuId: {}", userId, request.menuId(), e);
+			log.error("장바구니 아이템 추가 실패 - userId: {}, menuId: {}", userId, request.getMenuId(), e);
 			throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	public String updateCartItem(Long userId, UUID menuId, int quantity) {
+		log.info("[CART] updateCartItem 진입 - userId: {}, menuId: {}", userId, menuId);
 		try {
 
 			List<RedisCartItem> items = getCartFromCache(userId);
@@ -80,6 +94,7 @@ public class CartService {
 	}
 
 	public String removeCartItem(Long userId, UUID menuId) {
+		log.info("[CART] removeCartItem 진입 - userId: {}, menuId: {}", userId, menuId);
 		try {
 			return cartRedisService.removeCartItem(userId, menuId);
 		} catch (GeneralException e) {
@@ -91,6 +106,7 @@ public class CartService {
 	}
 
 	public List<RedisCartItem> getCartFromCache(Long userId) {
+		log.info("[CART] getCartFromCache 진입 - userId: {}", userId);
 		try {
 			if (!cartRedisService.existsCartInRedis(userId)) {
 				loadDbToRedis(userId);
@@ -105,6 +121,7 @@ public class CartService {
 	}
 
 	public String clearCartItems(Long userId) {
+		log.info("[CART] clearCartItems 진입 - userId: {}", userId);
 		try {
 			return cartRedisService.clearCartItems(userId);
 		} catch (GeneralException e) {
@@ -117,6 +134,7 @@ public class CartService {
 
 	@Transactional(readOnly = true)
 	public String loadDbToRedis(Long userId) {
+		log.info("[CART] loadDbToRedis 진입 - userId: {}", userId);
 		try {
 			Cart cart = cartRepository.findByUser_UserId(userId)
 				.orElseThrow(() -> new GeneralException(ErrorStatus.CART_NOT_FOUND));
@@ -144,20 +162,32 @@ public class CartService {
 
 	@Transactional
 	public String syncRedisToDb(Long userId) {
+		log.info("[CART] syncRedisToDb 진입 - userId: {}", userId);
 		try {
 
 			List<RedisCartItem> redisItems = getCartFromCache(userId);
 
 			Cart cart = cartRepository.findByUser_UserId(userId)
 				.orElseThrow(() -> new GeneralException(ErrorStatus.CART_NOT_FOUND));
+
 			cartItemRepository.deleteByCart_CartId(cart.getCartId());
 			if (!redisItems.isEmpty()) {
 				List<CartItem> cartItems = redisItems.stream()
-					.map(item -> CartItem.builder()
-						.cart(cart)
-						.menu(Menu.builder().menuId(item.getMenuId()).build())
-						.quantity(item.getQuantity())
-						.build())
+					.filter(item -> {
+						boolean exists = menuRepository.existsById(item.getMenuId());
+						if (!exists) {
+							log.warn("메뉴가 존재하지 않아 동기화에서 제외 - menuId: {}", item.getMenuId());
+						}
+						return exists;
+					})
+					.map(item -> {
+						Menu menu = menuRepository.findById(item.getMenuId()).get();
+						return CartItem.builder()
+							.cart(cart)
+							.menu(menu)
+							.quantity(item.getQuantity())
+							.build();
+					})
 					.toList();
 
 				cartItemRepository.saveAll(cartItems);
@@ -175,7 +205,9 @@ public class CartService {
 	}
 
 	@Scheduled(initialDelay = 900000, fixedRate = 900000)
+	@Transactional
 	public String syncAllCartsToDb() {
+		log.info("[CART] syncAllCartsToDb 진입");
 		try {
 
 			Set<String> cartKeys = cartRedisService.getAllCartKeys();

@@ -12,7 +12,7 @@ import lombok.Getter;
 public enum ReviewSuccessStatus implements BaseCode {
 
 	REVIEW_CREATED(HttpStatus.CREATED, "REVIEW201", "리뷰 작성이 성공했습니다."),
-	GET_REVIEWS_SUCCESS(HttpStatus.FOUND, "REVIEW200", "리뷰 성공적으로 불러왔습니다.");
+	GET_REVIEWS_SUCCESS(HttpStatus.OK, "REVIEW200", "리뷰 성공적으로 불러왔습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

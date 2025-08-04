@@ -43,6 +43,7 @@ public enum StoreErrorCode implements BaseCode {
 	@Override
 	public ReasonDTO getReasonHttpStatus() {
 		return ReasonDTO.builder()
+			.isSuccess(false)
 			.message(message)
 			.code(code)
 			.httpStatus(httpStatus)

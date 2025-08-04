@@ -11,7 +11,9 @@ import lombok.Getter;
 @Getter
 public enum CustomerSuccessStatus implements BaseCode {
 
-	CUSTOMER_OK(HttpStatus.OK, "CUSTOMER200", "커스터머의 오더조회가 성공했습니다.");
+	CUSTOMER_OK(HttpStatus.OK, "CUSTOMER200", "커스터머의 오더조회가 성공했습니다."),
+	ADDRESS_LIST_FOUND(HttpStatus.OK, "ADDRESS_200", "주소 목록 조회가 완료되었습니다."),
+	ADDRESS_ADDED(HttpStatus.OK, "ADDRESS_200", "주소 등록이 완료되었습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;

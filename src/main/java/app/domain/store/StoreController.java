@@ -22,6 +22,7 @@ import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
 import app.global.apiPayload.exception.GeneralException;
+
 import lombok.RequiredArgsConstructor;
 
 @RestController

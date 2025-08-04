@@ -149,9 +149,9 @@ class AiServiceImplTest {
 			verify(chatClientRequestSpec, times(1)).user(promptTextCaptor.capture());
 			String capturedPrompt = promptTextCaptor.getValue();
 
-			assertTrue(capturedPrompt.contains(aiRequest.storeName()));
-			assertTrue(capturedPrompt.contains(aiRequest.menuName()));
-			assertTrue(capturedPrompt.contains(aiRequest.promptText()));
+			assertTrue(capturedPrompt.contains(aiRequest.getStoreName()));
+			assertTrue(capturedPrompt.contains(aiRequest.getMenuName()));
+			assertTrue(capturedPrompt.contains(aiRequest.getPromptText()));
 
 			verify(aiHistoryRepository, times(1)).save(aiHistoryCaptor.capture());
 			assertEquals(AiRequestStatus.PENDING, aiHistoryCaptor.getValue().getStatus());
