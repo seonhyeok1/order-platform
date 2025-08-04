@@ -60,7 +60,7 @@ public class StoreService {
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
 
 		if (!store.getUser().getUserId().equals(userId)) {
-			throw new GeneralException(StoreErrorCode.STORE_NOT_FOUND);
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
 		}
 
 		if (request.getCategoryId() != null) {
@@ -97,7 +97,7 @@ public class StoreService {
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
 
 		if (!store.getUser().getUserId().equals(userId)) {
-			throw new GeneralException(StoreErrorCode.STORE_NOT_FOUND);
+			throw new GeneralException(StoreErrorCode.INVALID_USER_ROLE);
 		}
 
 		store.markAsDeleted();
