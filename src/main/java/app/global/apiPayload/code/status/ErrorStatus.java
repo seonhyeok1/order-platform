@@ -2,21 +2,20 @@ package app.global.apiPayload.code.status;
 
 import org.springframework.http.HttpStatus;
 
-import app.global.apiPayload.code.BaseErrorCode;
-import app.global.apiPayload.code.ErrorReasonDTO;
+import app.global.apiPayload.code.BaseCode;
+import app.global.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum ErrorStatus implements BaseErrorCode {
+public enum ErrorStatus implements BaseCode {
 
 	// For test
 	TEMP_EXCEPTION(HttpStatus.BAD_REQUEST, "TEMP4001", "이거는 테스트"),
 
-	// AI 관련
-	AI_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "AI001", "AI 콘텐츠 생성에 실패했습니다."),
-	AI_INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "AI002", "잘못된 입력값입니다"),
+	// USER
+	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "GLOBAL001", "존재하지 않는 사용자입니다."),
 
 	// 가장 일반적인 응답
 	_INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "COMMON500", "서버 에러, 관리자에게 문의 바랍니다."),
@@ -26,6 +25,7 @@ public enum ErrorStatus implements BaseErrorCode {
 	NOTICE_NOT_FOUND(HttpStatus.BAD_REQUEST, "NOTICE400", "공지사항을 찾을 수 없습니다."),
 
 	// Store 관련
+	STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE004", "해당 가맹점을 찾을 수 없습니다."),
 	STORE_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_001", "존재하지 않는 매장 카테고리입니다."),
 	REGION_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE002", "존재하지 않는 지역입니다."),
 	MERCHANT_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE003", "존재하지 않는 가맹점입니다."),
@@ -57,13 +57,6 @@ public enum ErrorStatus implements BaseErrorCode {
 	VOUCHER_STORE_NOT_USABLE(HttpStatus.BAD_REQUEST, "VOUCHER_007", "해당 매장에서 바우처를 사용할 수 없습니다."),
 	VOUCHER_NOT_OWNED_BY_USER(HttpStatus.FORBIDDEN, "VOUCHER_008", "이 바우처는 해당 사용자의 소유가 아닙니다."),
 	VOUCHER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "VOUCHER_009", "이미 삭제 처리된 바우처입니다."),
-
-	// User 관련
-	USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER001", "존재하지 않는 사용자입니다."),
-	USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER002", "이미 존재하는 유저입니다."),
-	EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER003", "이미 사용 중인 이메일입니다."),
-	NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER004", "이미 사용 중인 닉네임입니다."),
-	PHONE_NUMBER_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER005", "이미 사용 중인 전화번호입니다."),
 
 	// Merchant 관련
 	MERCHANT_ALREADY_EXISTS(HttpStatus.CONFLICT, "MERCHANT_001", "이미 존재하는 가맹점주입니다."),
@@ -116,23 +109,29 @@ public enum ErrorStatus implements BaseErrorCode {
 	TOKEN_BALANCE_QUERY_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_003", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다."),
 	TOKEN_BURN_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_004", "토큰 소각(burn) 처리 중 오류가 발생했습니다."),
 	BALANCE_MISMATCH(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트와 DB의 토큰 잔액이 일치하지 않습니다."),
-	BALANCE_VERIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다.");
+	BALANCE_VERIFICATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN_005", "스마트컨트랙트 잔액 조회 중 오류가 발생했습니다."),
+
+	// address 관련
+	ADDRESS_ALREADY_EXISTS(HttpStatus.CONFLICT, "ADDRESS_001", "이미 존재하는 주소입니다."),
+	ADDRESS_ADD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_002", "주소 등록에 실패했습니다."),
+	ADDRESS_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "ADDRESS_003", "주소 목록 조회에 실패했습니다.");
+
 
 	private final HttpStatus httpStatus;
 	private final String code;
 	private final String message;
 
 	@Override
-	public ErrorReasonDTO getReason() {
-		return ErrorReasonDTO.builder()
+	public ReasonDTO getReason() {
+		return ReasonDTO.builder()
 			.message(message)
 			.code(code)
 			.build();
 	}
 
 	@Override
-	public ErrorReasonDTO getReasonHttpStatus() {
-		return ErrorReasonDTO.builder()
+	public ReasonDTO getReasonHttpStatus() {
+		return ReasonDTO.builder()
 			.message(message)
 			.code(code)
 			.httpStatus(httpStatus)

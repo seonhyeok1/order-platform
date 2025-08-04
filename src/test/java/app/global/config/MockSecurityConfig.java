@@ -22,8 +22,12 @@ public class MockSecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers("/customer/review/**").hasRole(UserRole.CUSTOMER.name())
+				.requestMatchers("/customer/order/**").hasRole(UserRole.CUSTOMER.name())
+				.requestMatchers("/owner/**").hasRole(UserRole.OWNER.name())
+				.requestMatchers("/user/signup", "/user/login").permitAll()
 				.requestMatchers("/manager/**").hasRole(UserRole.MANAGER.name())
-				.anyRequest().permitAll()
+				.anyRequest().denyAll()
+
 			);
 		return http.build();
 	}
