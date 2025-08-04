@@ -87,7 +87,7 @@ public class ManagerController {
 		description = "가게 목록을 페이지 별로 조회합니다. 생성일 또는 수정일 기준으로 정렬할 수 있습니다.")
 	public ApiResponse<PagedResponse<GetStoreListResponse>> getAllStore(
 		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable,
-		@RequestParam(defaultValue = "APPORVE") StoreAcceptStatus status
+		@RequestParam(defaultValue = "APPROVE") StoreAcceptStatus status
 	) {
 		return ApiResponse.onSuccess(managerService.getAllStore( status,pageable));
 	}
