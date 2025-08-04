@@ -2,9 +2,7 @@ package app.domain.store;
 
 import java.util.UUID;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,28 +19,29 @@ import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
+import app.domain.store.status.StoreSuccessStatus;
+import app.global.SecurityUtil;
+import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.exception.GeneralException;
-
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/store")
+@RequestMapping("/api/store")
 @RequiredArgsConstructor
 public class StoreController {
 
 	private final StoreService storeService;
 	private final StoreRepository storeRepository;
 	private final RegionRepository regionRepository;
+	private final SecurityUtil securityUtil;
 
 	@PostMapping
-	public ResponseEntity<StoreApproveResponse> createStore(@RequestBody StoreApproveRequest request) {
+	public ApiResponse<StoreApproveResponse> createStore(@RequestBody StoreApproveRequest request) {
 		validateCreateStoreRequest(request);
 
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		Long userId = Long.parseLong(authentication.getName());
+		StoreApproveResponse response = storeService.createStore(request);
 
-		StoreApproveResponse response = storeService.createStore(userId, request);
-		return ResponseEntity.ok(response);
+		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_CREATED_SUCCESS, response);
 	}
 
 	private void validateCreateStoreRequest(StoreApproveRequest request) {
@@ -72,8 +71,9 @@ public class StoreController {
 		}
 	}
 
-	@PutMapping("/store")
-	public ResponseEntity<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
+	@PutMapping
+	@PreAuthorize("hasAuthority('OWNER')")
+	public ApiResponse<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
 		if (request.getStoreId() == null)
 			throw new GeneralException(StoreErrorCode.STORE_ID_NULL);
 
@@ -84,12 +84,14 @@ public class StoreController {
 			throw new GeneralException(StoreErrorCode.CATEGORY_ID_NULL);
 
 		StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
-		return ResponseEntity.ok(response);
+		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_UPDATED_SUCCESS, response);
 	}
 
-	@DeleteMapping("/store/{storeId}")
-	public ResponseEntity<String> deleteStore(@PathVariable UUID storeId) {
+	@DeleteMapping("/{storeId}")
+	@PreAuthorize("hasAuthority('OWNER')")
+	public ApiResponse<String> deleteStore(@PathVariable UUID storeId) {
 		storeService.deleteStore(storeId);
-		return ResponseEntity.ok("가게 삭제가 완료되었습니다.");
+
+		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_DELETED_SUCCESS, "가게 삭제가 완료되었습니다.");
 	}
 }

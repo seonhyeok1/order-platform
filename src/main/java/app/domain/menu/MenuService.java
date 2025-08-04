@@ -4,8 +4,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +21,8 @@ import app.domain.menu.status.MenuErrorCode;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
-import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
-import app.global.apiPayload.PagedResponse;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.SecurityUtil;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
@@ -36,13 +32,10 @@ public class MenuService {
 
 	private final MenuRepository menuRepository;
 	private final StoreRepository storeRepository;
-	private final UserRepository userRepository;
+	private final SecurityUtil securityUtil;
 
 	@Transactional
-	public MenuCreateResponse createMenu(Long userId, MenuCreateRequest request) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(MenuErrorCode.USER_NOT_FOUND_FOR_MENU));
-
+	public MenuCreateResponse createMenu(MenuCreateRequest request) {
 		Store store = storeRepository.findById(request.getStoreId())
 			.orElseThrow(() -> new GeneralException(MenuErrorCode.STORE_NOT_FOUND_FOR_MENU));
 
@@ -66,9 +59,10 @@ public class MenuService {
 	}
 
 	@Transactional
-	public MenuUpdateResponse updateMenu(Long userId, MenuUpdateRequest request) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(MenuErrorCode.USER_NOT_FOUND_FOR_MENU));
+	public MenuUpdateResponse updateMenu(MenuUpdateRequest request) {
+
+		User user = securityUtil.getCurrentUser();
+		long userId = user.getUserId();
 
 		Menu menu = menuRepository.findByMenuIdAndDeletedAtIsNull(request.getMenuId())
 			.orElseThrow(() -> new GeneralException(MenuErrorCode.MENU_NOT_FOUND));
@@ -94,9 +88,10 @@ public class MenuService {
 	}
 
 	@Transactional
-	public MenuDeleteResponse deleteMenu(Long userId, MenuDeleteRequest request) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(MenuErrorCode.USER_NOT_FOUND_FOR_MENU));
+	public MenuDeleteResponse deleteMenu(MenuDeleteRequest request) {
+
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
 
 		Menu menu = menuRepository.findByMenuIdAndDeletedAtIsNull(request.getMenuId())
 			.orElseThrow(() -> new GeneralException(MenuErrorCode.MENU_NOT_FOUND));
@@ -119,9 +114,10 @@ public class MenuService {
 	}
 
 	@Transactional
-	public MenuUpdateResponse updateMenuVisibility(Long userId, UUID menuId, Boolean visible) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(MenuErrorCode.USER_NOT_FOUND_FOR_MENU));
+	public MenuUpdateResponse updateMenuVisibility(UUID menuId, Boolean visible) {
+
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
 
 		Menu menu = menuRepository.findByMenuIdAndDeletedAtIsNull(menuId)
 			.orElseThrow(() -> new GeneralException(MenuErrorCode.MENU_NOT_FOUND));
