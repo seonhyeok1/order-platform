@@ -21,6 +21,7 @@ public enum CustomerSuccessStatus implements BaseCode {
 	CUSTOMER_SEARCH_STORE_OK(HttpStatus.OK, "CUSTOMER202", "사용자의 가게 검색이 성공했습니다.");
 
 
+	ADDRESS_ADDED(HttpStatus.OK, "ADDRESS_201", "주소 등록이 완료되었습니다.");
 
 	private final HttpStatus httpStatus;
 	private final String code;
