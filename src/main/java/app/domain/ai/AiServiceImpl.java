@@ -30,18 +30,18 @@ public class AiServiceImpl implements AiService {
 
 	@Override
 	public AiResponse generateDescription(AiRequest aiRequest) {
-		if (!StringUtils.hasText(aiRequest.storeName())) {
+		if (!StringUtils.hasText(aiRequest.getStoreName())) {
 			throw new GeneralException(AiErrorStatus.AI_INVALID_INPUT_VALUE);
 		}
-		if (aiRequest.reqType() == ReqType.MENU_DESCRIPTION && !StringUtils.hasText(aiRequest.menuName())) {
+		if (aiRequest.getReqType() == ReqType.MENU_DESCRIPTION && !StringUtils.hasText(aiRequest.getMenuName())) {
 			throw new GeneralException(AiErrorStatus.AI_INVALID_INPUT_VALUE);
 		}
 
 		AiHistory aiRequestEntity = AiHistory.builder()
-			.storeName(aiRequest.storeName())
-			.menuName(StringUtils.hasText(aiRequest.menuName()) ? aiRequest.menuName() : "")
-			.reqType(aiRequest.reqType())
-			.promptText(aiRequest.promptText())
+			.storeName(aiRequest.getStoreName())
+			.menuName(StringUtils.hasText(aiRequest.getMenuName()) ? aiRequest.getMenuName() : "")
+			.reqType(aiRequest.getReqType())
+			.promptText(aiRequest.getPromptText())
 			.status(AiRequestStatus.PENDING)
 			.build();
 
