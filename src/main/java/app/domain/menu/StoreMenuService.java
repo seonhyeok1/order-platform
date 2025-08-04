@@ -43,19 +43,11 @@ public class StoreMenuService {
 			throw new GeneralException(StoreMenuErrorCode.MENU_NAME_DUPLICATE);
 		}
 
-		Menu menu = Menu.builder()
-			.store(store)
-			.name(request.getName())
-			.price(request.getPrice())
-			.description(request.getDescription())
-			.build();
+		Menu menu = new Menu(null, store, request.getName(), request.getPrice(), request.getDescription(), false, null);
 
 		Menu savedMenu = menuRepository.save(menu);
 
-		return MenuCreateResponse.builder()
-			.menuId(savedMenu.getMenuId())
-			.name(savedMenu.getName())
-			.build();
+		return new MenuCreateResponse(savedMenu.getMenuId(), savedMenu.getName());
 	}
 
 	@Transactional
@@ -81,10 +73,7 @@ public class StoreMenuService {
 
 		Menu updatedMenu = menuRepository.save(menu);
 
-		return MenuUpdateResponse.builder()
-			.menuId(updatedMenu.getMenuId())
-			.name(updatedMenu.getName())
-			.build();
+		return new MenuUpdateResponse(updatedMenu.getMenuId(), updatedMenu.getName());
 	}
 
 	@Transactional
@@ -107,10 +96,7 @@ public class StoreMenuService {
 		menu.markAsDeleted();
 		menuRepository.save(menu);
 
-		return MenuDeleteResponse.builder()
-			.menuId(menu.getMenuId())
-			.status("DELETED")
-			.build();
+		return new MenuDeleteResponse(menu.getMenuId(), "DELETED");
 	}
 
 	@Transactional
@@ -129,10 +115,7 @@ public class StoreMenuService {
 		menu.update(null, null, null, visible);
 		Menu updatedMenu = menuRepository.save(menu);
 
-		return MenuUpdateResponse.builder()
-			.menuId(updatedMenu.getMenuId())
-			.name(updatedMenu.getName())
-			.build();
+		return new MenuUpdateResponse(updatedMenu.getMenuId(), updatedMenu.getName());
 	}
 
 	@Transactional(readOnly = true)
@@ -143,18 +126,10 @@ public class StoreMenuService {
 		List<Menu> menus = menuRepository.findByStoreAndDeletedAtIsNull(store);
 
 		List<MenuListResponse.MenuDetail> menuDetails = menus.stream()
-			.map(menu -> MenuListResponse.MenuDetail.builder()
-				.menuId(menu.getMenuId())
-				.name(menu.getName())
-				.price(menu.getPrice())
-				.description(menu.getDescription())
-				.isHidden(menu.isHidden())
-				.build())
+			.map(menu -> new MenuListResponse.MenuDetail(menu.getMenuId(), menu.getName(), menu.getPrice(),
+				menu.getDescription(), menu.isHidden()))
 			.collect(Collectors.toList());
 
-		return MenuListResponse.builder()
-			.storeId(store.getStoreId())
-			.menus(menuDetails)
-			.build();
+		return new MenuListResponse(store.getStoreId(), menuDetails);
 	}
 }

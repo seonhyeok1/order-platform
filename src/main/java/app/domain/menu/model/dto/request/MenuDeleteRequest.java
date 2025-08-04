@@ -2,16 +2,21 @@ package app.domain.menu.model.dto.request;
 
 import java.util.UUID;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
-@Getter
-@Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class MenuDeleteRequest {
-	private UUID menuId;
+    private UUID menuId;
+
+    public MenuDeleteRequest() {
+    }
+
+    public MenuDeleteRequest(UUID menuId) {
+        this.menuId = menuId;
+    }
+
+    public UUID getMenuId() {
+        return menuId;
+    }
+
+    public void setMenuId(UUID menuId) {
+        this.menuId = menuId;
+    }
 }

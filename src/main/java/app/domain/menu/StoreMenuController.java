@@ -60,7 +60,7 @@ public class StoreMenuController {
 
 	@GetMapping("/store/menu")
 	public ApiResponse<MenuListResponse> getMenuList(@RequestParam("storeId") String storeId) {
-		MenuListRequest request = MenuListRequest.builder().storeId(UUID.fromString(storeId)).build();
+		MenuListRequest request = new MenuListRequest(UUID.fromString(storeId));
 		MenuListResponse response = storeMenuService.getMenuList(request);
 		return ApiResponse.onSuccess(StoreMenuSuccessStatus._OK, response);
 	}

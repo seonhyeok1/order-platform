@@ -42,24 +42,11 @@ public class StoreService {
 		Category category = categoryRepository.findById(request.getCategoryId())
 			.orElseThrow(() -> new GeneralException(StoreErrorCode.CATEGORY_NOT_FOUND));
 
-		Store store = Store.builder()
-			.storeName(request.getStoreName())
-			.region(region)
-			.user(user)
-			.category(category)
-			.address(request.getAddress())
-			.description(request.getDesc())
-			.phoneNumber(request.getPhoneNumber())
-			.minOrderAmount(request.getMinOrderAmount().intValue())
-			.storeAcceptStatus(StoreAcceptStatus.PENDING)
-			.build();
+		Store store = new Store(null, user, region, category, request.getStoreName(), request.getDesc(), request.getAddress(), request.getPhoneNumber(), request.getMinOrderAmount(), StoreAcceptStatus.PENDING);
 
 		Store savedStore = storeRepository.save(store);
 
-		return StoreApproveResponse.builder()
-			.storeId(savedStore.getStoreId())
-			.storeApprovalStatus(savedStore.getStoreAcceptStatus().name())
-			.build();
+		return new StoreApproveResponse(savedStore.getStoreId(), savedStore.getStoreAcceptStatus().name());
 	}
 
 	@Transactional
@@ -97,9 +84,7 @@ public class StoreService {
 		}
 
 		Store updatedStore = storeRepository.save(store);
-		return StoreInfoUpdateResponse.builder()
-			.storeId(updatedStore.getStoreId())
-			.build();
+		return new StoreInfoUpdateResponse(updatedStore.getStoreId());
 	}
 
 	@Transactional
