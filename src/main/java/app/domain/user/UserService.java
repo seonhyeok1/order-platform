@@ -16,9 +16,11 @@ import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.request.LoginRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
+import app.domain.user.model.dto.response.GetUserInfoResponse;
 import app.domain.user.model.dto.response.LoginResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.status.UserErrorStatus;
+import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.JwtTokenProvider;
@@ -36,6 +38,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
+	private final SecurityUtil securityUtil;
 	private static final String REFRESH_TOKEN_PREFIX = "RT:";
 	private static final String BLACKLIST_PREFIX = "BL:";
 
@@ -95,8 +98,20 @@ public class UserService {
 	public void logout() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+		if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(
+			authentication.getPrincipal())) {
+			throw new GeneralException(UserErrorStatus.AUTHENTICATION_NOT_FOUND);
+		}
+
 		String userId = authentication.getName();
-		String accessToken = (String)authentication.getCredentials();
+		Object credentials = authentication.getCredentials();
+		if (!(credentials instanceof String accessToken)) {
+			String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
+			if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
+				redisTemplate.delete(refreshTokenKey);
+			}
+			return;
+		}
 
 		String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
 		if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
@@ -129,10 +144,12 @@ public class UserService {
 		logout();
 	}
 
-	/**
-	 * 사용자의 고유 필드(아이디, 이메일, 닉네임, 전화번호) 중복 여부 검사 - 회원가입에서만 사용
-	 * @param createUserRequest 회원가입 요청 DTO
-	 */
+	@Transactional
+	public GetUserInfoResponse getUserInfo() {
+		User currentUser = securityUtil.getCurrentUser();
+		return GetUserInfoResponse.from(currentUser);
+	}
+
 	private void validateUserUniqueness(CreateUserRequest createUserRequest) {
 		userRepository.findFirstByUniqueFields(
 			createUserRequest.getUsername(),

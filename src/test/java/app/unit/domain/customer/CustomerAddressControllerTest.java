@@ -34,6 +34,7 @@ import app.domain.customer.dto.response.AddCustomerAddressResponse;
 import app.domain.customer.dto.response.GetCustomerAddressListResponse;
 import app.domain.customer.status.CustomerErrorStatus;
 import app.domain.customer.status.CustomerSuccessStatus;
+import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
 
@@ -187,7 +188,7 @@ class CustomerAddressControllerTest {
 			.andExpect(jsonPath("$.message").value(CustomerErrorStatus.ADDRESS_ADD_FAILED.getMessage()));
 	}
 
-	@ParameterizedTest(name = "실패 - alias가 \"{0}\"일 때 (수동 검증)")
+	@ParameterizedTest(name = "실패 - alias가 \"{0}\"일 때 (입력값 검증)")
 	@NullAndEmptySource
 	@ValueSource(strings = {" "})
 	@WithMockUser(username = "1", roles = "CUSTOMER")
@@ -199,10 +200,10 @@ class CustomerAddressControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value(CustomerErrorStatus.ADDRESS_ALIAS_INVALID.getCode()));
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()));
 	}
 
-	@ParameterizedTest(name = "실패 - address가 \"{0}\"일 때 (수동 검증)")
+	@ParameterizedTest(name = "실패 - address가 \"{0}\"일 때 (입력값 검증)")
 	@NullAndEmptySource
 	@ValueSource(strings = {" "})
 	@WithMockUser(username = "1", roles = "CUSTOMER")
@@ -214,22 +215,21 @@ class CustomerAddressControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value(CustomerErrorStatus.ADDRESS_ADDRESS_INVALID.getCode()));
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()));
 	}
 
-	@ParameterizedTest(name = "실패 - addressDetail이 \"{0}\"일 때 (수동 검증)")
+	@ParameterizedTest(name = "실패 - addressDetail이 \"{0}\"일 때 (입력값 검증)")
 	@NullAndEmptySource
 	@ValueSource(strings = {" "})
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void addCustomerAddresses_Fail_InvalidAddressDetail(String invalidAddressDetail) throws Exception {
-		AddCustomerAddressRequest request = new AddCustomerAddressRequest("우리 집", "서울시 종로구", invalidAddressDetail,
-			false);
+		AddCustomerAddressRequest request = new AddCustomerAddressRequest("우리 집", "서울시 종로구", invalidAddressDetail, false);
 
 		mockMvc.perform(post("/customer/address/add")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.code").value(CustomerErrorStatus.ADDRESS_ADDRESSDETAIL_INVALID.getCode()));
+			.andExpect(jsonPath("$.code").value(ErrorStatus._BAD_REQUEST.getCode()));
 	}
 }
