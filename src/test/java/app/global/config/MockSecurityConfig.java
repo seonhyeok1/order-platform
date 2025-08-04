@@ -21,13 +21,15 @@ public class MockSecurityConfig {
 		http
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/customer/cart/**").hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/customer/review/**").hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/customer/order/**").hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/owner/**").hasRole(UserRole.OWNER.name())
+				.requestMatchers("/customer/cart/**").hasRole(UserRole.CUSTOMER.name())
 				.requestMatchers("/payment/**").hasRole(UserRole.CUSTOMER.name())
+				.requestMatchers("/manager/**").hasRole(UserRole.MANAGER.name())
+				.requestMatchers("/owner/**").hasRole(UserRole.OWNER.name())
 				.requestMatchers("/user/signup", "/user/login").permitAll()
 				.anyRequest().denyAll()
+
 			);
 		return http.build();
 	}

@@ -2,9 +2,9 @@ package app.domain.review.model.entity;
 
 import java.util.UUID;
 
-import app.domain.user.model.entity.User;
 import app.domain.order.model.entity.Orders;
 import app.domain.store.model.entity.Store;
+import app.domain.user.model.entity.User;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,7 +35,7 @@ public class Review extends BaseEntity {
 
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "b_order_id", nullable = false)
-	private Orders Orders;
+	private Orders orders;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
@@ -46,8 +46,8 @@ public class Review extends BaseEntity {
 	private Store store;
 
 	@Column(nullable = false)
-	private int rating;
+	private Long rating;
 
 	@Column(nullable = false)
-	private String context;
+	private String content;
 }
