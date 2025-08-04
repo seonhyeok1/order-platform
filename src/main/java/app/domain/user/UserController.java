@@ -1,6 +1,7 @@
 package app.domain.user;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.request.LoginRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
+import app.domain.user.model.dto.response.GetUserInfoResponse;
 import app.domain.user.model.dto.response.LoginResponse;
 import app.domain.user.status.UserSuccessStatus;
 import app.global.apiPayload.ApiResponse;
@@ -51,5 +53,12 @@ public class UserController {
 	public ApiResponse<Void> withdraw() {
 		userService.withdrawMembership();
 		return ApiResponse.onSuccess(UserSuccessStatus.WITHDRAW_SUCCESS, null);
+	}
+
+	@GetMapping("/info")
+	@Operation(summary = "회원 정보 조회 API", description = "현재 로그인된 사용자의 정보를 조회합니다.")
+	public ApiResponse<GetUserInfoResponse> getUserInfo() {
+		GetUserInfoResponse response = userService.getUserInfo();
+		return ApiResponse.onSuccess(UserSuccessStatus.USER_PROFILE_FETCHED, response);
 	}
 }

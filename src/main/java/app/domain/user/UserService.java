@@ -16,9 +16,11 @@ import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.request.CreateUserRequest;
 import app.domain.user.model.dto.request.LoginRequest;
 import app.domain.user.model.dto.response.CreateUserResponse;
+import app.domain.user.model.dto.response.GetUserInfoResponse;
 import app.domain.user.model.dto.response.LoginResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.status.UserErrorStatus;
+import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.jwt.JwtTokenProvider;
@@ -36,6 +38,7 @@ public class UserService {
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final RedisTemplate<String, String> redisTemplate;
+	private final SecurityUtil securityUtil;
 	private static final String REFRESH_TOKEN_PREFIX = "RT:";
 	private static final String BLACKLIST_PREFIX = "BL:";
 
@@ -127,6 +130,12 @@ public class UserService {
 		userRepository.delete(user);
 
 		logout();
+	}
+
+	@Transactional
+	GetUserInfoResponse getUserInfo() {
+		User currentUser = securityUtil.getCurrentUser();
+		return GetUserInfoResponse.from(currentUser);
 	}
 
 	/**
