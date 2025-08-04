@@ -98,8 +98,20 @@ public class UserService {
 	public void logout() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+		if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(
+			authentication.getPrincipal())) {
+			throw new GeneralException(UserErrorStatus.AUTHENTICATION_NOT_FOUND);
+		}
+
 		String userId = authentication.getName();
-		String accessToken = (String)authentication.getCredentials();
+		Object credentials = authentication.getCredentials();
+		if (!(credentials instanceof String accessToken)) {
+			String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
+			if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
+				redisTemplate.delete(refreshTokenKey);
+			}
+			return;
+		}
 
 		String refreshTokenKey = REFRESH_TOKEN_PREFIX + userId;
 		if (Boolean.TRUE.equals(redisTemplate.hasKey(refreshTokenKey))) {
@@ -133,7 +145,7 @@ public class UserService {
 	}
 
 	@Transactional
-	GetUserInfoResponse getUserInfo() {
+	public GetUserInfoResponse getUserInfo() {
 		User currentUser = securityUtil.getCurrentUser();
 		return GetUserInfoResponse.from(currentUser);
 	}
