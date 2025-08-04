@@ -110,24 +110,23 @@ public class StoreControllerTest {
 		}
 
 		@Test
-		@DisplayName("실패: 존재하지 않는 지역")
-		void createStoreFailRegionNotFound() throws GeneralException {
-			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, TEST_CATEGORY_ID, "테스트 주소", "테스트 가게",
-				"테스트 설명",
+		@DisplayName("실패: categoryId 누락")
+		void createStoreFailCategoryIdNull() throws GeneralException {
+			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, null, "테스트 주소", "테스트 가게", "테스트 설명",
 				"01012345678", 1000L);
 
-			when(regionRepository.findById(TEST_REGION_ID)).thenReturn(Optional.empty());
+			when(regionRepository.findById(TEST_REGION_ID)).thenReturn(Optional.of(mock(Region.class)));
 
 			GeneralException exception = assertThrows(GeneralException.class, () ->
 				storeController.createStore(request)
 			);
-			assertEquals(StoreErrorCode.REGION_NOT_FOUND, exception.getCode());
+			assertEquals(StoreErrorCode.CATEGORY_ID_NULL, exception.getCode());
 
 			verify(storeService, never()).createStore(any(StoreApproveRequest.class));
 		}
 
 		@Test
-		@DisplayName("실패: 주소 누락")
+		@DisplayName("실패: address 누락")
 		void createStoreFailAddressNull() throws GeneralException {
 			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, TEST_CATEGORY_ID, null, "테스트 가게",
 				"테스트 설명",
@@ -144,7 +143,7 @@ public class StoreControllerTest {
 		}
 
 		@Test
-		@DisplayName("실패: 가게 이름 누락")
+		@DisplayName("실패: storeName 누락")
 		void createStoreFailStoreNameNull() throws GeneralException {
 			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, TEST_CATEGORY_ID, "테스트 주소", null,
 				"테스트 설명",
@@ -161,7 +160,7 @@ public class StoreControllerTest {
 		}
 
 		@Test
-		@DisplayName("실패: 최소 주문 금액 누락")
+		@DisplayName("실패: minOrderAmount 누락")
 		void createStoreFailMinOrderAmountNull() throws GeneralException {
 			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, TEST_CATEGORY_ID, "테스트 주소", "테스트 가게",
 				"테스트 설명",
@@ -173,6 +172,23 @@ public class StoreControllerTest {
 				storeController.createStore(request)
 			);
 			assertEquals(StoreErrorCode.MIN_ORDER_AMOUNT_NULL, exception.getCode());
+
+			verify(storeService, never()).createStore(any(StoreApproveRequest.class));
+		}
+
+		@Test
+		@DisplayName("실패: 존재하지 않는 지역")
+		void createStoreFailRegionNotFound() throws GeneralException {
+			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, TEST_CATEGORY_ID, "테스트 주소", "테스트 가게",
+				"테스트 설명",
+				"01012345678", 1000L);
+
+			when(regionRepository.findById(TEST_REGION_ID)).thenReturn(Optional.empty());
+
+			GeneralException exception = assertThrows(GeneralException.class, () ->
+				storeController.createStore(request)
+			);
+			assertEquals(StoreErrorCode.REGION_NOT_FOUND, exception.getCode());
 
 			verify(storeService, never()).createStore(any(StoreApproveRequest.class));
 		}
@@ -212,22 +228,6 @@ public class StoreControllerTest {
 
 			verify(storeService, never()).createStore(any(StoreApproveRequest.class));
 		}
-
-		@Test
-		@DisplayName("실패: 카테고리 ID 누락")
-		void createStoreFailCategoryIdNull() throws GeneralException {
-			StoreApproveRequest request = new StoreApproveRequest(TEST_REGION_ID, null, "테스트 주소", "테스트 가게", "테스트 설명",
-				"01012345678", 1000L);
-
-			when(regionRepository.findById(TEST_REGION_ID)).thenReturn(Optional.of(mock(Region.class)));
-
-			GeneralException exception = assertThrows(GeneralException.class, () ->
-				storeController.createStore(request)
-			);
-			assertEquals(StoreErrorCode.CATEGORY_ID_NULL, exception.getCode());
-
-			verify(storeService, never()).createStore(any(StoreApproveRequest.class));
-		}
 	}
 
 	@Nested
@@ -237,8 +237,8 @@ public class StoreControllerTest {
 		@Test
 		@DisplayName("성공: 가게 정보 수정")
 		void updateStoreSuccess() throws Exception {
-			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(TEST_STORE_ID, TEST_CATEGORY_ID, "수정된 가게",
-				"수정된 주소", "01098765432", 2000L, "수정된 설명");
+			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(TEST_STORE_ID, TEST_CATEGORY_ID, "새 가게 이름",
+				"새 주소", "01098765432", 2000L, "새 설명");
 
 			StoreInfoUpdateResponse expectedResponse = new StoreInfoUpdateResponse(TEST_STORE_ID);
 
@@ -260,10 +260,9 @@ public class StoreControllerTest {
 		@Test
 		@DisplayName("실패: 유효하지 않은 요청 (예: storeId 누락)")
 		void updateStoreFailInvalidRequest() throws GeneralException {
-			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(null, TEST_CATEGORY_ID, "수정된 가게", "수정된 주소",
-				"01098765432", 2000L, "수정된 설명"); // storeId 필드 누락
+			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(null, TEST_CATEGORY_ID, "새 가게 이름",
+				"새 주소", "01098765432", 2000L, "새 설명");
 
-			// storeService.updateStoreInfo가 GeneralException을 던지도록 Mocking
 			when(storeService.updateStoreInfo(any(StoreInfoUpdateRequest.class)))
 				.thenThrow(new GeneralException(StoreErrorCode.STORE_ID_NULL));
 
@@ -272,15 +271,14 @@ public class StoreControllerTest {
 			);
 			assertEquals(StoreErrorCode.STORE_ID_NULL, exception.getCode());
 
-			// storeService.updateStoreInfo가 호출되었는지 확인
 			verify(storeService, times(1)).updateStoreInfo(any(StoreInfoUpdateRequest.class));
 		}
 
 		@Test
 		@DisplayName("실패: GeneralException 발생")
 		void updateStoreFailGeneralException() throws GeneralException {
-			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(TEST_STORE_ID, TEST_CATEGORY_ID, "수정된 가게",
-				"수정된 주소", "01098765432", 2000L, "수정된 설명");
+			StoreInfoUpdateRequest request = new StoreInfoUpdateRequest(TEST_STORE_ID, TEST_CATEGORY_ID, "새 가게 이름",
+				"새 주소", "01098765432", 2000L, "새 설명");
 
 			when(storeService.updateStoreInfo(any(StoreInfoUpdateRequest.class)))
 				.thenThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND));
@@ -297,6 +295,8 @@ public class StoreControllerTest {
 	@Nested
 	@DisplayName("가게 삭제 API 테스트")
 	class DeleteStoreTest {
+
+		UUID storeId = UUID.randomUUID();
 
 		@Test
 		@DisplayName("성공: 가게 삭제")
