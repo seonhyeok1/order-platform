@@ -13,6 +13,7 @@ import app.domain.manager.dto.response.GetCustomerListResponse;
 import app.domain.manager.dto.response.GetStoreDetailResponse;
 import app.domain.manager.dto.response.GetCustomerDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
+import app.domain.manager.status.ManagerErrorStatus;
 import app.domain.order.model.OrderItemRepository;
 import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.dto.response.OrderDetailResponse;
@@ -105,7 +106,7 @@ public class ManagerService {
 		Store store = storeRepository.findByStoreIdAndDeletedAtIsNull(storeId)
 			.orElseThrow(() -> new GeneralException(ErrorStatus.STORE_NOT_FOUND));
 		if (status == store.getStoreAcceptStatus()) {
-			throw new GeneralException(ErrorStatus.INVALID_STORE_STATUS);
+			throw new GeneralException(ManagerErrorStatus.INVALID_STORE_STATUS);
 		}
 		store.updateAcceptStatus(status);
 		return store.getStoreName()+ "의 상태가 변경 되었습니다.";

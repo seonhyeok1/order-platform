@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 import app.domain.menu.model.dto.response.GetMenuListResponse;
+import app.domain.menu.status.MenuSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.PagedResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,9 +17,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/customer")
 @RequiredArgsConstructor
 @Tag(name = "사용자 API", description = "사용자의 메뉴관련 API")
-public class MenuController {
+public class CustomerMenuController {
 
-	private final MenuService menuService;
+	private final CustomerMenuService customerMenuService;
 
 	@GetMapping("/{storeId}/menus")
 	@Operation(
@@ -27,6 +28,7 @@ public class MenuController {
 	public ApiResponse<PagedResponse<GetMenuListResponse>> getMenus(
 		@PathVariable UUID storeId,
 		@PageableDefault(size = 20, sort = "createdAt", direction = DESC) Pageable pageable) {
-		return ApiResponse.onSuccess(menuService.getMenusByStoreId(storeId, pageable));
+		return ApiResponse.onSuccess(
+			MenuSuccessStatus.CUSTOMER_GET_STORE_MENU_LIST_OK, customerMenuService.getMenusByStoreId(storeId, pageable));
 	}
 }

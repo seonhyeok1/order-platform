@@ -36,8 +36,8 @@ import app.domain.review.model.ReviewRepository;
 import app.domain.store.model.StoreQueryRepository;
 import app.domain.store.model.entity.Region;
 import app.domain.store.model.entity.Store;
-import app.domain.store.model.entity.StoreRepository;
-import app.domain.store.model.enums.StoreAcceptStatus;
+import app.domain.store.repository.StoreRepository;
+import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.UserSearchRepository;
 import app.domain.user.model.UserAddressRepository;
 import app.domain.user.model.UserRepository;
@@ -337,8 +337,8 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
-		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
+		assertThat(ex.getErrorReasonHttpStatus().getHttpStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
 	}
 
 	@Test
@@ -353,8 +353,8 @@ class ManagerServiceTest {
 			GeneralException.class
 		);
 
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
-		assertThat(ex.getErrorStatus().getMessage()).isEqualTo("존재하지 않는 사용자입니다.");
+		assertThat(ex.getErrorReason()).isEqualTo(ErrorStatus.USER_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("존재하지 않는 사용자입니다.");
 	}
 
 	//--------
@@ -519,7 +519,7 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
 
 
@@ -537,7 +537,7 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
 	}
 
 
@@ -561,6 +561,6 @@ class ManagerServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorStatus()).isEqualTo(ErrorStatus.INVALID_STORE_STATUS);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.INVALID_STORE_STATUS);
 	}
 }

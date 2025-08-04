@@ -12,7 +12,7 @@ import app.domain.order.model.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
-import app.global.apiPayload.code.status.ErrorStatus;
+import app.global.SecurityUtil;
 import app.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 
@@ -22,11 +22,11 @@ public class CustomerOrderService {
 
 	private final OrdersRepository ordersRepository;
 	private final UserRepository userRepository;
+	private final SecurityUtil securityUtil;
 
 	@Transactional(readOnly = true)
-	public List<CustomerOrderResponse> getCustomerOrders(Long userId) {
-		User user = userRepository.findById(userId)
-			.orElseThrow(() -> new GeneralException(ErrorStatus.USER_NOT_FOUND));
+	public List<CustomerOrderResponse> getCustomerOrders() {
+		User user = securityUtil.getCurrentUser();
 		List<Orders> orders = ordersRepository.findByUser(user);
 		if (orders.isEmpty()) {
 			throw new GeneralException(CustomerErrorStatus.CUSTOMER_ORDER_NOT_FOUND);
