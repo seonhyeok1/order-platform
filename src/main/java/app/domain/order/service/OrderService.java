@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -159,7 +158,6 @@ public class OrderService {
 	);
 
 	@Transactional
-	@PreAuthorize("hasAnyAuthority('OWNER', 'MANAGER', 'MASTER')")
 	public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, OrderStatus newStatus) {
 		User currentUser = securityUtil.getCurrentUser();
 

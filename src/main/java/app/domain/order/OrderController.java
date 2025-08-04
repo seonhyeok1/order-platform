@@ -2,6 +2,7 @@ package app.domain.order;
 
 import java.util.UUID;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -47,6 +48,7 @@ public class OrderController {
 
 	@Operation(summary = "주문 상태 변경 API", description = "주문 ID로 주문 상태를 변경합니다.")
 	@PatchMapping("/{orderId}/status")
+	@PreAuthorize("hasAnyAuthority('OWNER', 'MANAGER', 'MASTER')")
 	public ApiResponse<UpdateOrderStatusResponse> updateOrderStatus(
 		@PathVariable UUID orderId,
 		@Valid @RequestBody UpdateOrderStatusRequest request
