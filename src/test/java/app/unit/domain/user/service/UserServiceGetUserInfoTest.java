@@ -1,4 +1,4 @@
-package app.domain.user;
+package app.unit.domain.user.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 
+import app.domain.user.UserService;
 import app.domain.user.model.dto.response.GetUserInfoResponse;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
