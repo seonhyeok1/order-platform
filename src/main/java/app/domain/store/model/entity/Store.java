@@ -3,7 +3,6 @@ package app.domain.store.model.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import app.domain.user.model.entity.User;
 import app.domain.menu.model.entity.Category;
 import app.domain.store.status.StoreAcceptStatus;
 import app.domain.user.model.entity.User;
@@ -17,7 +16,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

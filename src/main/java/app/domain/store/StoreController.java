@@ -21,6 +21,8 @@ import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
+import app.global.apiPayload.exception.GeneralException;
+
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -45,41 +47,41 @@ public class StoreController {
 
 	private void validateCreateStoreRequest(StoreApproveRequest request) {
 		if (request.getRegionId() == null) {
-			throw new StoreException(StoreErrorCode.REGION_ID_NULL);
+			throw new GeneralException(StoreErrorCode.REGION_ID_NULL);
 		}
 		Region region = regionRepository.findById(request.getRegionId())
-			.orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND));
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.REGION_NOT_FOUND));
 
 		if (request.getCategoryId() == null) {
-			throw new StoreException(StoreErrorCode.CATEGORY_ID_NULL);
+			throw new GeneralException(StoreErrorCode.CATEGORY_ID_NULL);
 		}
 		if (request.getAddress() == null) {
-			throw new StoreException(StoreErrorCode.ADDRESS_NULL);
+			throw new GeneralException(StoreErrorCode.ADDRESS_NULL);
 		}
 		if (request.getStoreName() == null) {
-			throw new StoreException(StoreErrorCode.STORE_NAME_NULL);
+			throw new GeneralException(StoreErrorCode.STORE_NAME_NULL);
 		}
 		if (request.getMinOrderAmount() == null) {
-			throw new StoreException(StoreErrorCode.MIN_ORDER_AMOUNT_NULL);
+			throw new GeneralException(StoreErrorCode.MIN_ORDER_AMOUNT_NULL);
 		}
 		if (request.getMinOrderAmount() < 0) {
-			throw new StoreException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
+			throw new GeneralException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
 		}
 		if (storeRepository.existsByStoreNameAndRegion(request.getStoreName(), region)) {
-			throw new StoreException(StoreErrorCode.DUPLICATE_STORE_NAME_IN_REGION);
+			throw new GeneralException(StoreErrorCode.DUPLICATE_STORE_NAME_IN_REGION);
 		}
 	}
 
 	@PutMapping("/store")
 	public ResponseEntity<StoreInfoUpdateResponse> updateStore(@RequestBody StoreInfoUpdateRequest request) {
 		if (request.getStoreId() == null)
-			throw new StoreException(StoreErrorCode.STORE_ID_NULL);
+			throw new GeneralException(StoreErrorCode.STORE_ID_NULL);
 
 		if (request.getMinOrderAmount() != null && request.getMinOrderAmount() < 0)
-			throw new StoreException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
+			throw new GeneralException(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID);
 
 		if (request.getCategoryId() == null)
-			throw new StoreException(StoreErrorCode.CATEGORY_ID_NULL);
+			throw new GeneralException(StoreErrorCode.CATEGORY_ID_NULL);
 
 		StoreInfoUpdateResponse response = storeService.updateStoreInfo(request);
 		return ResponseEntity.ok(response);

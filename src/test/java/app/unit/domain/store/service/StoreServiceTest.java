@@ -31,6 +31,7 @@ import app.domain.store.status.StoreAcceptStatus;
 import app.domain.store.status.StoreErrorCode;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
+import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
 import app.global.config.SecurityConfig;
 
@@ -145,7 +146,7 @@ class StoreServiceTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
 
-			StoreException exception = assertThrows(StoreException.class, () -> {
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
 				storeService.createStore(authenticatedUserId, request);
 			});
 			assertEquals(StoreErrorCode.REGION_NOT_FOUND, exception.getCode());
@@ -266,9 +267,9 @@ class StoreServiceTest {
 				Store mockStore = mock(Store.class);
 
 				when(storeRepository.findById(storeId)).thenReturn(Optional.of(mockStore));
-				doThrow(new StoreException(StoreErrorCode.STORE_NOT_FOUND)).when(mockStore).markAsDeleted();
+				doThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND)).when(mockStore).markAsDeleted();
 
-				StoreException exception = assertThrows(StoreException.class, () -> {
+				GeneralException exception = assertThrows(GeneralException.class, () -> {
 					storeService.deleteStore(storeId);
 				});
 

@@ -29,6 +29,8 @@ import app.domain.store.model.entity.Region;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreErrorCode;
+import app.global.apiPayload.exception.GeneralException;
+
 
 @ExtendWith(MockitoExtension.class)
 public class StoreControllerTest {
@@ -111,7 +113,7 @@ public class StoreControllerTest {
 				.minOrderAmount(10000L)
 				.build();
 
-			StoreException ex = assertThrows(StoreException.class, () -> {
+			GeneralException ex = assertThrows(GeneralException.class, () -> {
 				storeController.createStore(request);
 			});
 			assertEquals(StoreErrorCode.REGION_ID_NULL, ex.getCode());
@@ -133,7 +135,7 @@ public class StoreControllerTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.empty());
 
-			StoreException ex = assertThrows(StoreException.class, () -> {
+			GeneralException ex = assertThrows(GeneralException.class, () -> {
 				storeController.createStore(request);
 			});
 			assertEquals(StoreErrorCode.REGION_NOT_FOUND, ex.getCode());
@@ -156,7 +158,7 @@ public class StoreControllerTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.createStore(request));
 			assertEquals(StoreErrorCode.ADDRESS_NULL, ex.getCode());
 		}
 
@@ -177,7 +179,7 @@ public class StoreControllerTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.createStore(request));
 			assertEquals(StoreErrorCode.STORE_NAME_NULL, ex.getCode());
 		}
 
@@ -198,7 +200,7 @@ public class StoreControllerTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.createStore(request));
 			assertEquals(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID, ex.getCode());
 		}
 
@@ -220,7 +222,7 @@ public class StoreControllerTest {
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 			when(storeRepository.existsByStoreNameAndRegion(request.getStoreName(), mockRegion)).thenReturn(true);
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.createStore(request));
 			assertEquals(StoreErrorCode.DUPLICATE_STORE_NAME_IN_REGION, ex.getCode());
 		}
 
@@ -241,7 +243,7 @@ public class StoreControllerTest {
 
 			when(regionRepository.findById(regionId)).thenReturn(Optional.of(mockRegion));
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.createStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.createStore(request));
 			assertEquals(StoreErrorCode.CATEGORY_ID_NULL, ex.getCode());
 		}
 	}
@@ -309,7 +311,7 @@ public class StoreControllerTest {
 				.desc("설명")
 				.build();
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.updateStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.updateStore(request));
 			assertEquals(StoreErrorCode.STORE_ID_NULL, ex.getCode());
 		}
 
@@ -326,7 +328,7 @@ public class StoreControllerTest {
 				.desc("설명")
 				.build();
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.updateStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.updateStore(request));
 			assertEquals(StoreErrorCode.MIN_ORDER_AMOUNT_INVALID, ex.getCode());
 		}
 
@@ -343,7 +345,7 @@ public class StoreControllerTest {
 				.desc("설명")
 				.build();
 
-			StoreException ex = assertThrows(StoreException.class, () -> storeController.updateStore(request));
+			GeneralException ex = assertThrows(GeneralException.class, () -> storeController.updateStore(request));
 			assertEquals(StoreErrorCode.CATEGORY_ID_NULL, ex.getCode());
 		}
 	}

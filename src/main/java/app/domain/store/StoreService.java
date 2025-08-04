@@ -16,9 +16,9 @@ import app.domain.store.model.entity.Store;
 import app.domain.store.repository.RegionRepository;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreAcceptStatus;
+import app.domain.store.status.StoreErrorCode;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
-import app.domain.store.status.StoreErrorCode;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -100,3 +100,4 @@ public class StoreService {
 		store.markAsDeleted();
 	}
 }
+

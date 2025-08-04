@@ -12,11 +12,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RegionService {
 
-    private final RegionRepository regionRepository;
+	private final RegionRepository regionRepository;
 
-    public UUID getRegionIdByCode(String regionCode) {
-        return regionRepository.findByRegionCode(regionCode)
-                .orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND))
-                .getRegionId();
-    }
+	public UUID getRegionIdByCode(String regionCode) {
+		return regionRepository.findByRegionCode(regionCode)
+			.orElseThrow(() -> new StoreException(StoreErrorCode.REGION_NOT_FOUND))
+			.getRegionId();
+	}
 }

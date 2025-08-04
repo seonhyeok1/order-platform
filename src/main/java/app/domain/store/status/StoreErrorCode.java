@@ -3,7 +3,6 @@ package app.domain.store.status;
 import org.springframework.http.HttpStatus;
 
 import app.global.apiPayload.code.BaseCode;
-import app.global.apiPayload.code.BaseErrorCode;
 import app.global.apiPayload.code.ReasonDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

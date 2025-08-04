@@ -14,7 +14,6 @@ import app.domain.review.model.dto.request.CreateReviewRequest;
 import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.review.model.entity.Review;
 import app.domain.review.status.ReviewErrorStatus;
-
 import app.domain.store.repository.StoreRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
@@ -39,7 +38,6 @@ public class ReviewService {
 
 		Orders order = ordersRepository.findById(request.getOrdersId())
 			.orElseThrow(() -> new GeneralException(ReviewErrorStatus.ORDER_NOT_FOUND));
-
 
 		if (!order.getUser().equals(user)) {
 			throw new GeneralException(ErrorStatus._FORBIDDEN);
