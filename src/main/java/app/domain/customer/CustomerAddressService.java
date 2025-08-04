@@ -25,7 +25,7 @@ public class CustomerAddressService {
 	private final SecurityUtil securityUtil;
 
 	@Transactional(readOnly = true)
-	@PreAuthorize("hasAuthority('CUSTOMER')")
+	// @PreAuthorize("hasAuthority('CUSTOMER')")
 	public List<GetCustomerAddressListResponse> getCustomerAddresses() throws GeneralException {
 		User user = securityUtil.getCurrentUser();
 
@@ -40,7 +40,7 @@ public class CustomerAddressService {
 	}
 
 	@Transactional
-	@PreAuthorize("hasAuthority('CUSTOMER')")
+	// @PreAuthorize("hasAuthority('CUSTOMER')")
 	public AddCustomerAddressResponse addCustomerAddress(AddCustomerAddressRequest request) {
 		User user = securityUtil.getCurrentUser();
 
