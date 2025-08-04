@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.customer.dto.response.CustomerOrderResponse;
+import app.domain.customer.status.CustomerSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,6 @@ public class CustomerOrderController {
 		@AuthenticationPrincipal UserDetails principal
 	) {
 		Long userId = Long.parseLong(principal.getUsername());
-		return ApiResponse.onSuccess(customerOrderService.getCustomerOrders(userId));
+		return ApiResponse.onSuccess(CustomerSuccessStatus.CUSTOMER_OK, customerOrderService.getCustomerOrders(userId));
 	}
 }

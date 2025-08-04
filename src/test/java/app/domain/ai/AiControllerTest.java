@@ -62,7 +62,7 @@ class AiControllerTest {
 	void givenValidRequest_whenGenerateDescription_thenReturnsSuccess() throws Exception {
 		AiRequest request =
 			new AiRequest("맛있는 족발집", "반반 족발", ReqType.MENU_DESCRIPTION, "쫄깃하고 부드러운 식감을 강조해주세요.");
-		AiResponse response = new AiResponse(UUID.randomUUID().toString(), "AI 응답");
+		AiResponse response = new AiResponse(UUID.randomUUID().toString(), "서울시 최고의 반반 족발을 느껴보세요.");
 		given(aiService.generateDescription(any(AiRequest.class))).willReturn(response);
 
 		mockMvc
@@ -72,8 +72,8 @@ class AiControllerTest {
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.resultCode").value("COMMON200"))
-			.andExpect(jsonPath("$.message").value("success"))
+			.andExpect(jsonPath("$.code").value("AI201"))
+			.andExpect(jsonPath("$.message").value("AI 응답 생성이 성공했습니다."))
 			.andExpect(jsonPath("$.result.requestId").value(response.getRequestId()))
 			.andExpect(jsonPath("$.result.generatedContent").value(response.getGeneratedContent()));
 	}

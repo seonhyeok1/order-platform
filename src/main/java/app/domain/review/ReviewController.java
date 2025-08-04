@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import app.domain.review.model.dto.request.CreateReviewRequest;
 import app.domain.review.model.dto.response.GetReviewResponse;
+import app.domain.review.status.ReviewSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -30,11 +31,10 @@ public class ReviewController {
 	@Operation(summary = "리뷰 생성 API", description = "리뷰를 생성합니다.")
 	public ApiResponse<String> createReview(
 		@AuthenticationPrincipal UserDetails principal,
-
 		@Valid @RequestBody CreateReviewRequest request
 	) {
 		Long userId = Long.parseLong(principal.getUsername());
-		return ApiResponse.onSuccess(reviewService.createReview(userId, request));
+		return ApiResponse.onSuccess(ReviewSuccessStatus.REVIEW_CREATED, reviewService.createReview(userId, request));
 	}
 
 	@GetMapping
@@ -43,6 +43,6 @@ public class ReviewController {
 		@AuthenticationPrincipal UserDetails principal
 	) {
 		Long userId = Long.parseLong(principal.getUsername());
-		return ApiResponse.onSuccess(reviewService.getReviews(userId));
+		return ApiResponse.onSuccess(ReviewSuccessStatus.GET_REVIEWS_SUCCESS, reviewService.getReviews(userId));
 	}
 }

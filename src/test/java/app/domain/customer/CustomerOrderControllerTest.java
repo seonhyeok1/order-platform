@@ -81,7 +81,6 @@ class CustomerOrderControllerTest {
 
 		given(customerOrderService.getCustomerOrders(userId)).willReturn(responses);
 
-		// when & then
 		mockMvc.perform(get("/customer/order"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.result[0].storeName").value("테스트 가게"));
