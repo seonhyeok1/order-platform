@@ -9,6 +9,7 @@ import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.exception.GeneralException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.util.StringUtils;
@@ -36,7 +37,7 @@ public class CustomerAddressController {
 	@PostMapping("/add")
 	@Operation(summary = "/api/customer/address/add", description = "사용자 주소지 등록")
 	public ApiResponse<AddCustomerAddressResponse> AddCustomerAddress(
-		@RequestBody AddCustomerAddressRequest request){
+		@RequestBody @Valid AddCustomerAddressRequest request){
 		validateAddCustomerRequest(request);
 		AddCustomerAddressResponse response = customerAddressService.addCustomerAddress(request);
 		return ApiResponse.onSuccess(CustomerSuccessStatus.ADDRESS_ADDED, response);
