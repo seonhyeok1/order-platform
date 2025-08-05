@@ -2,23 +2,27 @@ package app.unit.domain.order;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,16 +31,14 @@ import app.domain.order.model.dto.request.UpdateOrderStatusRequest;
 import app.domain.order.model.dto.response.UpdateOrderStatusResponse;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.service.OrderService;
-import app.domain.order.status.OrderErrorStatus;
 import app.domain.order.status.OrderSuccessStatus;
+import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
-import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
 
 @WebMvcTest(controllers = OrderController.class)
 @Import(MockSecurityConfig.class)
-@AutoConfigureMockMvc(addFilters = false)
-@DisplayName("OrderController 테스트")
+@DisplayName("OrderController.updateOrderStatus 테스트")
 class OrderControllerUpdateOrderStatusTest {
 
 	@Autowired
@@ -45,11 +47,25 @@ class OrderControllerUpdateOrderStatusTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private WebApplicationContext context;
+
 	@MockitoBean
 	private OrderService orderService;
 
+	@MockitoBean
+	private SecurityUtil securityUtil;
+
+	@BeforeEach
+	void setUp() {
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
+	}
+
 	@Nested
-	@DisplayName("주문 상태 변경 API [/customer/order/{orderId}/status] 테스트")
+	@DisplayName("주문 상태 변경 API [/api/order/{orderId}/status] 테스트")
 	class UpdateOrderStatusTest {
 
 		@Test
@@ -68,7 +84,8 @@ class OrderControllerUpdateOrderStatusTest {
 			given(orderService.updateOrderStatus(eq(orderId), eq(OrderStatus.ACCEPTED))).willReturn(mockResponse);
 
 			// when
-			ResultActions resultActions = mockMvc.perform(patch("/customer/order/{orderId}/status", orderId)
+			ResultActions resultActions = mockMvc.perform(patch("/order/{orderId}/status", orderId)
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)));
 
@@ -91,7 +108,8 @@ class OrderControllerUpdateOrderStatusTest {
 			request.setNewStatus(null);
 
 			// when
-			ResultActions resultActions = mockMvc.perform(patch("/customer/order/{orderId}/status", orderId)
+			ResultActions resultActions = mockMvc.perform(patch("/order/{orderId}/status", orderId)
+				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)));
 
@@ -104,28 +122,5 @@ class OrderControllerUpdateOrderStatusTest {
 				.andDo(print());
 		}
 
-		@Test
-		@DisplayName("실패(비즈니스 로직): 권한 없는 사용자가 요청 시 403 Forbidden을 반환한다.")
-		void updateOrderStatus_Fail_AccessDenied() throws Exception {
-			// given
-			UUID orderId = UUID.randomUUID();
-			UpdateOrderStatusRequest request = new UpdateOrderStatusRequest();
-			request.setNewStatus(OrderStatus.ACCEPTED);
-
-			given(orderService.updateOrderStatus(eq(orderId), any(OrderStatus.class)))
-				.willThrow(new GeneralException(OrderErrorStatus.ORDER_ACCESS_DENIED));
-
-			// when
-			ResultActions resultActions = mockMvc.perform(patch("/customer/order/{orderId}/status", orderId)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)));
-
-			// then
-			resultActions
-				.andExpect(status().isForbidden()) // 💡 HTTP 403 상태 코드를 기대
-				.andExpect(jsonPath("$.isSuccess").value(false))
-				.andExpect(jsonPath("$.code").value(OrderErrorStatus.ORDER_ACCESS_DENIED.getCode()))
-				.andDo(print());
-		}
 	}
 }

@@ -139,6 +139,7 @@ public class OrderService {
 	);
 
 	@Transactional
+	@PreAuthorize("hasAnyAuthority('OWNER','MANAGER','MASTER')")
 	public UpdateOrderStatusResponse updateOrderStatus(UUID orderId, OrderStatus newStatus) {
 		User currentUser = securityUtil.getCurrentUser();
 

@@ -22,6 +22,21 @@ public class GetCustomerDetailResponse {
 	private LocalDateTime updatedAt;
 	private List<GetCustomerAddressListResponse> address;
 
+	public GetCustomerDetailResponse() {
+	}
+
+	public GetCustomerDetailResponse(Long userId, String email, String userName, String name, String nickName, String phoneNumber, LocalDateTime createdAt, LocalDateTime updatedAt, List<GetCustomerAddressListResponse> address) {
+		this.userId = userId;
+		this.email = email;
+		this.userName = userName;
+		this.name = name;
+		this.nickName = nickName;
+		this.phoneNumber = phoneNumber;
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
+		this.address = address;
+	}
+
 	public static GetCustomerDetailResponse from(User user, List<GetCustomerAddressListResponse> addressList) {
 		return GetCustomerDetailResponse.builder()
 			.userId(user.getUserId())

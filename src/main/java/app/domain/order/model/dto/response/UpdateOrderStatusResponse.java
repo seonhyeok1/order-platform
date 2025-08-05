@@ -18,6 +18,14 @@ public class UpdateOrderStatusResponse {
 	@Schema(description = "업데이트된 주문 상태")
 	private OrderStatus updatedStatus;
 
+	public UpdateOrderStatusResponse() {
+	}
+
+	public UpdateOrderStatusResponse(UUID orderId, OrderStatus updatedStatus) {
+		this.orderId = orderId;
+		this.updatedStatus = updatedStatus;
+	}
+
 	public static UpdateOrderStatusResponse from(Orders order) {
 		return UpdateOrderStatusResponse.builder()
 			.orderId(order.getOrdersId())

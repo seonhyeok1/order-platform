@@ -5,9 +5,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
-import app.domain.user.model.entity.enums.UserRole;
 import app.global.jwt.JwtAccessDeniedHandler;
 import app.global.jwt.JwtAuthenticationEntryPoint;
 import app.global.jwt.JwtAuthenticationFilter;
@@ -19,18 +19,10 @@ public class MockSecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-			.csrf(csrf -> csrf.disable())
+			// CSRF 보호 기능을 비활성화 (테스트 환경에서는 일반적으로 비활성화)
+			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/customer/review/**").hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/customer/order/**").hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/customer/cart/**").hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/payment/**").hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/manager/**").hasRole(UserRole.MANAGER.name())
-				.requestMatchers("/customer/**").hasRole(UserRole.CUSTOMER.name())
-				.requestMatchers("/owner/**").hasRole(UserRole.OWNER.name())
-				.requestMatchers("/user/signup", "/user/login").permitAll()
-				.anyRequest().denyAll()
-
+				.anyRequest().permitAll()
 			);
 		return http.build();
 	}

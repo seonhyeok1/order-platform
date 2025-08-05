@@ -26,6 +26,26 @@ public class GetStoreDetailResponse {
 	private String ownerRealName;
 	private String ownerPhone;
 
+	public GetStoreDetailResponse() {
+	}
+
+	public GetStoreDetailResponse(UUID storeId, String storeName, String description, String address, String phoneNumber, long minOrderAmount, String regionName, String categoryName, double averageRating, Long ownerId, String ownerEmail, String ownerName, String ownerRealName, String ownerPhone) {
+		this.storeId = storeId;
+		this.storeName = storeName;
+		this.description = description;
+		this.address = address;
+		this.phoneNumber = phoneNumber;
+		this.minOrderAmount = minOrderAmount;
+		this.regionName = regionName;
+		this.categoryName = categoryName;
+		this.averageRating = averageRating;
+		this.ownerId = ownerId;
+		this.ownerEmail = ownerEmail;
+		this.ownerName = ownerName;
+		this.ownerRealName = ownerRealName;
+		this.ownerPhone = ownerPhone;
+	}
+
 	public static GetStoreDetailResponse from(Store store, double avgRating) {
 		User user = store.getUser();
 

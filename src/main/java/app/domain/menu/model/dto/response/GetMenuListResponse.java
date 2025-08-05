@@ -14,6 +14,16 @@ public class GetMenuListResponse {
     private String description;
     private Long price;
 
+    public GetMenuListResponse() {
+    }
+
+    public GetMenuListResponse(UUID menuId, String name, String description, Long price) {
+        this.menuId = menuId;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+    }
+
     public static GetMenuListResponse from(Menu menu) {
         return GetMenuListResponse.builder()
             .menuId(menu.getMenuId())
