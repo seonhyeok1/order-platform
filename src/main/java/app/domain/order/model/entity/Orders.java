@@ -30,9 +30,23 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class Orders extends BaseEntity {
+
+	public Orders(UUID ordersId, Store store, User user, Long totalPrice, String deliveryAddress, PaymentMethod paymentMethod, OrderChannel orderChannel, ReceiptMethod receiptMethod, OrderStatus orderStatus, boolean isRefundable, String orderHistory, String requestMessage) {
+		this.ordersId = ordersId;
+		this.store = store;
+		this.user = user;
+		this.totalPrice = totalPrice;
+		this.deliveryAddress = deliveryAddress;
+		this.paymentMethod = paymentMethod;
+		this.orderChannel = orderChannel;
+		this.receiptMethod = receiptMethod;
+		this.orderStatus = orderStatus;
+		this.isRefundable = isRefundable;
+		this.orderHistory = orderHistory;
+		this.requestMessage = requestMessage;
+	}
 
 	@Id
 	@GeneratedValue

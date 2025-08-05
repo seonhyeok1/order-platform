@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class PaymentFailRequest {
 
@@ -22,4 +21,10 @@ public class PaymentFailRequest {
 
 	@NotBlank(message = "실패 사유는 필수입니다.")
 	private String message;
+
+	public PaymentFailRequest(String orderId, String errorCode, String message) {
+		this.orderId = orderId;
+		this.errorCode = errorCode;
+		this.message = message;
+	}
 }

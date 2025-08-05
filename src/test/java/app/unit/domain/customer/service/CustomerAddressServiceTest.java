@@ -385,9 +385,9 @@ class CustomerAddressServiceTest {
 			assertThat(result.size()).isEqualTo(1);
 
 			GetCustomerAddressListResponse result1 = result.get(0);
-			assertThat(result1.alias()).isEqualTo(singleAddress.getAlias());
-			assertThat(result1.address()).isEqualTo(singleAddress.getAddress());
-			assertThat(result1.addressDetail()).isEqualTo(singleAddress.getAddressDetail());
+			assertThat(result1.getAlias()).isEqualTo(singleAddress.getAlias());
+			assertThat(result1.getAddress()).isEqualTo(singleAddress.getAddress());
+			assertThat(result1.getAddressDetail()).isEqualTo(singleAddress.getAddressDetail());
 			assertThat(result1.isDefault()).isEqualTo(singleAddress.isDefault());
 
 			verify(userAddressRepository, times(1)).findAllByUserUserId(testUser.getUserId());
@@ -408,15 +408,15 @@ class CustomerAddressServiceTest {
 			assertThat(result.size()).isEqualTo(2);
 
 			GetCustomerAddressListResponse result1 = result.get(0);
-			assertThat(result1.alias()).isEqualTo(address1.getAlias());
-			assertThat(result1.address()).isEqualTo(address1.getAddress());
-			assertThat(result1.addressDetail()).isEqualTo(address1.getAddressDetail());
+			assertThat(result1.getAlias()).isEqualTo(address1.getAlias());
+			assertThat(result1.getAddress()).isEqualTo(address1.getAddress());
+			assertThat(result1.getAddressDetail()).isEqualTo(address1.getAddressDetail());
 			assertThat(result1.isDefault()).isEqualTo(address1.isDefault());
 
 			GetCustomerAddressListResponse result2 = result.get(1);
-			assertThat(result2.alias()).isEqualTo(address2.getAlias());
-			assertThat(result2.address()).isEqualTo(address2.getAddress());
-			assertThat(result2.addressDetail()).isEqualTo(address2.getAddressDetail());
+			assertThat(result2.getAlias()).isEqualTo(address2.getAlias());
+			assertThat(result2.getAddress()).isEqualTo(address2.getAddress());
+			assertThat(result2.getAddressDetail()).isEqualTo(address2.getAddressDetail());
 			assertThat(result2.isDefault()).isEqualTo(address2.isDefault());
 
 			verify(userAddressRepository, times(1)).findAllByUserUserId(testUser.getUserId());

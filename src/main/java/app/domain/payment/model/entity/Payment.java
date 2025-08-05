@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_payment")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class Payment extends BaseEntity {
 
@@ -45,6 +44,15 @@ public class Payment extends BaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private PaymentStatus paymentStatus;
+
+	public Payment(UUID paymentId, String paymentKey, UUID ordersId, PaymentMethod paymentMethod, Long amount, PaymentStatus paymentStatus) {
+		this.paymentId = paymentId;
+		this.paymentKey = paymentKey;
+		this.ordersId = ordersId;
+		this.paymentMethod = paymentMethod;
+		this.amount = amount;
+		this.paymentStatus = paymentStatus;
+	}
 
 	public void updatePaymentStatus(PaymentStatus paymentStatus) {
 		this.paymentStatus = paymentStatus;

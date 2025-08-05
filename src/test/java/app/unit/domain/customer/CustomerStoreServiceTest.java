@@ -177,7 +177,7 @@ class CustomerStoreServiceTest {
 		);
 
 		// then
-		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo(ErrorStatus.STORE_NOT_FOUND);
+		assertThat(ex.getErrorReasonHttpStatus().getCode()).isEqualTo("STORE004");
 	}
 
 }

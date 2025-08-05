@@ -105,4 +105,16 @@ public class StoreController {
 		StoreOrderListResponse response = storeService.getStoreOrderList(storeId);
 		return ApiResponse.onSuccess(StoreSuccessStatus._OK, response);
 	}
+
+	@PostMapping("/order/{orderId}/accept")
+	public ApiResponse<String> acceptOrder(@PathVariable UUID orderId) {
+		storeService.acceptOrder(orderId);
+		return ApiResponse.onSuccess(StoreSuccessStatus.ORDER_ACCEPTED_SUCCESS, "주문 수락이 완료되었습니다.");
+	}
+
+	@PostMapping("/order/{orderId}/reject")
+	public ApiResponse<String> rejectOrder(@PathVariable UUID orderId) {
+		storeService.rejectOrder(orderId);
+		return ApiResponse.onSuccess(StoreSuccessStatus.ORDER_REJECTED_SUCCESS, "주문 거절이 완료되었습니다.");
+	}
 }

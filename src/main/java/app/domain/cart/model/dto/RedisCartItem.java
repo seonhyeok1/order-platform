@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
 public class RedisCartItem {
@@ -23,4 +22,10 @@ public class RedisCartItem {
 
 	@NotNull
 	private int quantity;
+
+	public RedisCartItem(UUID menuId, UUID storeId, int quantity) {
+		this.menuId = menuId;
+		this.storeId = storeId;
+		this.quantity = quantity;
+	}
 }

@@ -1,8 +1,5 @@
 package app.domain.payment;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -14,20 +11,21 @@ import java.util.UUID;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import app.domain.cart.service.CartService;
-import app.domain.order.model.repository.OrdersRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.entity.enums.OrderStatus;
-import app.domain.payment.model.repository.PaymentEtcRepository;
-import app.domain.payment.model.repository.PaymentRepository;
+import app.domain.order.model.repository.OrdersRepository;
 import app.domain.payment.model.dto.request.CancelPaymentRequest;
 import app.domain.payment.model.dto.request.PaymentConfirmRequest;
 import app.domain.payment.model.dto.request.PaymentFailRequest;
 import app.domain.payment.model.entity.Payment;
 import app.domain.payment.model.entity.PaymentEtc;
 import app.domain.payment.model.entity.enums.PaymentStatus;
+import app.domain.payment.model.repository.PaymentEtcRepository;
+import app.domain.payment.model.repository.PaymentRepository;
 import app.domain.payment.status.PaymentErrorStatus;
 import app.domain.user.model.entity.User;
 import app.global.SecurityUtil;
@@ -67,26 +65,13 @@ public class PaymentService {
 		}
 	}
 
-	@Transactional
-	public String confirmPayment(PaymentConfirmRequest request) {
-		User user = securityUtil.getCurrentUser();
-		Orders order = getOrderById(UUID.fromString(request.getOrderId()));
-		long requestAmount = Long.parseLong(request.getAmount());
-		if (order.getTotalPrice() != requestAmount) {
-			throw new GeneralException(PaymentErrorStatus.PAYMENT_AMOUNT_MISMATCH);
-		}
-		String widgetSecretKey = tossSecretKey;
-		Base64.Encoder encoder = Base64.getEncoder();
-		byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
-		String authorizations = "Basic " + new String(encodedBytes);
-
-		String fullUrl = tossUrl + "/confirm";
-		String responseBody = "";
-		boolean isSuccess = false;
-		int code = 0;
-		Long userId = user.getUserId();
-
+	public String callTossConfirmApi(PaymentConfirmRequest request, Long userId) {
 		try {
+			String widgetSecretKey = tossSecretKey;
+			Base64.Encoder encoder = Base64.getEncoder();
+			byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
+			String authorizations = "Basic " + new String(encodedBytes);
+			String fullUrl = tossUrl + "/confirm";
 			String idempotencyKey = generateIdempotencyKey(userId, request.getOrderId());
 
 			JSONObject obj = new JSONObject();
@@ -105,23 +90,79 @@ public class PaymentService {
 			OutputStream outputStream = connection.getOutputStream();
 			outputStream.write(obj.toString().getBytes("UTF-8"));
 
-			code = connection.getResponseCode();
-			isSuccess = code == 200;
+			int code = connection.getResponseCode();
+			boolean isSuccess = code == 200;
 
-			InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
-			BufferedReader reader = new BufferedReader(
-				new InputStreamReader(responseStream, StandardCharsets.UTF_8));
+			java.io.InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
+			java.io.BufferedReader reader = new java.io.BufferedReader(
+				new java.io.InputStreamReader(responseStream, StandardCharsets.UTF_8));
 			StringBuilder responseBuilder = new StringBuilder();
 			String line;
 			while ((line = reader.readLine()) != null) {
 				responseBuilder.append(line);
 			}
-			responseBody = responseBuilder.toString();
+			String responseBody = responseBuilder.toString();
+			return (isSuccess ? "success:" : "fail:") + responseBody;
 		} catch (Exception e) {
 			throw new GeneralException(PaymentErrorStatus.TOSS_API_ERROR);
 		}
+	}
 
-		JSONObject responseJson = new JSONObject(responseBody);
+	public String callTossCancelApi(String paymentKey, String cancelReason, Long userId, UUID orderId) {
+		try {
+			String widgetSecretKey = tossSecretKey;
+			Base64.Encoder encoder = Base64.getEncoder();
+			byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
+			String authorizations = "Basic " + new String(encodedBytes);
+			String idempotencyKey = generateIdempotencyKey(userId, orderId.toString());
+
+			JSONObject obj = new JSONObject();
+			obj.put("cancelReason", cancelReason);
+
+			String cancelUrl = tossUrl + "/" + paymentKey + "/cancel";
+
+			URL url = new URL(cancelUrl);
+			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+			connection.setRequestProperty("Authorization", authorizations);
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setRequestProperty("Idempotency-Key", idempotencyKey);
+			connection.setRequestMethod("POST");
+			connection.setDoOutput(true);
+
+			OutputStream outputStream = connection.getOutputStream();
+			outputStream.write(obj.toString().getBytes("UTF-8"));
+
+			int code = connection.getResponseCode();
+			boolean isSuccess = code == 200;
+
+			java.io.InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
+			java.io.BufferedReader reader = new java.io.BufferedReader(
+				new java.io.InputStreamReader(responseStream, StandardCharsets.UTF_8));
+			StringBuilder responseBuilder = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				responseBuilder.append(line);
+			}
+			String responseBody = responseBuilder.toString();
+			return (isSuccess ? "success:" : "fail:") + responseBody;
+		} catch (Exception e) {
+			throw new GeneralException(PaymentErrorStatus.TOSS_API_ERROR);
+		}
+	}
+
+	@PreAuthorize("hasAuthority('CUSTOMER')")
+	@Transactional
+	public String confirmPayment(PaymentConfirmRequest request) {
+		User user = securityUtil.getCurrentUser();
+		Orders order = getOrderById(UUID.fromString(request.getOrderId()));
+		long requestAmount = Long.parseLong(request.getAmount());
+		if (order.getTotalPrice() != requestAmount) {
+			throw new GeneralException(PaymentErrorStatus.PAYMENT_AMOUNT_MISMATCH);
+		}
+
+		String responseWithPrefix = callTossConfirmApi(request, user.getUserId());
+		boolean isSuccess = responseWithPrefix.startsWith("success:");
+		String responseBody = responseWithPrefix.substring(responseWithPrefix.indexOf(":") + 1);
 		PaymentStatus paymentStatus = isSuccess ? PaymentStatus.COMPLETED : PaymentStatus.FAILED;
 
 		Payment payment = Payment.builder()
@@ -136,7 +177,7 @@ public class PaymentService {
 
 		PaymentEtc paymentEtc = PaymentEtc.builder()
 			.payment(savedPayment)
-			.paymentResponse(responseJson.toString())
+			.paymentResponse(responseBody)
 			.build();
 
 		paymentEtcRepository.save(paymentEtc);
@@ -149,6 +190,7 @@ public class PaymentService {
 		}
 	}
 
+	@PreAuthorize("hasAuthority('CUSTOMER')")
 	@Transactional
 	public String failSave(PaymentFailRequest request) {
 		Orders order = getOrderById(UUID.fromString(request.getOrderId()));
@@ -156,6 +198,7 @@ public class PaymentService {
 		return "결제 실패 처리가 완료되었습니다.";
 	}
 
+	@PreAuthorize("hasAuthority('CUSTOMER')")
 	@Transactional
 	public String cancelPayment(CancelPaymentRequest request) {
 		User user = securityUtil.getCurrentUser();
@@ -168,52 +211,10 @@ public class PaymentService {
 		Payment payment = paymentRepository.findByOrdersId(request.getOrderId())
 			.orElseThrow(() -> new GeneralException(ErrorStatus.PAYMENT_NOT_FOUND));
 
-		String widgetSecretKey = tossSecretKey;
-		Base64.Encoder encoder = Base64.getEncoder();
-		byte[] encodedBytes = encoder.encode((widgetSecretKey + ":").getBytes(StandardCharsets.UTF_8));
-		String authorizations = "Basic " + new String(encodedBytes);
-
-		String responseBody = "";
-		boolean isSuccess = false;
-		int code = 0;
-
-		try {
-			Long userId = user.getUserId();
-			String idempotencyKey = generateIdempotencyKey(userId, request.getOrderId().toString());
-
-			JSONObject obj = new JSONObject();
-			obj.put("cancelReason", request.getCancelReason());
-
-			String cancelUrl = tossUrl + "/" + payment.getPaymentKey() + "/cancel";
-
-			URL url = new URL(cancelUrl);
-			HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-			connection.setRequestProperty("Authorization", authorizations);
-			connection.setRequestProperty("Content-Type", "application/json");
-			connection.setRequestProperty("Idempotency-Key", idempotencyKey);
-			connection.setRequestMethod("POST");
-			connection.setDoOutput(true);
-
-			OutputStream outputStream = connection.getOutputStream();
-			outputStream.write(obj.toString().getBytes("UTF-8"));
-
-			code = connection.getResponseCode();
-			isSuccess = code == 200;
-
-			InputStream responseStream = isSuccess ? connection.getInputStream() : connection.getErrorStream();
-			BufferedReader reader = new BufferedReader(
-				new InputStreamReader(responseStream, StandardCharsets.UTF_8));
-			StringBuilder responseBuilder = new StringBuilder();
-			String line;
-			while ((line = reader.readLine()) != null) {
-				responseBuilder.append(line);
-			}
-			responseBody = responseBuilder.toString();
-		} catch (Exception e) {
-			throw new GeneralException(PaymentErrorStatus.TOSS_API_ERROR);
-		}
-
-		JSONObject responseJson = new JSONObject(responseBody);
+		String responseWithPrefix = callTossCancelApi(payment.getPaymentKey(), request.getCancelReason(), user.getUserId(),
+			request.getOrderId());
+		boolean isSuccess = responseWithPrefix.startsWith("success:");
+		String responseBody = responseWithPrefix.substring(responseWithPrefix.indexOf(":") + 1);
 
 		if (isSuccess) {
 			order.updateOrderStatus(OrderStatus.REFUNDED);
@@ -223,7 +224,7 @@ public class PaymentService {
 
 		PaymentEtc paymentEtc = PaymentEtc.builder()
 			.payment(payment)
-			.paymentResponse(responseJson.toString())
+			.paymentResponse(responseBody)
 			.build();
 
 		paymentEtcRepository.save(paymentEtc);

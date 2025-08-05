@@ -14,6 +14,7 @@ import app.domain.menu.model.repository.CategoryRepository;
 import app.domain.menu.model.repository.MenuRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.repository.OrdersRepository;
+import app.domain.order.service.OrderService;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.review.model.entity.Review;
@@ -43,6 +44,7 @@ public class StoreService {
 	private final MenuRepository menuRepository;
 	private final ReviewRepository reviewRepository;
 	private final OrdersRepository ordersRepository;
+	private final OrderService orderService;
 	private final SecurityUtil securityUtil;
 
 	@Transactional
@@ -178,5 +180,35 @@ public class StoreService {
 			.collect(Collectors.toList());
 
 		return new StoreOrderListResponse(store.getStoreId(), orderDetails);
+	}
+
+	@Transactional
+	public void acceptOrder(UUID orderId) {
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
+		Orders order = ordersRepository.findById(orderId)
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.ORDER_NOT_FOUND));
+
+		if (!order.getStore().getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.NOT_STORE_OWNER);
+		}
+
+		orderService.updateOrderStatus(orderId, app.domain.order.model.entity.enums.OrderStatus.ACCEPTED);
+	}
+
+	@Transactional
+	public void rejectOrder(UUID orderId) {
+		User user = securityUtil.getCurrentUser();
+		Long userId = user.getUserId();
+
+		Orders order = ordersRepository.findById(orderId)
+			.orElseThrow(() -> new GeneralException(StoreErrorCode.ORDER_NOT_FOUND));
+
+		if (!order.getStore().getUser().getUserId().equals(userId)) {
+			throw new GeneralException(StoreErrorCode.NOT_STORE_OWNER);
+		}
+
+		orderService.updateOrderStatus(orderId, app.domain.order.model.entity.enums.OrderStatus.REJECTED);
 	}
 }

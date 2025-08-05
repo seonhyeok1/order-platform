@@ -12,7 +12,6 @@ import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RefundDisableProcessor implements CommandLineRunner {
@@ -38,10 +37,6 @@ public class RefundDisableProcessor implements CommandLineRunner {
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
 					break;
-				} catch (Exception e) {
-					if (!Thread.currentThread().isInterrupted()) {
-						log.error("환불 불가 처리 중 오류 발생", e);
-					}
 				}
 			}
 		});

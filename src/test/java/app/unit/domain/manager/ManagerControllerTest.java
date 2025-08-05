@@ -69,9 +69,19 @@ class ManagerControllerTest {
 	void getAllCustomerTest() throws Exception {
 		// given
 		List<GetCustomerListResponse> content = List.of(
-			new GetCustomerListResponse(2L, "te@naver.com", "김감자", LocalDateTime.parse("2025-07-29T15:32:11")),
-			new GetCustomerListResponse(1L, "test@example.com", "홍길동",
-				LocalDateTime.parse("2025-07-28T17:18:29.971213"))
+			GetCustomerListResponse.builder()
+				.id(2L)
+				.email("te@naver.com")
+				.name("김감자")
+				.createdAt(LocalDateTime.parse("2025-07-29T15:32:11"))
+				.build(),
+
+			GetCustomerListResponse.builder()
+				.id(1L)
+				.email("test@example.com")
+				.name("홍길동")
+				.createdAt(LocalDateTime.parse("2025-07-28T17:18:29.971213"))
+				.build()
 		);
 		PagedResponse<GetCustomerListResponse> response = new PagedResponse<>(content, 0, 20, 2, 1, true);
 
@@ -94,46 +104,46 @@ class ManagerControllerTest {
 	}
 
 	@DisplayName("사용자 상세 조회 API 테스트 - 주소 포함")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = "MANAGER")
 	@Test
 	void getUserDetailWithAddressTest() throws Exception {
 		// given
 		Long userId = 1L;
 
-		GetCustomerAddressListResponse address = new GetCustomerAddressListResponse(
-			"집",
-			"서울특별시 강남구 테헤란로",
-			"101동 202호",
-			true
-		);
+		GetCustomerAddressListResponse address = GetCustomerAddressListResponse.builder()
+			.alias("집")
+			.address("서울특별시 강남구 테헤란로")
+			.addressDetail("101동 202호")
+			.isDefault(true)
+			.build();
 
-		GetCustomerDetailResponse response = new GetCustomerDetailResponse(
-			userId,
-			"test@example.com",
-			"kkk7391",
-			"aaa",
-			"길동이",
-			"01012345678",
-			LocalDateTime.now(),
-			LocalDateTime.now(),
-			List.of(address)
-		);
+		GetCustomerDetailResponse response = GetCustomerDetailResponse.builder()
+			.userId(userId)
+			.email("test@example.com")
+			.userName("kkk7391")
+			.name("aaa")
+			.nickName("길동이")
+			.phoneNumber("01012345678")
+			.createdAt(LocalDateTime.now())
+			.updatedAt(LocalDateTime.now())
+			.address(List.of(address))
+			.build();
 
 		when(managerService.getCustomerDetailById(userId)).thenReturn(response);
 
 		// when & then
-		mockMvc.perform(get("/admin/users/{userId}", userId))
+		mockMvc.perform(get("/manager/customer/{userId}", userId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.result.userId").value(userId))
 			.andExpect(jsonPath("$.result.email").value("test@example.com"))
 			.andExpect(jsonPath("$.result.address[0].alias").value("집"))
 			.andExpect(jsonPath("$.result.address[0].address").value("서울특별시 강남구 테헤란로"))
 			.andExpect(jsonPath("$.result.address[0].addressDetail").value("101동 202호"))
-			.andExpect(jsonPath("$.result.address[0].isDefault").value(true));
+			.andExpect(jsonPath("$.result.address[0].default").value(true));
 	}
 
 	@DisplayName("유저 주문 내역 조회 API 테스트")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = "MANAGER")
 	@Test
 	void getUserOrderListTest() throws Exception {
 		// given
@@ -165,7 +175,7 @@ class ManagerControllerTest {
 			.thenReturn(response);
 
 		// when & then
-		mockMvc.perform(get("/admin/users/{userId}/order", userId)
+		mockMvc.perform(get("/manager/customer/{userId}/order", userId)
 				.param("page", "0")
 				.param("size", "20"))
 			.andExpect(status().isOk())
@@ -180,21 +190,26 @@ class ManagerControllerTest {
 	}
 
 	@DisplayName("사용자 검색 API 테스트")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = "MANAGER")
 	@Test
 	void searchCustomerTest() throws Exception {
 		// given
 		String keyword = "홍길동";
 		Pageable pageable = PageRequest.of(0, 20);
 		List<GetCustomerListResponse> content = List.of(
-			new GetCustomerListResponse(1L, "user1@example.com", "홍길동", LocalDateTime.now())
+			GetCustomerListResponse.builder()
+				.id(1L)
+				.email("user1@example.com")
+				.name("홍길동")
+				.createdAt(LocalDateTime.now())
+				.build()
 		);
 		PagedResponse<GetCustomerListResponse> response = new PagedResponse<>(content, 0, 20, 2, 1, true);
 
 		when(managerService.searchCustomer(eq(keyword), any(Pageable.class))).thenReturn(response);
 
 		// when & then
-		mockMvc.perform(get("/admin/users/search")
+		mockMvc.perform(get("/manager/customer/search")
 				.param("keyWord", keyword)
 				.param("page", "0")
 				.param("size", "20"))
@@ -203,7 +218,7 @@ class ManagerControllerTest {
 	}
 
 	@DisplayName("존재하지 않는 사용자 조회 시 예외 테스트")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = "MANAGER")
 	@Test
 	void getUserDetail_NotFoundException_Test() throws Exception {
 		// given
@@ -213,14 +228,16 @@ class ManagerControllerTest {
 			.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND)); // 예외를 던짐
 
 		// when & then
-		mockMvc.perform(get("/admin/users/{userId}", invalidUserId))
+		mockMvc.perform(get("/manager/customer/{userId}", invalidUserId))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("USER001"))
-			.andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value(ErrorStatus.USER_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.USER_NOT_FOUND.getMessage()));
 	}
 
+
 	@DisplayName("존재하지 않는 사용자 주문목록 조회 시 예외 테스트")
-	@WithMockUser
+	@WithMockUser(username = "1", roles = "MANAGER")
 	@Test
 	void getCustomerOrderList_NotFoundException_Test() throws Exception {
 		// given
@@ -230,16 +247,18 @@ class ManagerControllerTest {
 			.thenThrow(new GeneralException(ErrorStatus.USER_NOT_FOUND));
 
 		// when & then
-		mockMvc.perform(get("/admin/users/{userId}/order", invalidUserId)
+		mockMvc.perform(get("/manager/customer/{userId}/order", invalidUserId)
 				.param("page", "0")
 				.param("size", "20"))
 			.andExpect(status().isNotFound())
-			.andExpect(jsonPath("$.resultCode").value("USER001"))
-			.andExpect(jsonPath("$.message").value("존재하지 않는 사용자입니다."));
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value(ErrorStatus.USER_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.USER_NOT_FOUND.getMessage()));
 	}
 
 	@Test
 	@DisplayName("가게 리스트 조회 - 승인 상태로 필터링")
+	@WithMockUser(username = "1", roles = "MANAGER")
 	void testGetAllStoreWithStatus() throws Exception {
 		// given
 		PagedResponse<GetStoreListResponse> mockResponse =
@@ -250,45 +269,47 @@ class ManagerControllerTest {
 
 		// when & then
 		mockMvc.perform(get("/manager/store")
-				.param("status", "WAITING")
+				.param("status", "PENDING")
 				.param("page", "0")
 				.param("size", "20"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data").exists());
+			.andExpect(jsonPath("$.result").exists());
 	}
 
 	@Test
 	@DisplayName("가게 상세 조회")
+	@WithMockUser(username = "1", roles = "MANAGER")
 	void testGetStoreById() throws Exception {
 		// given
 		UUID storeId = UUID.randomUUID();
 
-		GetStoreDetailResponse response = new GetStoreDetailResponse(
-			storeId,
-			"감자탕 명가",
-			"진한 국물의 감자탕",
-			"서울시 종로구 종로1가",
-			"010-2222-3333",
-			15000L,
-			"종로구",
-			"한식",
-			4.3,
-			2L,
-			"adfjf@naver",
-			"akdfj1234",
-			"김길동",
-			"010123434"
-		);
+		GetStoreDetailResponse response = GetStoreDetailResponse.builder()
+			.storeId(storeId)
+			.storeName("감자탕 명가")
+			.description("진한 국물의 감자탕")
+			.address("서울시 종로구 종로1가")
+			.phoneNumber("010-2222-3333")
+			.minOrderAmount(15000L)
+			.regionName("종로구")
+			.categoryName("한식")
+			.averageRating(4.3)
+			.ownerId(2L)
+			.ownerEmail("adfjf@naver")
+			.ownerName("akdfj1234")
+			.ownerRealName("김길동")
+			.ownerPhone("010123434")
+			.build();
 		when(managerService.getStoreDetail(storeId)).thenReturn(response);
 
 		// when & then
 		mockMvc.perform(get("/manager/store/{storeId}", storeId))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data").exists());
+			.andExpect(jsonPath("$.result").exists());
 	}
 
 	@Test
 	@DisplayName("가게 승인 처리")
+	@WithMockUser(username = "1", roles = "MANAGER")
 	void testApproveStore() throws Exception {
 		// given
 		UUID storeId = UUID.randomUUID();
@@ -301,7 +322,7 @@ class ManagerControllerTest {
 		mockMvc.perform(patch("/manager/store/{storeId}/accept", storeId)
 				.param("status", status.name()))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.data").value(message));
+			.andExpect(jsonPath("$.result").value(message));
 	}
 
 }

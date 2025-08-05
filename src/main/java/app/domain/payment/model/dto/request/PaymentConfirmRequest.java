@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class PaymentConfirmRequest {
 
@@ -23,4 +22,10 @@ public class PaymentConfirmRequest {
 	@NotBlank(message = "결제 금액은 필수입니다.")
 	@Pattern(regexp = "^[1-9]\\d*$", message = "결제 금액은 양수여야 합니다.")
 	private String amount;
+
+	public PaymentConfirmRequest(String paymentKey, String orderId, String amount) {
+		this.paymentKey = paymentKey;
+		this.orderId = orderId;
+		this.amount = amount;
+	}
 }
