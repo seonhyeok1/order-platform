@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class CancelPaymentRequest {
 
@@ -19,4 +18,9 @@ public class CancelPaymentRequest {
 	private UUID orderId;
 
 	private String cancelReason;
+
+	public CancelPaymentRequest(UUID orderId, String cancelReason) {
+		this.orderId = orderId;
+		this.cancelReason = cancelReason;
+	}
 }

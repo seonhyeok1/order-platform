@@ -20,7 +20,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_cart")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class Cart extends BaseEntity {
 
@@ -31,5 +30,10 @@ public class Cart extends BaseEntity {
 	@OneToOne
 	@JoinColumn(name = "user_id", nullable = false, unique = true)
 	private User user;
+
+	public Cart(UUID cartId, User user) {
+		this.cartId = cartId;
+		this.user = user;
+	}
 
 }

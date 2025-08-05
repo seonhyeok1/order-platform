@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class CreateOrderRequest {
 
@@ -35,4 +34,13 @@ public class CreateOrderRequest {
 
 	@NotBlank(message = "배송 주소는 필수입니다.")
 	private String deliveryAddress;
+
+	public CreateOrderRequest(PaymentMethod paymentMethod, OrderChannel orderChannel, ReceiptMethod receiptMethod, String requestMessage, Long totalPrice, String deliveryAddress) {
+		this.paymentMethod = paymentMethod;
+		this.orderChannel = orderChannel;
+		this.receiptMethod = receiptMethod;
+		this.requestMessage = requestMessage;
+		this.totalPrice = totalPrice;
+		this.deliveryAddress = deliveryAddress;
+	}
 }

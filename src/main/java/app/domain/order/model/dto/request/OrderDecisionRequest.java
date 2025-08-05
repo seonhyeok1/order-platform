@@ -8,9 +8,12 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class OrderDecisionRequest {
 
 	private String status;
+
+	public OrderDecisionRequest(String status) {
+		this.status = status;
+	}
 }

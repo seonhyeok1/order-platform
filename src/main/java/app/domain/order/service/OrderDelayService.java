@@ -27,6 +27,5 @@ public class OrderDelayService {
 		RDelayedQueue<UUID> delayedQueue = redissonClient.getDelayedQueue(queue);
 
 		delayedQueue.offer(orderId, 5, TimeUnit.MINUTES);
-		log.info("주문 {} 환불 불가 처리가 5분 후로 예약되었습니다.", orderId);
 	}
 }

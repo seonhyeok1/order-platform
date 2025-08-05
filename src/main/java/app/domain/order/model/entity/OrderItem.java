@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_b_order_item")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class OrderItem extends BaseEntity {
 
@@ -41,4 +40,12 @@ public class OrderItem extends BaseEntity {
 
 	@Column(nullable = false)
 	private int quantity;
+
+	public OrderItem(UUID orderItemId, Orders orders, String menuName, Long price, int quantity) {
+		this.orderItemId = orderItemId;
+		this.orders = orders;
+		this.menuName = menuName;
+		this.price = price;
+		this.quantity = quantity;
+	}
 }

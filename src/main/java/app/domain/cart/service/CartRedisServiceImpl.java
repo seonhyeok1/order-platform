@@ -137,6 +137,11 @@ public class CartRedisServiceImpl implements CartRedisService {
 
 	@Override
 	public Long extractUserIdFromKey(String key) {
-		return Long.parseLong(key.substring(5));
+		try {
+			return Long.parseLong(key.substring(5));
+		} catch (Exception e) {
+			throw new GeneralException(CartErrorStatus.INVALID_KEY_EXTRACT_FAILED);
+		}
+
 	}
 }

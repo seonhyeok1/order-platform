@@ -21,7 +21,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "p_payment_etc")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 @Builder
 public class PaymentEtc extends BaseEntity {
 
@@ -35,4 +34,10 @@ public class PaymentEtc extends BaseEntity {
 
 	@Column(nullable = false, columnDefinition = "TEXT")
 	private String paymentResponse;
+
+	public PaymentEtc(UUID paymentEtcId, Payment payment, String paymentResponse) {
+		this.paymentEtcId = paymentEtcId;
+		this.payment = payment;
+		this.paymentResponse = paymentResponse;
+	}
 }
