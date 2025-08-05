@@ -1,4 +1,4 @@
-package app.unit.domain.customer;
+package app.unit.domain.customer.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;

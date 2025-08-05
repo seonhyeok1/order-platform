@@ -31,9 +31,6 @@ import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
 import app.global.config.MockSecurityConfig;
-import app.global.jwt.JwtAccessDeniedHandler;
-import app.global.jwt.JwtAuthenticationEntryPoint;
-import app.global.jwt.JwtTokenProvider;
 
 @WebMvcTest(CustomerMenuController.class)
 @Import({MockSecurityConfig.class})
@@ -84,7 +81,7 @@ class CustomerMenuControllerTest {
 		when(menuService.getMenusByStoreId(eq(storeId), any(Pageable.class))).thenReturn(pagedResponse);
 
 		// when & then
-		mockMvc.perform(get("/api/customer/store/{storeId}/menus", storeId)
+		mockMvc.perform(get("/customer/store/{storeId}/menus", storeId)
 				.param("page", "0")
 				.param("size", "20")
 				.contentType(MediaType.APPLICATION_JSON))
@@ -107,7 +104,7 @@ class CustomerMenuControllerTest {
 			.thenThrow(new GeneralException(ErrorStatus.STORE_NOT_FOUND));
 
 		// then
-		mockMvc.perform(get("/customer/{storeId}/menus", invalidStoreId)
+		mockMvc.perform(get("/customer/store/{storeId}/menus", invalidStoreId)
 				.param("page", "0")
 				.param("size", "20")
 				.contentType(MediaType.APPLICATION_JSON))
@@ -115,7 +112,6 @@ class CustomerMenuControllerTest {
 			.andExpect(jsonPath("$.code").value(ErrorStatus.STORE_NOT_FOUND.getCode()))
 			.andExpect(jsonPath("$.message").value(ErrorStatus.STORE_NOT_FOUND.getMessage()));
 	}
-
 
 	@DisplayName("가게 메뉴가 없는 경우 빈 목록을 반환한다")
 	@WithMockUser(roles = "CUSTOMER")
@@ -130,7 +126,7 @@ class CustomerMenuControllerTest {
 		when(menuService.getMenusByStoreId(eq(storeId), any(Pageable.class))).thenReturn(pagedResponse);
 
 		// when & then
-		mockMvc.perform(get("/customer/{storeId}/menus", storeId)
+		mockMvc.perform(get("/customer/store/{storeId}/menus", storeId)
 				.param("page", "0")
 				.param("size", "20")
 				.contentType(MediaType.APPLICATION_JSON))

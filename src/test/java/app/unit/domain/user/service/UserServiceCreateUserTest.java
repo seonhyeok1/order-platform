@@ -17,6 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import app.domain.cart.model.entity.Cart;
+import app.domain.cart.model.repository.CartRepository;
 import app.domain.user.UserService;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.dto.request.CreateUserRequest;
@@ -34,6 +36,8 @@ class UserServiceCreateUserTest {
 	private UserRepository userRepository;
 	@Mock
 	private PasswordEncoder passwordEncoder;
+	@Mock
+	private CartRepository cartRepository;
 	@InjectMocks
 	private UserService userService;
 
@@ -77,7 +81,8 @@ class UserServiceCreateUserTest {
 			givenNoDuplicatesFound(req);
 			given(passwordEncoder.encode(req.getPassword())).willReturn("encodedPassword");
 			given(userRepository.save(any(User.class))).willReturn(user);
-
+			given(cartRepository.save(any(Cart.class))).willReturn(Cart.builder().user(user).build());
+			
 			// when
 			CreateUserResponse res = userService.createUser(req);
 

@@ -1,4 +1,4 @@
-package app.unit.domain.customer;
+package app.unit.domain.user.model;
 
 import static org.assertj.core.api.Assertions.*;
 

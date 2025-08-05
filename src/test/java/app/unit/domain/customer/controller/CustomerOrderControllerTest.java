@@ -1,4 +1,4 @@
-package app.unit.domain.customer;
+package app.unit.domain.customer.controller;
 
 import static org.mockito.BDDMockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
