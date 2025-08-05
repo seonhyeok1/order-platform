@@ -57,23 +57,36 @@ public class SecurityConfig {
 					"/v2/api-docs", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources",
 					"/swagger-resources/**", "/configuration/ui", "/configuration/security", "/swagger-ui/**",
 					"/webjars/**", "/swagger-ui.html",
-					"/user/signup", "/user/login"
+					"/user/signup", "/user/login", "/region/**", "/payment/**"
 				)
 				.permitAll()
 
 				.requestMatchers("/store/**")
-				.hasAuthority(UserRole.OWNER.name())
+				.hasAnyAuthority(UserRole.OWNER.name(), UserRole.MANAGER.name(),
+					UserRole.MASTER.name())
+
 				.requestMatchers("/order/**")
 				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.OWNER.name(), UserRole.MANAGER.name(),
 					UserRole.MASTER.name())
-				.requestMatchers("/customer/**")
-				.hasAuthority(UserRole.CUSTOMER.name())
-				.requestMatchers("/cart/**")
-				.hasAuthority(UserRole.CUSTOMER.name())
-				.requestMatchers("/admin/**")
-				.hasAuthority(UserRole.MANAGER.name())
-				.requestMatchers("/master/**")
-				.hasAuthority(UserRole.MASTER.name())
+
+				.requestMatchers("/customer/cart/**")
+				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
+					UserRole.MASTER.name())
+
+				.requestMatchers("/customer/review/**")
+				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
+					UserRole.MASTER.name())
+
+				.requestMatchers("/customer/store/**")
+				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
+					UserRole.MASTER.name())
+
+				.requestMatchers("/manager/**")
+				.hasAnyAuthority(UserRole.MANAGER.name(),
+					UserRole.MASTER.name())
+
+				.requestMatchers("/owner/ai/**")
+				.hasAuthority(UserRole.OWNER.name())
 
 				.anyRequest()
 				.authenticated()
