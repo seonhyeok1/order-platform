@@ -15,6 +15,17 @@ public class GetStoreListResponse {
 	private long minOrderAmount;
 	private double averageRating;
 
+	public GetStoreListResponse() {
+	}
+
+	public GetStoreListResponse(UUID storeId, String storeName, String address, long minOrderAmount, double averageRating) {
+		this.storeId = storeId;
+		this.storeName = storeName;
+		this.address = address;
+		this.minOrderAmount = minOrderAmount;
+		this.averageRating = averageRating;
+	}
+
 	public static GetStoreListResponse from(Store store, double averageRating) {
 		return GetStoreListResponse.builder()
 			.storeId(store.getStoreId())

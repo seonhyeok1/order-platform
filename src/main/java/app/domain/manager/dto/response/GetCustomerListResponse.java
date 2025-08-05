@@ -15,6 +15,16 @@ public class GetCustomerListResponse {
 	private String name;
 	private LocalDateTime createdAt;
 
+	public GetCustomerListResponse() {
+	}
+
+	public GetCustomerListResponse(Long id, String email, String name, LocalDateTime createdAt) {
+		this.id = id;
+		this.email = email;
+		this.name = name;
+		this.createdAt = createdAt;
+	}
+
 	public static GetCustomerListResponse from(User user) {
 		return GetCustomerListResponse.builder()
 			.id(user.getUserId())

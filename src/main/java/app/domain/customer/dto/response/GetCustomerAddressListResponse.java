@@ -13,6 +13,16 @@ public class GetCustomerAddressListResponse {
 	private String addressDetail;
 	private boolean isDefault;
 
+	public GetCustomerAddressListResponse() {
+	}
+
+	public GetCustomerAddressListResponse(String alias, String address, String addressDetail, boolean isDefault) {
+		this.alias = alias;
+		this.address = address;
+		this.addressDetail = addressDetail;
+		this.isDefault = isDefault;
+	}
+
 	public static GetCustomerAddressListResponse from(UserAddress address) {
 		return GetCustomerAddressListResponse.builder()
 			.alias(address.getAlias())

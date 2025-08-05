@@ -10,4 +10,11 @@ import lombok.Setter;
 public class UpdateOrderStatusRequest {
 	@NotNull
 	private OrderStatus newStatus;
+
+	public UpdateOrderStatusRequest() {
+	}
+
+	public UpdateOrderStatusRequest(OrderStatus newStatus) {
+		this.newStatus = newStatus;
+	}
 }

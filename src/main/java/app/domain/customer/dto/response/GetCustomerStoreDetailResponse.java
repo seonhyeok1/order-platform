@@ -19,6 +19,20 @@ public class GetCustomerStoreDetailResponse {
 	private String categoryName;
 	private double averageRating;
 
+	public GetCustomerStoreDetailResponse() {
+	}
+
+	public GetCustomerStoreDetailResponse(UUID storeId, String storeName, String description, String address, String phoneNumber, long minOrderAmount, String categoryName, double averageRating) {
+		this.storeId = storeId;
+		this.storeName = storeName;
+		this.description = description;
+		this.address = address;
+		this.phoneNumber = phoneNumber;
+		this.minOrderAmount = minOrderAmount;
+		this.categoryName = categoryName;
+		this.averageRating = averageRating;
+	}
+
 	public static GetCustomerStoreDetailResponse from(Store store, double avgRating) {
 		return GetCustomerStoreDetailResponse.builder()
 			.storeId(store.getStoreId())

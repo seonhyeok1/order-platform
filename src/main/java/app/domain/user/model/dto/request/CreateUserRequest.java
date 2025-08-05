@@ -40,4 +40,17 @@ public class CreateUserRequest {
 	@NotNull
 	@ValidUserRole
 	private UserRole userRole;
+
+	public CreateUserRequest() {
+	}
+
+	public CreateUserRequest(String username, String password, String email, String nickname, String realName, String phoneNumber, UserRole userRole) {
+		this.username = username;
+		this.password = password;
+		this.email = email;
+		this.nickname = nickname;
+		this.realName = realName;
+		this.phoneNumber = phoneNumber;
+		this.userRole = userRole;
+	}
 }
