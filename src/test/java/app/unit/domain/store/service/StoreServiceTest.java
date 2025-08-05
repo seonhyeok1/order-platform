@@ -24,6 +24,7 @@ import app.domain.menu.model.repository.CategoryRepository;
 import app.domain.menu.model.repository.MenuRepository;
 import app.domain.order.model.entity.Orders;
 import app.domain.order.model.repository.OrdersRepository;
+import app.domain.order.service.OrderService;
 import app.domain.review.model.ReviewRepository;
 import app.domain.review.model.dto.response.GetReviewResponse;
 import app.domain.review.model.entity.Review;
@@ -68,6 +69,9 @@ class StoreServiceTest {
 	private OrdersRepository ordersRepository;
 
 	@Mock
+	private OrderService orderService;
+
+	@Mock
 	private SecurityUtil securityUtil;
 
 	private final Long TEST_USER_ID = 1L;
@@ -75,7 +79,7 @@ class StoreServiceTest {
 	@BeforeEach
 	void setUp() {
 		storeService = new StoreService(storeRepository, regionRepository, categoryRepository, menuRepository,
-			reviewRepository, ordersRepository, securityUtil);
+			reviewRepository, ordersRepository, orderService, securityUtil);
 	}
 
 	@Nested
@@ -664,6 +668,94 @@ class StoreServiceTest {
 			verify(securityUtil, times(1)).getCurrentUser();
 			verify(storeRepository, times(1)).findById(testStoreId);
 			verify(ordersRepository, never()).findByStore(any(Store.class));
+		}
+	}
+
+	@Nested
+	@DisplayName("주문 수락/거절 테스트")
+	class OrderAcceptRejectTest {
+
+		private User currentUser;
+		private Store store;
+		private Orders order;
+		private UUID orderId;
+		private UUID storeId;
+
+		@BeforeEach
+		void setUp() {
+			currentUser = User.builder().userId(TEST_USER_ID).username("owner").build();
+			storeId = UUID.randomUUID();
+			store = Store.builder().storeId(storeId).user(currentUser).build();
+			orderId = UUID.randomUUID();
+			order = Orders.builder().ordersId(orderId).store(store).build();
+
+			when(securityUtil.getCurrentUser()).thenReturn(currentUser);
+		}
+
+		@Test
+		@DisplayName("주문 수락 성공")
+		void acceptOrder_success() {
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
+			when(orderService.updateOrderStatus(eq(orderId), eq(app.domain.order.model.entity.enums.OrderStatus.ACCEPTED)))
+				.thenReturn(mock(app.domain.order.model.dto.response.UpdateOrderStatusResponse.class));
+
+			assertDoesNotThrow(() -> storeService.acceptOrder(orderId));
+			verify(orderService, times(1)).updateOrderStatus(eq(orderId), eq(app.domain.order.model.entity.enums.OrderStatus.ACCEPTED));
+		}
+
+		@Test
+		@DisplayName("주문 수락 실패 - 주문을 찾을 수 없음")
+		void acceptOrder_orderNotFound() {
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.empty());
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> storeService.acceptOrder(orderId));
+			assertEquals(StoreErrorCode.ORDER_NOT_FOUND, exception.getCode());
+		}
+
+		@Test
+		@DisplayName("주문 수락 실패 - 현재 사용자가 가게 점주가 아님")
+		void acceptOrder_notStoreOwner() {
+			User anotherUser = User.builder().userId(TEST_USER_ID + 1).username("another").build();
+			Store anotherStore = Store.builder().storeId(UUID.randomUUID()).user(anotherUser).build();
+			Orders orderOfAnotherStore = Orders.builder().ordersId(orderId).store(anotherStore).build();
+
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.of(orderOfAnotherStore));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> storeService.acceptOrder(orderId));
+			assertEquals(StoreErrorCode.NOT_STORE_OWNER, exception.getCode());
+		}
+
+		@Test
+		@DisplayName("주문 거절 성공")
+		void rejectOrder_success() {
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.of(order));
+			when(orderService.updateOrderStatus(eq(orderId), eq(app.domain.order.model.entity.enums.OrderStatus.REJECTED)))
+				.thenReturn(mock(app.domain.order.model.dto.response.UpdateOrderStatusResponse.class));
+
+			assertDoesNotThrow(() -> storeService.rejectOrder(orderId));
+			verify(orderService, times(1)).updateOrderStatus(eq(orderId), eq(app.domain.order.model.entity.enums.OrderStatus.REJECTED));
+		}
+
+		@Test
+		@DisplayName("주문 거절 실패 - 주문을 찾을 수 없음")
+		void rejectOrder_orderNotFound() {
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.empty());
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> storeService.rejectOrder(orderId));
+			assertEquals(StoreErrorCode.ORDER_NOT_FOUND, exception.getCode());
+		}
+
+		@Test
+		@DisplayName("주문 거절 실패 - 현재 사용자가 가게 점주가 아님")
+		void rejectOrder_notStoreOwner() {
+			User anotherUser = User.builder().userId(TEST_USER_ID + 1).username("another").build();
+			Store anotherStore = Store.builder().storeId(UUID.randomUUID()).user(anotherUser).build();
+			Orders orderOfAnotherStore = Orders.builder().ordersId(orderId).store(anotherStore).build();
+
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.of(orderOfAnotherStore));
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> storeService.rejectOrder(orderId));
+			assertEquals(StoreErrorCode.NOT_STORE_OWNER, exception.getCode());
 		}
 	}
 }
