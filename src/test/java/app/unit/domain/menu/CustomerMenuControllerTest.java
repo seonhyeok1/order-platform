@@ -84,7 +84,7 @@ class CustomerMenuControllerTest {
 		when(menuService.getMenusByStoreId(eq(storeId), any(Pageable.class))).thenReturn(pagedResponse);
 
 		// when & then
-		mockMvc.perform(get("/customer/{storeId}/menus", storeId)
+		mockMvc.perform(get("/api/customer/store/{storeId}/menus", storeId)
 				.param("page", "0")
 				.param("size", "20")
 				.contentType(MediaType.APPLICATION_JSON))

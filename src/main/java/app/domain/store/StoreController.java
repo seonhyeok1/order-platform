@@ -30,7 +30,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/store")
+@RequestMapping("/store")
 @RequiredArgsConstructor
 public class StoreController {
 
@@ -84,8 +84,8 @@ public class StoreController {
 	@DeleteMapping("/{storeId}")
 	public ApiResponse<String> deleteStore(@Valid @PathVariable UUID storeId) {
 		storeService.deleteStore(storeId);
-
-		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_DELETED_SUCCESS, "가게 삭제가 완료되었습니다.");
+		return ApiResponse.onSuccess(StoreSuccessStatus.STORE_DELETED_SUCCESS,
+			StoreSuccessStatus.STORE_DELETED_SUCCESS.getMessage());
 	}
 
 	@GetMapping("/{storeId}/menu")
