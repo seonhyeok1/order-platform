@@ -350,7 +350,7 @@ public class StoreControllerTest {
 	@DisplayName("점주의 메뉴 목록 조회 API 테스트")
 	class GetStoreMenusTest {
 
-		private final UUID testStoreId = TEST_STORE_ID; // TEST_STORE_ID를 사용하도록 수정
+		private final UUID testStoreId = TEST_STORE_ID;
 
 		@Test
 		@DisplayName("성공: 메뉴 목록 조회")
@@ -408,7 +408,7 @@ public class StoreControllerTest {
 	@DisplayName("점주의 리뷰 목록 조회 API 테스트")
 	class GetStoreReviewsTest {
 
-		private final UUID testStoreId = TEST_STORE_ID; // TEST_STORE_ID를 사용하도록 수정
+		private final UUID testStoreId = TEST_STORE_ID;
 
 		@Test
 		@DisplayName("성공: 리뷰 목록 조회")
@@ -465,7 +465,7 @@ public class StoreControllerTest {
 	@DisplayName("점주의 주문 목록 조회 API 테스트")
 	class GetStoreOrdersTest {
 
-		private final UUID testStoreId = TEST_STORE_ID; // TEST_STORE_ID를 사용하도록 수정
+		private final UUID testStoreId = TEST_STORE_ID;
 
 		@Test
 		@DisplayName("성공: 주문 목록 조회")
@@ -523,6 +523,78 @@ public class StoreControllerTest {
 			assertEquals(StoreErrorCode.INVALID_USER_ROLE,
 				exception.getCode());
 			verify(storeService, times(1)).getStoreOrderList(testStoreId);
+		}
+	}
+
+	@Nested
+	@DisplayName("주문 수락/거절 테스트")
+	class OrderAcceptRejectTest {
+		@Test
+		@DisplayName("주문 수락 API 성공 테스트")
+		void acceptOrder_success() {
+			UUID orderId = UUID.randomUUID();
+			doNothing().when(storeService).acceptOrder(orderId);
+
+			ApiResponse<String> response = storeController.acceptOrder(orderId);
+
+			assertSuccessResponse(response, StoreSuccessStatus.ORDER_ACCEPTED_SUCCESS, "주문 수락이 완료되었습니다.");
+			verify(storeService, times(1)).acceptOrder(orderId);
+		}
+
+		@Test
+		@DisplayName("주문 거절 API 성공 테스트")
+		void rejectOrder_success() {
+			UUID orderId = UUID.randomUUID();
+			doNothing().when(storeService).rejectOrder(orderId);
+
+			ApiResponse<String> response = storeController.rejectOrder(orderId);
+
+			assertSuccessResponse(response, StoreSuccessStatus.ORDER_REJECTED_SUCCESS, "주문 거절이 완료되었습니다.");
+			verify(storeService, times(1)).rejectOrder(orderId);
+		}
+
+		@Test
+		@DisplayName("주문 수락 API 실패 테스트 - 서비스에서 예외 발생")
+		void acceptOrder_fail_throwException() {
+			UUID orderId = UUID.randomUUID();
+			doThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND)).when(storeService).acceptOrder(orderId);
+
+			assertThrows(GeneralException.class, () -> storeController.acceptOrder(orderId));
+		}
+
+		@Test
+		@DisplayName("주문 거절 API 실패 테스트 - 서비스에서 예외 발생")
+		void rejectOrder_fail_throwException() {
+			UUID orderId = UUID.randomUUID();
+			doThrow(new GeneralException(StoreErrorCode.STORE_NOT_FOUND)).when(storeService).rejectOrder(orderId);
+
+			assertThrows(GeneralException.class, () -> storeController.rejectOrder(orderId));
+		}
+
+		@Test
+		@DisplayName("주문 수락 API 실패 테스트 - 권한 없음 - 서비스 layer")
+		void acceptOrder_fail_unauthorized() {
+			UUID orderId = UUID.randomUUID();
+			doThrow(new GeneralException(StoreErrorCode.INVALID_USER_ROLE))
+				.when(storeService).acceptOrder(orderId);
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.acceptOrder(orderId);
+			});
+			assertEquals(StoreErrorCode.INVALID_USER_ROLE, exception.getCode());
+		}
+
+		@Test
+		@DisplayName("주문 거절 API 실패 테스트 - 권한 없음 - 서비스 layer")
+		void rejectOrder_fail_unauthorized() {
+			UUID orderId = UUID.randomUUID();
+			doThrow(new GeneralException(StoreErrorCode.INVALID_USER_ROLE))
+				.when(storeService).rejectOrder(orderId);
+
+			GeneralException exception = assertThrows(GeneralException.class, () -> {
+				storeController.rejectOrder(orderId);
+			});
+			assertEquals(StoreErrorCode.INVALID_USER_ROLE, exception.getCode());
 		}
 	}
 }
