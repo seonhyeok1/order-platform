@@ -1,21 +1,24 @@
 package app.domain.customer.dto.response;
 
 import app.domain.user.model.entity.UserAddress;
-import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
+import lombok.Getter;
 
-@Schema(description = "유저 주소 목록 응답 DTO")
-public record GetCustomerAddressListResponse(
-	String alias,
-	String address,
-	String addressDetail,
-	boolean isDefault
-) {
+@Getter
+@Builder
+public class GetCustomerAddressListResponse {
+
+	private String alias;
+	private String address;
+	private String addressDetail;
+	private boolean isDefault;
+
 	public static GetCustomerAddressListResponse from(UserAddress address) {
-		return new GetCustomerAddressListResponse(
-			address.getAlias(),
-			address.getAddress(),
-			address.getAddressDetail(),
-			address.isDefault()
-		);
+		return GetCustomerAddressListResponse.builder()
+			.alias(address.getAlias())
+			.address(address.getAddress())
+			.addressDetail(address.getAddressDetail())
+			.isDefault(address.isDefault())
+			.build();
 	}
 }
