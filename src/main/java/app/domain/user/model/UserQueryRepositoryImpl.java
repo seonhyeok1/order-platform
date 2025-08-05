@@ -1,4 +1,4 @@
-package app.domain.user;
+package app.domain.user.model;
 
 import java.util.List;
 
@@ -10,14 +10,13 @@ import org.springframework.util.StringUtils;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-
 import app.domain.user.model.entity.QUser;
 import app.domain.user.model.entity.User;
 import lombok.RequiredArgsConstructor;
 
 @Repository
 @RequiredArgsConstructor
-public class UserSearchRepositoryImpl implements UserSearchRepository {
+public class UserQueryRepositoryImpl implements UserQueryRepository {
 
 	private final JPAQueryFactory queryFactory;
 

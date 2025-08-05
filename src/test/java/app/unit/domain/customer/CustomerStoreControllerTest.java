@@ -1,12 +1,14 @@
 package app.unit.domain.customer;
 
 import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import app.domain.customer.CustomerStoreController;
 import app.domain.customer.CustomerStoreService;
@@ -50,14 +55,40 @@ class CustomerStoreControllerTest {
 	@MockitoBean
 	private JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
+
+	@Autowired
+	private WebApplicationContext context;
+
+	@BeforeEach
+	void setUp() {
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
+	}
+
 	private final UUID storeId = UUID.randomUUID();
 
 	@Test
 	@DisplayName("가게 목록 조회 성공")
+	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getApprovedStoreList() throws Exception {
 		List<GetStoreListResponse> stores = List.of(
-			new GetStoreListResponse(storeId, "맛집1", "서울 강남구", 3000, 4.5),
-			new GetStoreListResponse(UUID.randomUUID(), "맛집2", "부산 해운대구", 2000, 3.9)
+			GetStoreListResponse.builder()
+				.storeId(storeId)
+				.storeName("맛집1")
+				.address("서울 강남구")
+				.minOrderAmount(3000)
+				.averageRating(4.5)
+				.build(),
+
+			GetStoreListResponse.builder()
+				.storeId(UUID.randomUUID())
+				.storeName("맛집2")
+				.address("부산 해운대구")
+				.minOrderAmount(2000)
+				.averageRating(3.9)
+				.build()
 		);
 
 		Page<GetStoreListResponse> page = new PageImpl<>(stores, PageRequest.of(0, 20), stores.size());
@@ -76,10 +107,18 @@ class CustomerStoreControllerTest {
 
 	@Test
 	@DisplayName("가게 상세 조회 성공")
+	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getApprovedStoreDetail() throws Exception {
-		GetCustomerStoreDetailResponse response = new GetCustomerStoreDetailResponse(
-			storeId, "맛집1", "한식 맛집", "서울 강남", "010-1234-5678", 3000L, "서울", 4.5
-		);
+		GetCustomerStoreDetailResponse response = GetCustomerStoreDetailResponse.builder()
+			.storeId(storeId)
+			.storeName("맛집1")
+			.description("한식 맛집")
+			.address("서울 강남")
+			.phoneNumber("010-1234-5678")
+			.minOrderAmount(3000L)
+			.categoryName("서울")
+			.averageRating(4.5)
+			.build();
 		given(customerStoreService.getApproveStoreDetail(storeId)).willReturn(response);
 
 		mockMvc.perform(get("/customer/store/{storeId}", storeId))
@@ -90,10 +129,17 @@ class CustomerStoreControllerTest {
 
 	@Test
 	@DisplayName("가게 검색 성공")
+	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void searchApprovedStore() throws Exception {
 		String keyword = "치킨";
 		List<GetStoreListResponse> stores = List.of(
-			new GetStoreListResponse(storeId, "치킨집", "서울 강남구", 3000, 4.5)
+			GetStoreListResponse.builder()
+				.storeId(storeId)
+				.storeName("치킨집")
+				.address("서울 강남구")
+				.minOrderAmount(3000)
+				.averageRating(4.5)
+				.build()
 		);
 		Page<GetStoreListResponse> page = new PageImpl<>(stores, PageRequest.of(0, 10), 1);
 		given(customerStoreService.searchApproveStores(eq(keyword), any())).willReturn(PagedResponse.from(page));
@@ -109,6 +155,7 @@ class CustomerStoreControllerTest {
 
 	@Test
 	@DisplayName("가게 검색 결과 없음 - 빈 리스트 반환")
+	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void searchApprovedStore_emptyResult() throws Exception {
 		// given
 		Page<GetStoreListResponse> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
@@ -127,6 +174,7 @@ class CustomerStoreControllerTest {
 
 	@Test
 	@DisplayName("가게 상세 조회 실패 - 존재하지 않는 가게")
+	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getStoreDetail_storeNotFound() throws Exception {
 		// given
 		given(customerStoreService.getApproveStoreDetail(storeId))
@@ -134,8 +182,13 @@ class CustomerStoreControllerTest {
 
 		// when & then
 		mockMvc.perform(get("/customer/store/{storeId}", storeId))
-			.andExpect(status().isBadRequest())
-			.andExpect(jsonPath("$.message").value(ErrorStatus.STORE_NOT_FOUND.getMessage()))
-			.andExpect(jsonPath("$.code").value(ErrorStatus.STORE_NOT_FOUND.getCode()));
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.isSuccess").value(false))
+			.andExpect(jsonPath("$.code").value(ErrorStatus.STORE_NOT_FOUND.getCode()))
+			.andExpect(jsonPath("$.message").value(ErrorStatus.STORE_NOT_FOUND.getMessage()));
+
+
+
+
 	}
 }

@@ -4,15 +4,12 @@ import java.util.UUID;
 
 import app.domain.store.model.entity.Store;
 import app.domain.user.model.entity.User;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
-@Schema(description = "가게 상세 응답 DTO")
 @Getter
-@AllArgsConstructor
+@Builder
 public class GetStoreDetailResponse {
-
 	private UUID storeId;
 	private String storeName;
 	private String description;
@@ -29,25 +26,24 @@ public class GetStoreDetailResponse {
 	private String ownerRealName;
 	private String ownerPhone;
 
-
 	public static GetStoreDetailResponse from(Store store, double avgRating) {
 		User user = store.getUser();
 
-		return new GetStoreDetailResponse(
-			store.getStoreId(),
-			store.getStoreName(),
-			store.getDescription(),
-			store.getAddress(),
-			store.getPhoneNumber(),
-			store.getMinOrderAmount(),
-			store.getRegion().getRegionName(),
-			store.getCategory().getCategoryName(),
-			avgRating,
-			user.getUserId(),
-			user.getEmail(),
-			user.getUsername(),
-			user.getNickname(),
-			user.getPhoneNumber()
-		);
+		return GetStoreDetailResponse.builder()
+			.storeId(store.getStoreId())
+			.storeName(store.getStoreName())
+			.description(store.getDescription())
+			.address(store.getAddress())
+			.phoneNumber(store.getPhoneNumber())
+			.minOrderAmount(store.getMinOrderAmount())
+			.regionName(store.getRegion().getRegionName())
+			.categoryName(store.getCategory().getCategoryName())
+			.averageRating(avgRating)
+			.ownerId(user.getUserId())
+			.ownerEmail(user.getEmail())
+			.ownerName(user.getUsername())
+			.ownerRealName(user.getNickname())
+			.ownerPhone(user.getPhoneNumber())
+			.build();
 	}
 }

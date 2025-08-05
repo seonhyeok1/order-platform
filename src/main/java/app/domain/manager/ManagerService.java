@@ -24,8 +24,8 @@ import app.domain.store.model.StoreQueryRepository;
 import app.domain.store.model.entity.Store;
 import app.domain.store.repository.StoreRepository;
 import app.domain.store.status.StoreAcceptStatus;
-import app.domain.user.UserSearchRepository;
 import app.domain.user.model.UserAddressRepository;
+import app.domain.user.model.UserQueryRepository;
 import app.domain.user.model.UserRepository;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.enums.UserRole;
@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class ManagerService {
 
 	private final UserRepository userRepository;
-	private final UserSearchRepository userSearchRepository;
+	private final UserQueryRepository userQueryRepository;
 	private final UserAddressRepository userAddressRepository;
 	private final OrdersRepository ordersRepository;
 	private final OrderItemRepository orderItemRepository;
@@ -82,7 +82,7 @@ public class ManagerService {
 
 	@Transactional(readOnly = true)
 	public PagedResponse<GetCustomerListResponse> searchCustomer(String keyWord, Pageable pageable) {
-		Page<User> users = userSearchRepository.searchUser(keyWord, pageable);
+		Page<User> users = userQueryRepository.searchUser(keyWord, pageable);
 
 		Page<GetCustomerListResponse> content = users.map(GetCustomerListResponse::from);
 

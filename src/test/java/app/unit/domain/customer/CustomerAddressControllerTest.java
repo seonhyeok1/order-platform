@@ -68,20 +68,19 @@ class CustomerAddressControllerTest {
 	@WithMockUser(username = "1", roles = "CUSTOMER")
 	void getCustomerAddresses_Success() throws Exception {
 		List<GetCustomerAddressListResponse> addressResponse = List.of(
-			new GetCustomerAddressListResponse(
-				"우리집",
-				"서울시 강남구",
-				"101호",
-				true
-			),
-			new GetCustomerAddressListResponse(
-				"회사",
-				"서울시 서초구",
-				"202호",
-				false
-			)
+			GetCustomerAddressListResponse.builder()
+				.alias("우리집")
+				.address("서울시 강남구")
+				.addressDetail("101호")
+				.isDefault(true)
+				.build(),
+			GetCustomerAddressListResponse.builder()
+				.alias("회사")
+				.address("서울시 서초구")
+				.addressDetail("202호")
+				.isDefault(false)
+				.build()
 		);
-
 		when(customerAddressService.getCustomerAddresses()).thenReturn(addressResponse);
 
 		mockMvc.perform(get("/customer/address/list"))
