@@ -16,7 +16,11 @@ public enum StoreSuccessStatus implements BaseCode {
 	// 가게 관련 응답
 	STORE_CREATED_SUCCESS(HttpStatus.CREATED, "STORE201", "가게가 성공적으로 생성되었습니다."),
 	STORE_UPDATED_SUCCESS(HttpStatus.OK, "STORE202", "가게 정보가 성공적으로 업데이트되었습니다."),
-	STORE_DELETED_SUCCESS(HttpStatus.OK, "STORE203", "가게가 성공적으로 삭제되었습니다.");
+	STORE_DELETED_SUCCESS(HttpStatus.OK, "STORE203", "가게가 성공적으로 삭제되었습니다."),
+
+	// 주문 관련 응답
+	ORDER_ACCEPTED_SUCCESS(HttpStatus.OK, "STORE204", "주문이 성공적으로 수락되었습니다."),
+	ORDER_REJECTED_SUCCESS(HttpStatus.OK, "STORE205", "주문이 성공적으로 거절되었습니다.");
 
 
 	private final HttpStatus httpStatus;
