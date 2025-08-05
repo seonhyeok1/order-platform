@@ -28,7 +28,6 @@ import app.domain.customer.CustomerStoreController;
 import app.domain.customer.CustomerStoreService;
 import app.domain.customer.dto.response.GetCustomerStoreDetailResponse;
 import app.domain.customer.dto.response.GetStoreListResponse;
-import app.domain.review.status.ReviewErrorStatus;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
