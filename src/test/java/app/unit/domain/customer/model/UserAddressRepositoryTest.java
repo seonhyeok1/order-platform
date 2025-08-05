@@ -19,10 +19,11 @@ import app.domain.user.model.UserAddressRepository;
 import app.domain.user.model.entity.User;
 import app.domain.user.model.entity.UserAddress;
 import app.domain.user.model.entity.enums.UserRole;
-import app.global.config.JpaAuditingConfig;
+import app.global.config.QueryDslConfig;
+import app.global.config.TestJpaConfig;
 
 @DataJpaTest
-@Import(JpaAuditingConfig.class)
+@Import({QueryDslConfig.class, TestJpaConfig.class})
 @DisplayName("UserAddressRepository 테스트")
 class UserAddressRepositoryTest {
 

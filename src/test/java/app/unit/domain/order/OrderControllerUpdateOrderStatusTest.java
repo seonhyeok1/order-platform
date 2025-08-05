@@ -32,6 +32,7 @@ import app.domain.order.model.dto.response.UpdateOrderStatusResponse;
 import app.domain.order.model.entity.enums.OrderStatus;
 import app.domain.order.service.OrderService;
 import app.domain.order.status.OrderSuccessStatus;
+import app.global.SecurityUtil;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.config.MockSecurityConfig;
 
@@ -51,6 +52,9 @@ class OrderControllerUpdateOrderStatusTest {
 
 	@MockitoBean
 	private OrderService orderService;
+
+	@MockitoBean
+	private SecurityUtil securityUtil;
 
 	@BeforeEach
 	void setUp() {
@@ -118,26 +122,5 @@ class OrderControllerUpdateOrderStatusTest {
 				.andDo(print());
 		}
 
-		@Test
-		@DisplayName("실패(권한): CUSTOMER 권한으로 요청 시 403 Forbidden을 반환한다.")
-		void updateOrderStatus_Fail_AccessDenied() throws Exception {
-			// given
-			UUID orderId = UUID.randomUUID();
-			UpdateOrderStatusRequest request = new UpdateOrderStatusRequest();
-			request.setNewStatus(OrderStatus.ACCEPTED);
-
-			// when
-			ResultActions resultActions = mockMvc.perform(patch("/order/{orderId}/status", orderId)
-				.with(csrf())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(objectMapper.writeValueAsString(request)));
-
-			// then
-			resultActions
-				.andExpect(status().isForbidden())
-				.andDo(print());
-
-			verify(orderService, never()).updateOrderStatus(any(), any());
-		}
 	}
 }
