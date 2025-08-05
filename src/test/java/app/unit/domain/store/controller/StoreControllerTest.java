@@ -89,7 +89,7 @@ public class StoreControllerTest {
 			when(storeService.createStore(any(StoreApproveRequest.class)))
 				.thenReturn(expectedResponse);
 
-			mockMvc.perform(post("/api/store")
+			mockMvc.perform(post("/store")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
@@ -252,7 +252,7 @@ public class StoreControllerTest {
 			when(storeService.updateStoreInfo(any(StoreInfoUpdateRequest.class)))
 				.thenReturn(expectedResponse);
 
-			mockMvc.perform(put("/api/store")
+			mockMvc.perform(put("/store")
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk())
@@ -312,12 +312,12 @@ public class StoreControllerTest {
 
 			doNothing().when(storeService).deleteStore(storeId);
 
-			mockMvc.perform(delete("/api/store/{storeId}", storeId))
+			mockMvc.perform(delete("/store/{storeId}", storeId))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.isSuccess").value(true))
 				.andExpect(jsonPath("$.code").value(StoreSuccessStatus.STORE_DELETED_SUCCESS.getCode()))
 				.andExpect(jsonPath("$.message").value(StoreSuccessStatus.STORE_DELETED_SUCCESS.getMessage()))
-				.andExpect(jsonPath("$.result").value("가게 삭제가 완료되었습니다."));
+				.andExpect(jsonPath("$.result").value(StoreSuccessStatus.STORE_DELETED_SUCCESS.getMessage()));
 
 			verify(storeService, times(1)).deleteStore(storeId);
 		}

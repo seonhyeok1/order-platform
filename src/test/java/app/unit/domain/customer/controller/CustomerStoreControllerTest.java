@@ -1,4 +1,4 @@
-package app.unit.domain.customer;
+package app.unit.domain.customer.controller;
 
 import static org.mockito.BDDMockito.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
@@ -54,7 +54,6 @@ class CustomerStoreControllerTest {
 
 	@MockitoBean
 	private JwtAccessDeniedHandler jwtAccessDeniedHandler;
-
 
 	@Autowired
 	private WebApplicationContext context;
@@ -186,9 +185,6 @@ class CustomerStoreControllerTest {
 			.andExpect(jsonPath("$.isSuccess").value(false))
 			.andExpect(jsonPath("$.code").value(ErrorStatus.STORE_NOT_FOUND.getCode()))
 			.andExpect(jsonPath("$.message").value(ErrorStatus.STORE_NOT_FOUND.getMessage()));
-
-
-
 
 	}
 }

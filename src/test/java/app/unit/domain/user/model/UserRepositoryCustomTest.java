@@ -21,7 +21,7 @@ import app.global.config.TestJpaConfig;
 @DataJpaTest
 @Import({QueryDslConfig.class, TestJpaConfig.class})
 @DisplayName("UserRepository 테스트")
-class UserRepositoryDslTest {
+class UserRepositoryCustomTest {
 
 	@Autowired
 	private UserRepository userRepository;

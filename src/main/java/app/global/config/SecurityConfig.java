@@ -61,6 +61,10 @@ public class SecurityConfig {
 				)
 				.permitAll()
 
+				.requestMatchers("/customer/address/**")
+				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
+					UserRole.MASTER.name())
+				
 				.requestMatchers("/store/**")
 				.hasAnyAuthority(UserRole.OWNER.name(), UserRole.MANAGER.name(),
 					UserRole.MASTER.name())

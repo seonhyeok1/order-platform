@@ -1,4 +1,4 @@
-package app.unit.domain.customer;
+package app.unit.domain.customer.controller;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
@@ -65,7 +65,7 @@ class CustomerAddressControllerTest {
 
 	@Test
 	@DisplayName("주소 목록 조회 - 성공")
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void getCustomerAddresses_Success() throws Exception {
 		List<GetCustomerAddressListResponse> addressResponse = List.of(
 			GetCustomerAddressListResponse.builder()
@@ -93,16 +93,16 @@ class CustomerAddressControllerTest {
 			.andExpect(jsonPath("$.result[0].alias").value("우리집"))
 			.andExpect(jsonPath("$.result[0].address").value("서울시 강남구"))
 			.andExpect(jsonPath("$.result[0].addressDetail").value("101호"))
-			.andExpect(jsonPath("$.result[0].isDefault").value(true))
+			.andExpect(jsonPath("$.result[0].default").value(true))
 			.andExpect(jsonPath("$.result[1].alias").value("회사"))
 			.andExpect(jsonPath("$.result[1].address").value("서울시 서초구"))
 			.andExpect(jsonPath("$.result[1].addressDetail").value("202호"))
-			.andExpect(jsonPath("$.result[1].isDefault").value(false));
+			.andExpect(jsonPath("$.result[1].default").value(false));
 	}
 
 	@Test
 	@DisplayName("주소 목록 조회 - 실패 (DB 조회 실패)")
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void getCustomerAddresses_Fail_InternalServiceException() throws Exception {
 		when(customerAddressService.getCustomerAddresses())
 			.thenThrow(new GeneralException(CustomerErrorStatus.ADDRESS_READ_FAILED));
@@ -115,7 +115,7 @@ class CustomerAddressControllerTest {
 
 	@Test
 	@DisplayName("주소 등록 - 성공")
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void addCustomerAddresses_Success() throws Exception {
 		AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 			"새로운 집",
@@ -143,7 +143,7 @@ class CustomerAddressControllerTest {
 
 	@Test
 	@DisplayName("주소 등록 - 실패 (주소 중복)")
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void addCustomerAddresses_Fail_ServiceException() throws Exception {
 		AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 			"새로운 집",
@@ -166,7 +166,7 @@ class CustomerAddressControllerTest {
 
 	@Test
 	@DisplayName("주소 등록 조회 - 실패 (DB 조회 실패)")
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void addCustomerAddresses_Fail_InternalServiceException() throws Exception {
 		AddCustomerAddressRequest request = new AddCustomerAddressRequest(
 			"새로운 집",
@@ -190,7 +190,7 @@ class CustomerAddressControllerTest {
 	@ParameterizedTest(name = "실패 - alias가 \"{0}\"일 때 (입력값 검증)")
 	@NullAndEmptySource
 	@ValueSource(strings = {" "})
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void addCustomerAddresses_Fail_InvalidAlias(String invalidAlias) throws Exception {
 		AddCustomerAddressRequest request = new AddCustomerAddressRequest(invalidAlias, "서울시 종로구", "303호", false);
 
@@ -205,7 +205,7 @@ class CustomerAddressControllerTest {
 	@ParameterizedTest(name = "실패 - address가 \"{0}\"일 때 (입력값 검증)")
 	@NullAndEmptySource
 	@ValueSource(strings = {" "})
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void addCustomerAddresses_Fail_InvalidAddress(String invalidAddress) throws Exception {
 		AddCustomerAddressRequest request = new AddCustomerAddressRequest("우리 집", invalidAddress, "303호", false);
 
@@ -220,9 +220,10 @@ class CustomerAddressControllerTest {
 	@ParameterizedTest(name = "실패 - addressDetail이 \"{0}\"일 때 (입력값 검증)")
 	@NullAndEmptySource
 	@ValueSource(strings = {" "})
-	@WithMockUser(username = "1", roles = "CUSTOMER")
+	@WithMockUser(username = "1", authorities = "CUSTOMER")
 	void addCustomerAddresses_Fail_InvalidAddressDetail(String invalidAddressDetail) throws Exception {
-		AddCustomerAddressRequest request = new AddCustomerAddressRequest("우리 집", "서울시 종로구", invalidAddressDetail, false);
+		AddCustomerAddressRequest request = new AddCustomerAddressRequest("우리 집", "서울시 종로구", invalidAddressDetail,
+			false);
 
 		mockMvc.perform(post("/customer/address/add")
 				.with(csrf())

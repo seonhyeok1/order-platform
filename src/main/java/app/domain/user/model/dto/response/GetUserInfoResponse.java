@@ -17,6 +17,19 @@ public class GetUserInfoResponse {
 	private String phoneNumber;
 	private UserRole userRole;
 
+	public GetUserInfoResponse() {
+	}
+
+	public GetUserInfoResponse(Long userId, String username, String email, String nickname, String realName, String phoneNumber, UserRole userRole) {
+		this.userId = userId;
+		this.username = username;
+		this.email = email;
+		this.nickname = nickname;
+		this.realName = realName;
+		this.phoneNumber = phoneNumber;
+		this.userRole = userRole;
+	}
+
 	public static GetUserInfoResponse from(User user) {
 		return GetUserInfoResponse.builder()
 			.userId(user.getUserId())

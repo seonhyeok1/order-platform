@@ -65,7 +65,6 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 생성 - 성공")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
 	void createOrder_Success() throws Exception {
 		Long userId = 1L;
 		UUID orderId = UUID.randomUUID();
@@ -81,7 +80,7 @@ class OrderControllerTest {
 		when(orderService.createOrder(any(CreateOrderRequest.class)))
 			.thenReturn(orderId);
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -95,7 +94,7 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 생성 - 총 금액 0 이하 실패")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_InvalidTotalPrice() throws Exception {
 		CreateOrderRequest request = new CreateOrderRequest(
 			PaymentMethod.CREDIT_CARD,
@@ -106,7 +105,7 @@ class OrderControllerTest {
 			"서울시 강남구"
 		);
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -120,7 +119,7 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 생성 - 서비스 에러")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_ServiceError() throws Exception {
 		Long userId = 1L;
 		CreateOrderRequest request = new CreateOrderRequest(
@@ -135,7 +134,7 @@ class OrderControllerTest {
 		when(orderService.createOrder(any(CreateOrderRequest.class)))
 			.thenThrow(new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR));
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -146,7 +145,7 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 상세 조회 - 성공")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void getOrderDetail_Success() throws Exception {
 		UUID orderId = UUID.randomUUID();
 		OrderDetailResponse response = new OrderDetailResponse(
@@ -163,7 +162,7 @@ class OrderControllerTest {
 
 		when(orderService.getOrderDetail(orderId)).thenReturn(response);
 
-		mockMvc.perform(get("/customer/order/{orderId}", orderId))
+		mockMvc.perform(get("/order/{orderId}", orderId))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.code").value(OrderSuccessStatus.ORDER_DETAIL_FETCHED.getCode()))
 			.andExpect(jsonPath("$.message").value(OrderSuccessStatus.ORDER_DETAIL_FETCHED.getMessage()))
@@ -186,14 +185,14 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 상세 조회 - 주문을 찾을 수 없음")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void getOrderDetail_OrderNotFound() throws Exception {
 		UUID orderId = UUID.randomUUID();
 
 		when(orderService.getOrderDetail(orderId))
 			.thenThrow(new GeneralException(ErrorStatus.ORDER_NOT_FOUND));
 
-		mockMvc.perform(get("/customer/order/{orderId}", orderId))
+		mockMvc.perform(get("/order/{orderId}", orderId))
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.code").value(ErrorStatus.ORDER_NOT_FOUND.getCode()))
 			.andExpect(jsonPath("$.message").value(ErrorStatus.ORDER_NOT_FOUND.getMessage()));
@@ -203,14 +202,14 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 상세 조회 - 서버 에러")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void getOrderDetail_ServerError() throws Exception {
 		UUID orderId = UUID.randomUUID();
 
 		when(orderService.getOrderDetail(orderId))
 			.thenThrow(new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR));
 
-		mockMvc.perform(get("/customer/order/{orderId}", orderId))
+		mockMvc.perform(get("/order/{orderId}", orderId))
 			.andExpect(status().isInternalServerError())
 			.andExpect(jsonPath("$.code").value(ErrorStatus._INTERNAL_SERVER_ERROR.getCode()))
 			.andExpect(jsonPath("$.message").value(ErrorStatus._INTERNAL_SERVER_ERROR.getMessage()));
@@ -220,11 +219,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 생성 - 잘못된 JSON 형식")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_InvalidJson() throws Exception {
 		String invalidJson = "{\"paymentMethod\": \"INVALID_METHOD\", \"totalPrice\": 10000}";
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(invalidJson))
@@ -235,11 +234,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("필수 파라미터 누락 - paymentMethod 없음")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_MissingPaymentMethod() throws Exception {
 		String jsonWithoutPaymentMethod = "{\"orderChannel\": \"ONLINE\", \"receiptMethod\": \"DELIVERY\", \"totalPrice\": 10000, \"deliveryAddress\": \"서울시 강남구\"}";
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutPaymentMethod))
@@ -253,11 +252,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("필수 파라미터 누락 - orderChannel 없음")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_MissingOrderChannel() throws Exception {
 		String jsonWithoutOrderChannel = "{\"paymentMethod\": \"CREDIT_CARD\", \"receiptMethod\": \"DELIVERY\", \"totalPrice\": 10000, \"deliveryAddress\": \"서울시 강남구\"}";
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutOrderChannel))
@@ -271,11 +270,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("필수 파라미터 누락 - receiptMethod 없음")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_MissingReceiptMethod() throws Exception {
 		String jsonWithoutReceiptMethod = "{\"paymentMethod\": \"CREDIT_CARD\", \"orderChannel\": \"ONLINE\", \"totalPrice\": 10000, \"deliveryAddress\": \"서울시 강남구\"}";
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutReceiptMethod))
@@ -289,11 +288,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("필수 파라미터 누락 - totalPrice 없음")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_MissingTotalPrice() throws Exception {
 		String jsonWithoutTotalPrice = "{\"paymentMethod\": \"CREDIT_CARD\", \"orderChannel\": \"ONLINE\", \"receiptMethod\": \"DELIVERY\", \"deliveryAddress\": \"서울시 강남구\"}";
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutTotalPrice))
@@ -307,11 +306,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("필수 파라미터 누락 - deliveryAddress 없음")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void createOrder_MissingDeliveryAddress() throws Exception {
 		String jsonWithoutDeliveryAddress = "{\"paymentMethod\": \"CREDIT_CARD\", \"orderChannel\": \"ONLINE\", \"receiptMethod\": \"DELIVERY\", \"totalPrice\": 10000}";
 
-		mockMvc.perform(post("/customer/order")
+		mockMvc.perform(post("/order")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonWithoutDeliveryAddress))
@@ -325,11 +324,11 @@ class OrderControllerTest {
 
 	@Test
 	@DisplayName("주문 상세 조회 - 잘못된 UUID 형식")
-	@WithMockUser(username = "1", roles = {"CUSTOMER"})
+	@WithMockUser(username = "1", authorities = {"CUSTOMER"})
 	void getOrderDetail_InvalidUUID() throws Exception {
 		String invalidUUID = "invalid-uuid";
 
-		mockMvc.perform(get("/customer/order/{orderId}", invalidUUID))
+		mockMvc.perform(get("/order/{orderId}", invalidUUID))
 			.andExpect(status().isBadRequest());
 
 		verify(orderService, never()).getOrderDetail(any());

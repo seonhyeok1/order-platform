@@ -154,5 +154,21 @@ class OrderServiceUpdateOrderStatusTest {
 				.extracting("code")
 				.isEqualTo(ErrorStatus.ORDER_NOT_FOUND);
 		}
+
+		@Test
+		@DisplayName("CUSTOMER 권한으로 주문 상태 변경을 시도하면 접근 거부 예외가 발생한다.")
+		void updateOrderStatus_ByCustomer_ThrowsAccessDenied() {
+			// Given
+			OrderStatus newStatus = OrderStatus.ACCEPTED;
+			User customer = User.builder().userId(2L).userRole(UserRole.CUSTOMER).build();
+			when(securityUtil.getCurrentUser()).thenReturn(customer);
+			when(ordersRepository.findById(orderId)).thenReturn(Optional.of(pendingOrder));
+
+			// When & Then
+			assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, newStatus))
+				.isInstanceOf(GeneralException.class)
+				.extracting("code")
+				.isEqualTo(OrderErrorStatus.ORDER_ACCESS_DENIED);
+		}
 	}
 }
