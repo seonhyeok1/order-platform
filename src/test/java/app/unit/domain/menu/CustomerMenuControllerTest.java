@@ -27,7 +27,6 @@ import org.springframework.web.context.WebApplicationContext;
 import app.domain.menu.CustomerMenuController;
 import app.domain.menu.CustomerMenuService;
 import app.domain.menu.model.dto.response.GetMenuListResponse;
-import app.domain.review.status.ReviewErrorStatus;
 import app.global.apiPayload.PagedResponse;
 import app.global.apiPayload.code.status.ErrorStatus;
 import app.global.apiPayload.exception.GeneralException;
