@@ -23,35 +23,36 @@ import app.domain.menu.model.dto.response.MenuListResponse;
 import app.domain.menu.model.dto.response.MenuUpdateResponse;
 import app.domain.menu.status.StoreMenuSuccessStatus;
 import app.global.apiPayload.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+@Tag(name = "Store", description = "가게, 가게 메뉴 관리")
 @RestController
-@RequestMapping("/menu")
+@RequestMapping("/store")
 @RequiredArgsConstructor
 public class StoreMenuController {
 
 	private final StoreMenuService storeMenuService;
 
-	@PostMapping("/store/menu")
+	@PostMapping("/menu")
 	public ApiResponse<MenuCreateResponse> createMenu(@Valid @RequestBody MenuCreateRequest request) {
 		MenuCreateResponse response = storeMenuService.createMenu(request);
 		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_CREATED_SUCCESS, response);
 	}
 
-	@PutMapping("/store/menu")
+	@PutMapping("/menu")
 	public ApiResponse<MenuUpdateResponse> updateMenu(@Valid @RequestBody MenuUpdateRequest request) {
 		MenuUpdateResponse response = storeMenuService.updateMenu(request);
 		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_UPDATED_SUCCESS, response);
 	}
 
-	@DeleteMapping("/store/menu/delete")
+	@DeleteMapping("/menu/delete")
 	public ApiResponse<MenuDeleteResponse> deleteMenu(@Valid @RequestBody MenuDeleteRequest request) {
 		MenuDeleteResponse response = storeMenuService.deleteMenu(request);
 		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_DELETED_SUCCESS, response);
 	}
 
-	@PutMapping("/store/menu/{menuId}/visible")
+	@PutMapping("/menu/{menuId}/visible")
 	public ApiResponse<MenuUpdateResponse> updateMenuVisibility(@PathVariable UUID menuId,
 		@Valid @RequestBody MenuVisibleRequest request) {
 		MenuUpdateResponse response = storeMenuService.updateMenuVisibility(menuId,
@@ -59,7 +60,7 @@ public class StoreMenuController {
 		return ApiResponse.onSuccess(StoreMenuSuccessStatus.MENU_UPDATED_SUCCESS, response);
 	}
 
-	@GetMapping("/store/menu")
+	@GetMapping("/menu")
 	public ApiResponse<MenuListResponse> getMenuList(@RequestParam("storeId") String storeId) {
 		MenuListRequest request = new MenuListRequest(UUID.fromString(storeId));
 		MenuListResponse response = storeMenuService.getMenuList(request);
