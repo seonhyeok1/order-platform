@@ -26,8 +26,8 @@ import app.global.apiPayload.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@RestController
 @RequestMapping("/store")
+
 @RequiredArgsConstructor
 public class StoreMenuController {
 

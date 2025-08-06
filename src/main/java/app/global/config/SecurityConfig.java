@@ -64,7 +64,7 @@ public class SecurityConfig {
 				.requestMatchers("/customer/address/**")
 				.hasAnyAuthority(UserRole.CUSTOMER.name(), UserRole.MANAGER.name(),
 					UserRole.MASTER.name())
-				
+
 				.requestMatchers("/store/**")
 				.hasAnyAuthority(UserRole.OWNER.name(), UserRole.MANAGER.name(),
 					UserRole.MASTER.name())
@@ -100,18 +100,17 @@ public class SecurityConfig {
 		return http.build();
 	}
 
-	// CORS 설정을 위한 Bean TODO: 실제 운영 환경에서는 구체적인 도메인 명시 필요
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 
-		configuration.setAllowedOrigins(Collections.singletonList("*")); // 모든 출처 허용 (개발용)
-		configuration.addAllowedMethod("*"); // 모든 HTTP 메서드 허용
-		configuration.addAllowedHeader("*"); // 모든 헤더 허용
+		configuration.setAllowedOrigins(Collections.singletonList("*"));
+		configuration.addAllowedMethod("*");
+		configuration.addAllowedHeader("*");
 		configuration.setAllowCredentials(true);
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-		source.registerCorsConfiguration("/**", configuration); // 모든 경로에 대해 위 설정 적용
+		source.registerCorsConfiguration("/**", configuration);
 		return source;
 	}
 }
