@@ -26,9 +26,11 @@ import app.domain.store.status.StoreErrorCode;
 import app.domain.store.status.StoreSuccessStatus;
 import app.global.apiPayload.ApiResponse;
 import app.global.apiPayload.exception.GeneralException;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@Tag(name = "Store", description = "가게, 가게 메뉴 관리")
 @RestController
 @RequestMapping("/store")
 @RequiredArgsConstructor

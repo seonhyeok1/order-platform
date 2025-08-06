@@ -23,9 +23,10 @@ import app.domain.menu.model.dto.response.MenuListResponse;
 import app.domain.menu.model.dto.response.MenuUpdateResponse;
 import app.domain.menu.status.StoreMenuSuccessStatus;
 import app.global.apiPayload.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
+@Tag(name = "Store", description = "가게, 가게 메뉴 관리")
 @RestController
 @RequestMapping("/store")
 @RequiredArgsConstructor
