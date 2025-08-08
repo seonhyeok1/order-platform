@@ -26,6 +26,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class AiHistory extends BaseEntity {
 
+	@Column(nullable = false)
+	private Long userId;
+
 	@Id
 	@GeneratedValue
 	private UUID aiRequestId;
@@ -38,7 +41,7 @@ public class AiHistory extends BaseEntity {
 
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
-	private ReqType reqType; // 메뉴 설명, 가게 설명
+	private ReqType reqType;
 
 	@Column(nullable = false)
 	private String promptText;
