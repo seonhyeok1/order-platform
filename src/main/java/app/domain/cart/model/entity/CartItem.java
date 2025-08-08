@@ -3,6 +3,7 @@ package app.domain.cart.model.entity;
 import java.util.UUID;
 
 import app.domain.menu.model.entity.Menu;
+import app.domain.store.model.entity.Store;
 import app.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,13 +38,18 @@ public class CartItem extends BaseEntity {
 	@JoinColumn(name = "menu_id", nullable = false)
 	private Menu menu;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "store_id", nullable = false)
+	private Store store;
+
 	@Column(nullable = false)
 	private int quantity;
 
-	public CartItem(UUID cartItemId, Cart cart, Menu menu, int quantity) {
+	public CartItem(UUID cartItemId, Cart cart, Menu menu, Store store, int quantity) {
 		this.cartItemId = cartItemId;
 		this.cart = cart;
 		this.menu = menu;
+		this.store = store;
 		this.quantity = quantity;
 	}
 }
