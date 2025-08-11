@@ -56,7 +56,7 @@ jobs:
       - name: Docker Token Length
         run: |
           echo "Token Length: $(#DOCKERHUB_TOKEN}"
-        env: |
+        env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Set up Docker Buildx
