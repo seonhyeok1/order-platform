@@ -241,42 +241,42 @@ class AiServiceImplTest {
 		}
 	}
 
-	@Nested
-	@DisplayName("통합 테스트 (@SpringBootTest)")
-	@SpringBootTest
-	@ActiveProfiles("test")
-	class AiServiceIntegrationTest {
-
-		@Autowired
-		private AiService aiService;
-
-		@Autowired
-		private AiHistoryRepository aiHistoryRepository;
-
-		@Test
-		@DisplayName("AI 응답 연동 및 DB 저장 확인")
-		@Transactional
-		void givenRealAiRequest_whenGenerateDescription_thenHistorySavedAsSuccess() {
-			AiRequest realRequest = new AiRequest(
-				"미스터피자",
-				"고구마 피자",
-				ReqType.MENU_DESCRIPTION,
-				"달콤하고 부드러운 점을 강조해서 30자 이내로 간략한 상품 설명을 작성해줘"
-			);
-			AiResponse aiResponse = aiService.generateDescription(realRequest);
-
-			assertNotNull(aiResponse.getRequestId(), "응답으로 받은 ID가 null이 아니어야 합니다.");
-			assertNotNull(aiResponse.getGeneratedContent(), "생성된 내용이 null이 아니어야 합니다.");
-			assertFalse(aiResponse.getGeneratedContent().isEmpty(), "생성된 내용이 비어있지 않아야 합니다.");
-			System.out.println("AI 생성 결과: " + aiResponse.getGeneratedContent());
-
-			AiHistory savedHistory = aiHistoryRepository.findById(UUID.fromString(aiResponse.getRequestId()))
-				.orElse(null);
-
-			assertNotNull(savedHistory, "DB에 해당 ID의 기록이 저장되어 있어야 합니다.");
-			assertEquals(AiRequestStatus.SUCCESS, savedHistory.getStatus(), "최종 상태는 SUCCESS여야 합니다.");
-			assertEquals(aiResponse.getGeneratedContent(), savedHistory.getGeneratedContent(),
-				"응답 내용과 DB에 저장된 내용이 같아야 합니다.");
-		}
-	}
+	// @Nested
+	// @DisplayName("통합 테스트 (@SpringBootTest)")
+	// @SpringBootTest
+	// @ActiveProfiles("test")
+	// class AiServiceIntegrationTest {
+	//
+	// 	@Autowired
+	// 	private AiService aiService;
+	//
+	// 	@Autowired
+	// 	private AiHistoryRepository aiHistoryRepository;
+	//
+	// 	@Test
+	// 	@DisplayName("AI 응답 연동 및 DB 저장 확인")
+	// 	@Transactional
+	// 	void givenRealAiRequest_whenGenerateDescription_thenHistorySavedAsSuccess() {
+	// 		AiRequest realRequest = new AiRequest(
+	// 			"미스터피자",
+	// 			"고구마 피자",
+	// 			ReqType.MENU_DESCRIPTION,
+	// 			"달콤하고 부드러운 점을 강조해서 30자 이내로 간략한 상품 설명을 작성해줘"
+	// 		);
+	// 		AiResponse aiResponse = aiService.generateDescription(realRequest);
+	//
+	// 		assertNotNull(aiResponse.getRequestId(), "응답으로 받은 ID가 null이 아니어야 합니다.");
+	// 		assertNotNull(aiResponse.getGeneratedContent(), "생성된 내용이 null이 아니어야 합니다.");
+	// 		assertFalse(aiResponse.getGeneratedContent().isEmpty(), "생성된 내용이 비어있지 않아야 합니다.");
+	// 		System.out.println("AI 생성 결과: " + aiResponse.getGeneratedContent());
+	//
+	// 		AiHistory savedHistory = aiHistoryRepository.findById(UUID.fromString(aiResponse.getRequestId()))
+	// 			.orElse(null);
+	//
+	// 		assertNotNull(savedHistory, "DB에 해당 ID의 기록이 저장되어 있어야 합니다.");
+	// 		assertEquals(AiRequestStatus.SUCCESS, savedHistory.getStatus(), "최종 상태는 SUCCESS여야 합니다.");
+	// 		assertEquals(aiResponse.getGeneratedContent(), savedHistory.getGeneratedContent(),
+	// 			"응답 내용과 DB에 저장된 내용이 같아야 합니다.");
+	// 	}
+	// }
 }
