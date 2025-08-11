@@ -63,3 +63,19 @@ jobs:
           context: .
           push: true
           tags: tjsgur/order-platform-backend:latest
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push-docker-image
+    steps:
+      - name: SSH and deploy to EC2
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull tjsgur/order-platform-backend:latest
+            echo "ㅋㅋ"
+            docker stop order-backend || true
+            docker rm order-backend || true
+            docker run -d -p 8080:8080 --name order-backend tjsgur/order-platform-backend:latest
