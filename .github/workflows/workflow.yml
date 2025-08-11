@@ -77,7 +77,6 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             docker pull tjsgur/order-platform-backend:latest
-            echo "ㅋㅋ"
             docker stop order-backend || true
             docker rm order-backend || true
-            docker run -d -p 8080:8080 --name order-backend tjsgur/order-platform-backend:latest
+            docker run -d -p 8080:8080 --env-file /home/ubuntu/.env --name order-backend tjsgur/order-platform-backend:latest
